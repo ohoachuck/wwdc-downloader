@@ -57,15 +57,17 @@ fi
 
 i=0
 cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/2013/[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}\.pdf\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
-    if [ -f "${WWDC_DIRNAME}/PDFs/${title_array[$i]}.pdf" ]
+	session_number=`echo $line | grep -o -E '/[0-9]+.pdf' | grep -o -E [0-9]+`
+	dest_path="${WWDC_DIRNAME}/PDFs/${session_number} - ${title_array[$i]}.pdf"
+    if [ -f "${dest_path}" ]
 	then
-    	echo "${WWDC_DIRNAME}/PDFs/${title_array[$i]}.pdf already downloaded (nothing to do!)"
+    	echo "${dest_path} already downloaded (nothing to do!)"
 	else
-	    echo "downloading PDF: $line" 
+	    echo "downloading PDF for session ${session_number}: $line" 
 
-	    curl $line > "${WWDC_DIRNAME}/PDFs/${title_array[$i]}.pdf.download"
+	    curl $line > "${dest_path}.download"
 	    
-		mv "${WWDC_DIRNAME}/PDFs/${title_array[$i]}.pdf.download" "${WWDC_DIRNAME}/PDFs/${title_array[$i]}.pdf"
+		mv "${dest_path}.download" "${dest_path}"
 	fi
     ((i+=1))
 done
@@ -89,15 +91,17 @@ fi
 rm ${WWDC_DIRNAME}/SD-VIDEOs/*.download
 i=0
 cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/2013/[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}-SD\.mov\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
-    if [ -f "${WWDC_DIRNAME}/SD-VIDEOs/${title_array[$i]}-SD.mov" ]
+	session_number=`echo $line | grep -o -E '/[0-9]+-SD.mov' | grep -o -E [0-9]+`
+	dest_path="${WWDC_DIRNAME}/SD-VIDEOs/${session_number} - ${title_array[$i]}-SD.mov"
+    if [ -f "${dest_path}" ]
 	then
-    	echo "${WWDC_DIRNAME}/SD-VIDEOs/${title_array[$i]}-SD.mov already downloaded (nothing to do!)"
+    	echo "${dest_path} already downloaded (nothing to do!)"
 	else
-	    echo "downloading SD Video: $line" 
+	    echo "downloading SD Video for session ${session_number}: $line" 
 
-	    curl $line > "${WWDC_DIRNAME}/SD-VIDEOs/${title_array[$i]}-SD.mov.download"
+	    curl $line > "${dest_path}.download"
 
-		mv "${WWDC_DIRNAME}/SD-VIDEOs/${title_array[$i]}-SD.mov.download" "${WWDC_DIRNAME}/SD-VIDEOs/${title_array[$i]}-SD.mov"
+		mv "${dest_path}.download" "${dest_path}"
 	fi
     ((i+=1))
 done
