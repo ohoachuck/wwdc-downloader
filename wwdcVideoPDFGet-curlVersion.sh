@@ -12,7 +12,7 @@ TMP_DIR="/tmp/wwdc2013.tmp"
 
 mkdir -p $TMP_DIR
 ituneslogin=$1
-itunespassword=$2
+read -s -p Password: itunespassword ; echo
 key=d4f7d769c2abecc664d0dadfed6a67f943442b5e9c87524d4587a95773750cea
 
 cookies=(--cookies=on --keep-session-cookies)
