@@ -8,11 +8,9 @@
 #	- wrong password does not give proper error message!
 #	- key should be get dynamically - this already happened to be changed
 
-VERSION="1.1"
+VERSION="1.2"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2013"
-DEFAULT_KEY="891bd3417a7776362562d2197f89480a8547b108fd934911bcbea0110d07f757"
-
 
 doGet2013 () {
 
@@ -24,7 +22,8 @@ doGet2013 () {
 	TMP_DIR="/tmp/wwdc2013.tmp"
 	mkdir -p $TMP_DIR
 
-	key=${DEFAULT_KEY}
+	# Dynamically get the key value as this can change (it did change for instance when Apple had to turn down their developer Portal for a week)
+	key=$(curl -L https://developer.apple.com/iphone | grep 'login?&appIdKey=' | sed -e 's/\(.*login?&appIdKey=\)\(.*\)\(&.*\)/\2/' | awk 'NR==1 {print $1}')
 	
 	cookies=(--cookies=on --keep-session-cookies)
 
