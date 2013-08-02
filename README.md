@@ -8,7 +8,7 @@ Video resources taken (SD) and PDF take about 52GB of disk space, so if for some
 
 There is 2 versions for the same script:
 
-1. `wwdcVideoPDFGet.sh` => initial version based on wget (not prefered)
+1. `wwdcVideoPDFGet.sh` => initial version based on wget (__depreciated!__)
 2. `wwdcVideoPDFGet-curlVersion.sh` => adapted version based on curl (no need for wget)
 
 ### Usage
