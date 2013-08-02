@@ -13,7 +13,7 @@ mkdir -p $TMP_DIR
 #base=$(pwd)
 ituneslogin=$1
 read -s -p Password: itunespassword ; echo
-key=d4f7d769c2abecc664d0dadfed6a67f943442b5e9c87524d4587a95773750cea
+key=891bd3417a7776362562d2197f89480a8547b108fd934911bcbea0110d07f757
 
 cookies=(--cookies=on --keep-session-cookies)
 

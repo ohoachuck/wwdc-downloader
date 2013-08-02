@@ -8,7 +8,7 @@ Video resources taken (SD) and PDF take about 52GB of disk space, so if for some
 
 There is 2 versions for the same script:
 
-1. `wwdcVideoPDFGet.sh` => initial version based on wget
+1. `wwdcVideoPDFGet.sh` => initial version based on wget (not prefered)
 2. `wwdcVideoPDFGet-curlVersion.sh` => adapted version based on curl (no need for wget)
 
 ### Usage
@@ -18,9 +18,15 @@ or
 
 `wwdcVideoPDFGet-curlVersion.sh <Apple Developer account login>`
 
-You will be prompted for your Apple Developer password.
+You will be prompted for your Apple Developer password. And SD videos will be downloaded by default.
 
-If you want to download the HD versions, globally replace "SD" throughout the script with "HD".  Note that the HD files are roughly 6 times larger than the SD versions, so make sure you have enough free disk space.
+### Options
+You can try `wwdcVideoPDFGet-curlVersion.sh -h` for more options. This second script allow you to choose for SD vs HD videos format to download.
+
+For downloading HD videos:
+
+ - `wwdcVideoPDFGet-curlVersion.sh -f HD <Apple Developer account login>`
+		
 
 More information on http://blog.hoachuck.biz/blog/2013/06/15/script-to-download-wwdc-2013-videos/
 
