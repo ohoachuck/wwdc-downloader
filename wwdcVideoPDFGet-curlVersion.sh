@@ -84,7 +84,7 @@ doGet2013 () {
 	i=0
 	cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/2013/[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}\.pdf\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
 		session_number=`echo $line | grep -o -E '/[0-9]+.pdf' | grep -o -E [0-9]+`
-		if [ ${SELECTIVE_SESSION_MODE} ];
+		if [ ${SELECTIVE_SESSION_MODE} == true ];
 		then
 			if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
 			then
@@ -140,7 +140,7 @@ doGet2013 () {
 	then
 		cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/2013/[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}-HD\.mov\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
 			session_number=`echo $line | grep -o -E '/[0-9]+-HD.mov' | grep -o -E [0-9]+`
-			if [ ${SELECTIVE_SESSION_MODE} ];
+			if [ ${SELECTIVE_SESSION_MODE} == true ];
 			then
 				if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
 				then
@@ -175,7 +175,7 @@ doGet2013 () {
 	then
 		cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/2013/[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}-SD\.mov\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
 			session_number=`echo $line | grep -o -E '/[0-9]+-SD.mov' | grep -o -E [0-9]+`
-			if [ ${SELECTIVE_SESSION_MODE} ];
+			if [ ${SELECTIVE_SESSION_MODE} == true ];
 			then
 				if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
 				then
