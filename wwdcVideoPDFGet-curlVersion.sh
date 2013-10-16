@@ -68,16 +68,16 @@ doGet2013 () {
 	echo "******* DOWNLOADING PDF FILES ********"
 
 	# PDF
-	mkdir -p ${WWDC_DIRNAME}/PDFs
+	mkdir -p "${WWDC_DIRNAME}"/PDFs
 
 	# do the rm *.download only if files exist
-	FILES_LIST="$(ls ${WWDC_DIRNAME}/PDFs/*.download 2>/dev/null)"
+	FILES_LIST="$(ls "${WWDC_DIRNAME}"/PDFs/*.download 2>/dev/null)"
 	if [ -z "$FILES_LIST" ]; then
 		#echo "All downloads will go to your Desktop/WWDC-2013 folder!"
 		:
 	else
 		echo "Some download was aborted last time you ran this script."
-		rm ${WWDC_DIRNAME}/PDFs/*.download	
+		rm "${WWDC_DIRNAME}"/PDFs/*.download	
 		echo "Cleaning non fully downloaded files: OK." 
 	fi
 
@@ -119,16 +119,16 @@ doGet2013 () {
 	echo "******* DOWNLOADING ${FORMAT} VIDEOS ********"
 
 	# Videos ${FORMAT}
-	mkdir -p ${WWDC_DIRNAME}/${FORMAT}-VIDEOs
+	mkdir -p "${WWDC_DIRNAME}"/${FORMAT}-VIDEOs
 
 	# do the rm *.download only if files exist
-	FILES_LIST="$(ls ${WWDC_DIRNAME}/${FORMAT}-VIDEOs/*.download 2>/dev/null)"
+	FILES_LIST="$(ls "${WWDC_DIRNAME}"/${FORMAT}-VIDEOs/*.download 2>/dev/null)"
 	if [ -z "$FILES_LIST" ]; then
 		#echo "All downloads will go to your Desktop/WWDC-2013 folder!"
 		:
 	else
 		echo "Some download was aborted last time you ran this script."
-		rm ${WWDC_DIRNAME}/${FORMAT}-VIDEOs/*.download	
+		rm "${WWDC_DIRNAME}"/${FORMAT}-VIDEOs/*.download	
 		echo "Cleaning non fully downloaded files: OK." 
 	fi
 
