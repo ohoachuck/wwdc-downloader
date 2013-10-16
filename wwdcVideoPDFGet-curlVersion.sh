@@ -2,10 +2,10 @@
 
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013
-# License: Do What You Want with it. But notice that this script come with no garanty and will not be maintained.
-# usage: wwdcVideoGet-curlVersion.sh <Apple-dev-account-login>
+# License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
+# Usage: wwdcVideoGet-curlVersion.sh <Apple-dev-account-login>
 # TODO: 
-#	- make 2012 videos download Possible
+#	- make 2012 videos download possible
 #	- dynamically set WWDC_DIRNAME according to download year
 #	- wrong password does not give proper error message!
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
@@ -331,7 +331,7 @@ case "${YEAR}" in
 	doGet2013 ${ituneslogin} ${itunespassword} ${FORMAT}
 	;;
 *)
-	echo "Sorry: can't process requested year. Please chose between \"2012\", \"2013\" or \"all\"."
+	echo "Sorry: can't process requested year. Please choose between \"2012\", \"2013\" or \"all\"."
 	;;
 esac
 
