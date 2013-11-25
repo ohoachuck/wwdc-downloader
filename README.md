@@ -6,26 +6,19 @@ This script is a bash script that should work out of the box without any needs o
 Its main purpose is to login into your Apple Developer account and retrieve all videos and associated documentation into a local folder arbitrary created on your Desktop (Mac OS architecture).
 Video resources (SD) and PDF take about 52GB of disk space, so if for some reason you couldn't download it in one shot, the script resumes where it has stopped and does not download everything again.
 
-There are 2 versions for the same script:
-
-1. `wwdcVideoPDFGet.sh` => initial version based on wget (**deprecated!**)
-2. `wwdcVideoPDFGet-curlVersion.sh` => adapted version based on curl (no need for wget)
-
-First version is not updated anymore because it does not comply with the current rule, which is: "script should work out of the box"! Indeed wget is not standard in most mac OS X versions. Please use `wwdcVideoPDFGet-curlVersion.sh` instead (I know the script name is crap). This second script is the only one being updated and improved so far.
-
 ### Usage
-`wwdcVideoPDFGet-curlVersion.sh <Apple Developer account login>`
+`wwdcDownloader.sh <Apple Developer account login>`
 
 You will be prompted for your Apple Developer password. And SD videos will be downloaded by default.
 
 ### Options
-You can try `wwdcVideoPDFGet-curlVersion.sh -h` for more options.
+You can try `wwdcDownloader.sh -h` for more options.
 
 This second script allows you to choose between SD and HD videos to download. But also would let you choose for instance to get only some specific sessions instead of all videos.
 
-See what's `wwdcVideoPDFGet-curlVersion.sh -h` option currently say:
+See what's `wwdcDownloader.sh -h` option currently say:
 
-		Usage: 	wwdcVideoPDFGet-curlVersion.sh [options] <Apple dev login>
+		Usage: 	wwdcDownloader.sh [options] <Apple dev login>
 		Options:
 			-y <year>: select year (ex: -y 2012). Default year is 2013
 				Possible values for year: 2012, 2013, all
@@ -37,21 +30,21 @@ See what's `wwdcVideoPDFGet-curlVersion.sh -h` option currently say:
 			
 		Examples:
 			- Download all PDFs and SD videos for 2013:
-  				wwdcVideoPDFGet-curlVersion.sh john.doe@me.com
+  				wwdcDownloader.sh john.doe@me.com
 			- Download all PDFs and HD videos for 2013:
-  				wwdcVideoPDFGet-curlVersion.sh -f HD john.doe@me.com
+  				wwdcDownloader.sh -f HD john.doe@me.com
 			- Download only session 201, 400 and 401 with SD videos for 2013:
-  				wwdcVideoPDFGet-curlVersion.sh -s 201,400,401 john.doe@me.com
+  				wwdcDownloader.sh -s 201,400,401 john.doe@me.com
 			- Download only session 201 and 400 with HD video for 2013:
-  				wwdcVideoPDFGet-curlVersion.sh -s 201,400 -f HD john.doe@me.com
+  				wwdcDownloader.sh -s 201,400 -f HD john.doe@me.com
 			- Download all PDFs and HD videos for 2013 in /Users/oho/Documents/WWDC-SESSIONS using verbose mode:
-  				wwdcVideoPDFGet-curlVersion.sh -v -f HD -o /Users/oho/Documents/WWDC-SESSIONS john.doe@me.com
+  				wwdcDownloader.sh -v -f HD -o /Users/oho/Documents/WWDC-SESSIONS john.doe@me.com
 		
 
 More information on http://blog.hoachuck.biz/blog/2013/06/15/script-to-download-wwdc-2013-videos/
 
 ### Requirements
-Works on MAC OS X.
+Works on Mac OS X.
 
 Should be working on Linux systems (as long as you change output directory): never tested!
 
