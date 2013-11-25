@@ -315,18 +315,35 @@ while getopts ":hy:f:s:vo:" opt; do
       	;;
   esac
 done
-  
+
+getPassword() {
+    ituneslogin=$1
+    
+    # try the keychain first
+    keychainServiceName="wwdcDownloader"
+    keychainPassword=`security find-generic-password -a ${ituneslogin} -s ${keychainServiceName} -w 2> /dev/null` 
+    if [[ ${#keychainPassword} -gt "0" ]];
+    then
+        echo $keychainPassword
+    else
+        read -s -p Password: newPassword
+        echo $newPassword
+        
+        # save it for next time
+        `security add-generic-password -a ${ituneslogin} -s ${keychainServiceName} -w ${newPassword}`
+    fi
+}
+
+itunespassword=$(getPassword ${ituneslogin})
+
 case "${YEAR}" in
 "2012")
-	read -s -p Password: itunespassword ; echo
 	doGet2012 ${ituneslogin} ${itunespassword} ${FORMAT}
 	;;
 "2013")
-	read -s -p Password: itunespassword ; echo
 	doGet2013 ${ituneslogin} ${itunespassword} ${FORMAT}
 	;;
 "all" | "ALL")
-	read -s -p Password: itunespassword ; echo
 	doGet2012 ${ituneslogin} ${itunespassword} ${FORMAT}
 	doGet2013 ${ituneslogin} ${itunespassword} ${FORMAT}
 	;;
