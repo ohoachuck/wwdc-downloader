@@ -4,7 +4,7 @@ WWDC Video and PDF downloder
 This script is a bash script that should work out of the box without any needs of extra software or development package.
 
 It's main purpose is to login into your Apple developer account and retreive all videos and associated documentations into a local folder arbitrary created on your Desktop (mac os architecture).
-Video resources taken (SD) and PDF take about 52GB of disk space, so if for some reason you do not have downloaded it in one shot, the script take it back when it have been stoped and does not download again averything.
+Video resources and PDFs take about 52GB of disk space for HD videos (half of it for SD), so if for some reason you do not have downloaded it in one shot, the script take it back when it have been stoped and does not download again averything.
 
 There are 2 versions for the same script:
 
@@ -49,6 +49,10 @@ See what's `wwdcVideoPDFGet-curlVersion.sh -h` option currently say:
 		
 
 More information on http://blog.hoachuck.biz/blog/2013/06/15/script-to-download-wwdc-2013-videos/
+
+### Add-ons
+If you have alfred 2, there is a workflow to search for sessions by title name or alternatively search in session speach transcription with asciwwdc.com
+
 
 ### Requirements
 Work on MAC OS X.
