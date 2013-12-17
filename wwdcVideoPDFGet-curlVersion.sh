@@ -2,10 +2,10 @@
 
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013
-# License: Do What You Want with it. But notice that this script come with no garanty and will not be maintained.
-# usage: wwdcVideoGet-curlVersion.sh <Apple-dev-account-login>
+# License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
+# Usage: wwdcVideoGet-curlVersion.sh <Apple-dev-account-login>
 # TODO: 
-#	- make 2012 videos download Possible
+#	- make 2012 videos download possible
 #	- dynamically set WWDC_DIRNAME according to download year
 #	- wrong password does not give proper error message!
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
@@ -68,16 +68,16 @@ doGet2013 () {
 	echo "******* DOWNLOADING PDF FILES ********"
 
 	# PDF
-	mkdir -p ${WWDC_DIRNAME}/PDFs
+	mkdir -p "${WWDC_DIRNAME}"/PDFs
 
 	# do the rm *.download only if files exist
-	FILES_LIST="$(ls ${WWDC_DIRNAME}/PDFs/*.download 2>/dev/null)"
+	FILES_LIST="$(ls "${WWDC_DIRNAME}"/PDFs/*.download 2>/dev/null)"
 	if [ -z "$FILES_LIST" ]; then
 		#echo "All downloads will go to your Desktop/WWDC-2013 folder!"
 		:
 	else
 		echo "Some download was aborted last time you ran this script."
-		rm ${WWDC_DIRNAME}/PDFs/*.download	
+		rm "${WWDC_DIRNAME}"/PDFs/*.download	
 		echo "Cleaning non fully downloaded files: OK." 
 	fi
 
@@ -119,16 +119,16 @@ doGet2013 () {
 	echo "******* DOWNLOADING ${FORMAT} VIDEOS ********"
 
 	# Videos ${FORMAT}
-	mkdir -p ${WWDC_DIRNAME}/${FORMAT}-VIDEOs
+	mkdir -p "${WWDC_DIRNAME}"/${FORMAT}-VIDEOs
 
 	# do the rm *.download only if files exist
-	FILES_LIST="$(ls ${WWDC_DIRNAME}/${FORMAT}-VIDEOs/*.download 2>/dev/null)"
+	FILES_LIST="$(ls "${WWDC_DIRNAME}"/${FORMAT}-VIDEOs/*.download 2>/dev/null)"
 	if [ -z "$FILES_LIST" ]; then
 		#echo "All downloads will go to your Desktop/WWDC-2013 folder!"
 		:
 	else
 		echo "Some download was aborted last time you ran this script."
-		rm ${WWDC_DIRNAME}/${FORMAT}-VIDEOs/*.download	
+		rm "${WWDC_DIRNAME}"/${FORMAT}-VIDEOs/*.download	
 		echo "Cleaning non fully downloaded files: OK." 
 	fi
 
@@ -331,7 +331,7 @@ case "${YEAR}" in
 	doGet2013 ${ituneslogin} ${itunespassword} ${FORMAT}
 	;;
 *)
-	echo "Sorry: can't process requested year. Please chose between \"2012\", \"2013\" or \"all\"."
+	echo "Sorry: can't process requested year. Please choose between \"2012\", \"2013\" or \"all\"."
 	;;
 esac
 

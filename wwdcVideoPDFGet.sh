@@ -2,7 +2,7 @@
 
 # Author: Olivier HO-A-CHUCK
 # Date: June 15th 2013
-# License: Do What You Want with it. But notice that this script come with no garanty and will not be maintained.
+# License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
 
 
 WWDC_DIRNAME="/Users/${USER}/Desktop/WWDC-2013"
