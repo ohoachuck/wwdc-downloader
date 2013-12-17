@@ -16,7 +16,7 @@ DEFAULT_YEAR="2013"
 SELECTIVE_SESSION_MODE=false
 VERBOSE=false
 TMP_DIR="/tmp/wwdc2013.tmp"
-WWDC_DIRNAME="/Users/${USER}/Desktop/WWDC-2013"
+WWDC_DIRNAME="/Users/${USER}/Documents/WWDC-2013"
 
 doGet2013 () {
 

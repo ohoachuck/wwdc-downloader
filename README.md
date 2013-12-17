@@ -3,13 +3,13 @@ WWDC Video and PDF downloader
 
 This script is a bash script that should work out of the box without any needs of extra software or development package.
 
-<<<<<<< HEAD
 It's main purpose is to login into your Apple developer account and retreive all videos and associated documentations into a local folder arbitrary created on your Desktop (mac os architecture).
+
 Video resources and PDFs take about 52GB of disk space for HD videos (half of it for SD), so if for some reason you do not have downloaded it in one shot, the script take it back when it have been stoped and does not download again averything.
-=======
+
+
 Its main purpose is to login into your Apple Developer account and retrieve all videos and associated documentation into a local folder arbitrary created on your Desktop (Mac OS architecture).
 Video resources (SD) and PDF take about 52GB of disk space, so if for some reason you couldn't download it in one shot, the script resumes where it has stopped and does not download everything again.
->>>>>>> f61f50b5b431bf6c91e07316065728a7d7130624
 
 There are 2 versions for the same script:
 
