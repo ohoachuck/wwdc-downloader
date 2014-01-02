@@ -1,9 +1,9 @@
-WWDC Video and PDF downloader
+WWDC & Tech-talks Videos and PDFs downloader
 ================
 
-This script is a bash script that should work out of the box without any needs of extra software or development package.
+This script is a bash script that should **work out of the box** without any needs of extra software or development package.
 
-It's main purpose is to login into your Apple developer account and retreive all videos and associated documentations into a local folder arbitrary created on your Desktop (mac os architecture).
+It's main purpose is to login into your Apple developer account and retreive all WWDC and Tech-Talks 2013 videos and associated documentations into a local folder arbitrary created on your User Document directory (mac os architecture).
 
 Video resources and PDFs take about 52GB of disk space for HD videos (half of it for SD), so if for some reason you do not have downloaded it in one shot, the script take it back when it have been stoped and does not download again averything.
 
@@ -30,27 +30,31 @@ This second script allows you to choose between SD and HD videos to download. Bu
 
 See what's `wwdcVideoPDFGet-curlVersion.sh -h` option currently say:
 
-		Usage: 	wwdcVideoPDFGet-curlVersion.sh [options] <Apple dev login>
-		Options:
-			-y <year>: select year (ex: -y 2012). Default year is 2013
-				Possible values for year: 2012, 2013, all
-				Warning: year 2012 videos download is not yet available
-			-f <format>: select video format type (SD or HD). Default video format is SD
-			-s <comma separated session numbers>: select which sessions you want to download
-			-v : verbose mode
-			-o <output path>: path where to download content (default is /Users/${USER}/Desktop/WWDC-2013)
-			
-		Examples:
-			- Download all PDFs and SD videos for 2013:
-  				wwdcVideoPDFGet-curlVersion.sh john.doe@me.com
-			- Download all PDFs and HD videos for 2013:
-  				wwdcVideoPDFGet-curlVersion.sh -f HD john.doe@me.com
-			- Download only session 201, 400 and 401 with SD videos for 2013:
-  				wwdcVideoPDFGet-curlVersion.sh -s 201,400,401 john.doe@me.com
-			- Download only session 201 and 400 with HD video for 2013:
-  				wwdcVideoPDFGet-curlVersion.sh -s 201,400 -f HD john.doe@me.com
-			- Download all PDFs and HD videos for 2013 in /Users/oho/Documents/WWDC-SESSIONS using verbose mode:
-  				wwdcVideoPDFGet-curlVersion.sh -v -f HD -o /Users/oho/Documents/WWDC-SESSIONS john.doe@me.com
+	Usage: 	wwdcVideoPDFGet-curlVersion.sh [options] <Apple dev login>
+	Options:
+		-y <year>: select year (ex: -y 2012). Default year is 2013
+			Possible values for year: 2012, 2013, all
+			Warning: year 2012 videos download is not yet available
+		-e <event>: select event type between "wwdc" and "tech-talks"
+			default value is "wwdc"
+		-f <format>: select video format type (SD or HD). Default video format is SD
+		-s <comma separated session numbers>: select which sessions you want to download
+		-v : verbose mode
+		-o <output path>: path where to download content (default is /Users/oho/Documents/WWDC-2013)
+	
+	Examples:
+		- Download all PDFs and SD videos for wwdc 2013:
+	  		wwdcVideoPDFGet-curlVersion.sh john.doe@me.com
+		- Download all PDFs and SD videos for tech-talks 2013:
+	  		wwdcVideoPDFGet-curlVersion.sh -e tech-talks john.doe@me.com
+		- Download all PDFs and HD videos for wwdc 2013:
+	  		wwdcVideoPDFGet-curlVersion.sh -f HD john.doe@me.com
+		- Download only session 201, 400 and 401 with SD videos for wwdc 2013:
+	  		wwdcVideoPDFGet-curlVersion.sh -s 201,400,401 john.doe@me.com
+		- Download only session 201 and 400 with HD video for wwdc 2013:
+	  		wwdcVideoPDFGet-curlVersion.sh -s 201,400 -f HD john.doe@me.com
+		- Download all PDFs and HD videos for wwdc 2013 in /Users/oho/Documents/WWDC-SESSIONS using verbose mode:
+	  		wwdcVideoPDFGet-curlVersion.sh -v -f HD -o /Users/oho/Documents/WWDC-SESSIONS john.doe@me.com
 		
 
 More information on http://blog.hoachuck.biz/blog/2013/06/15/script-to-download-wwdc-2013-videos/
