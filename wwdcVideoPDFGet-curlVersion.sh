@@ -544,11 +544,11 @@ done
   
 case "${YEAR}" in
 "2012")
-	read -s -p Password: itunespassword ; echo
+	read -r -s -p Password: itunespassword ; echo
 	doGet2012 ${ituneslogin} ${itunespassword} ${FORMAT}
 	;;
 "2013")
-	read -s -p Password: itunespassword ; echo
+	read -r -s -p Password: itunespassword ; echo
 	if [ ${EVENT} == "wwdc" ];
 	then
 		VIDEO_URL=${VIDEO_URL_WWDC}
@@ -560,7 +560,7 @@ case "${YEAR}" in
 	fi
 	;;
 "all" | "ALL")
-	read -s -p Password: itunespassword ; echo
+	read -r -s -p Password: itunespassword ; echo
 	doGet2012 ${ituneslogin} ${itunespassword} ${FORMAT}
 	doGet2013 ${ituneslogin} ${itunespassword} ${FORMAT}
 	;;
