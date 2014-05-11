@@ -20,7 +20,7 @@ SELECTIVE_SESSION_MODE=false
 VERBOSE=false
 TMP_DIR="/tmp/wwdc2013.tmp"
 WWDC_DIRNAME="/Users/${USER}/Documents/WWDC-2013"
-VIDEO_URL_WWDC="https://developer.apple.com/wwdc/videos/"
+VIDEO_URL_WWDC="https://developer.apple.com/videos/wwdc/2013/"
 VIDEO_URL_TECHTALK="https://developer.apple.com/tech-talks/videos/"
 
 
