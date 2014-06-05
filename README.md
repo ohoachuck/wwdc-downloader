@@ -1,6 +1,4 @@
-WWDC 2014, 2013 & Tech-talks 2013
-
-Videos and sessions PDFs downloader
+WWDC 2014, 2013 & Tech-talks 2013 <br/>Videos and sessions PDFs downloader
 ================
 
 This script is a bash script that should **work out of the box** without any needs of extra software or development package.
