@@ -159,7 +159,7 @@ doGetWWDCPost2012 () {
     cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'/'${REGEXFILE}'\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
 
     echo $line
-    session_number=`echo $line | grep -o -E '/[0-9]+-'${FORMAT}'.mov' | grep -o -E [0-9]+`
+    session_number=`echo $line | grep -o -i -E '/[0-9]+[_-]'${FORMAT}'[^/]*.mov' | grep -o -E '[0-9]+' | head -1`
         if [ ${SELECTIVE_SESSION_MODE} == true ];
         then
             if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
