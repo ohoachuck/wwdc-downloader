@@ -1,30 +1,30 @@
 #!/bin/sh
 
 # Author: Olivier HO-A-CHUCK
-# Date: June 27th 2013
+# Date: June 27th 2013 (update June 5th 2014)
 # License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
 # Usage: wwdcVideoGet-curlVersion.sh <Apple-dev-account-login>
 # To get 2013 tech-talks content: ./wwdcVideoGet-curlVersion.sh -e tech-talks <Apple-dev-account-login>
 #
 # TODO: 
-#	- make 2012 videos download possible
-#	- dynamically set WWDC_DIRNAME according to download year
+#	- make 2012 videos download possible (it's feasible but more painful than for 2013 and 2014, so time consuming...)
 #	- wrong password does not give proper error message!
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
+#   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.3"
+VERSION="1.4"
 DEFAULT_FORMAT="SD"
-DEFAULT_YEAR="2013"
+DEFAULT_YEAR="2014"
 DEFAULT_EVENT="wwdc"
 SELECTIVE_SESSION_MODE=false
 VERBOSE=false
-TMP_DIR="/tmp/wwdc2013.tmp"
-WWDC_DIRNAME="/Users/${USER}/Documents/WWDC-2013"
-VIDEO_URL_WWDC="https://developer.apple.com/videos/wwdc/2013/"
+TMP_DIR="/tmp/wwdc-session.tmp"
+WWDC_DIRNAME="/Users/${USER}/Documents/WWDC-SESSIONS"
+VIDEO_URL_WWDC="https://developer.apple.com/videos/wwdc"
 VIDEO_URL_TECHTALK="https://developer.apple.com/tech-talks/videos/"
 
 
-doGetWWDC2013 () {
+doGetWWDCPost2012 () {
 
 	ituneslogin=$1
 	itunespassword=$2
@@ -56,13 +56,14 @@ doGetWWDC2013 () {
 	curl  -s --cookie $TMP_DIR/cookies.txt \
 		 --cookie-jar $TMP_DIR/cookies.txt \
 		 ${VIDEO_URL} > $TMP_DIR/video.html
-		 		  
-	cat ${TMP_DIR}/video.html | sed -e '/class="thumbnail-title/,/<div class="error">/!d' > $TMP_DIR/video-cleaned.html
+
+    cat ${TMP_DIR}/video.html | sed -e '/class="thumbnail-title/,/<div class="error">/!d' > $TMP_DIR/video-cleaned.html
 
 	if [ -f ${TMP_DIR}/titles.txt ] ; then
 		rm ${TMP_DIR}/titles.txt
 	fi
-	cat ${TMP_DIR}/video-cleaned.html | while read line; do 
+
+    cat ${TMP_DIR}/video-cleaned.html | while read line; do 
 		echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | cut -d'>' -f2 | sed 's/\<\/li$//g' >> $TMP_DIR/titles.txt
 	done
 
@@ -79,17 +80,16 @@ doGetWWDC2013 () {
 	# do the rm *.download only if files exist
 	FILES_LIST="$(ls "${WWDC_DIRNAME}"/PDFs/*.download 2>/dev/null)"
 	if [ -z "$FILES_LIST" ]; then
-		#echo "All downloads will go to your Documents/WWDC-2013 folder!"
+		# echo "Hello, de Lu!"
 		:
 	else
 		echo "Some download was aborted last time you ran this script."
 		rm "${WWDC_DIRNAME}"/PDFs/*.download	
 		echo "Cleaning non fully downloaded files: OK." 
 	fi
-
 	i=0
-	cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/2013/[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}\.pdf\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
-		session_number=`echo $line | grep -o -E '/[0-9]+.pdf' | grep -o -E [0-9]+`
+	cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'\/[0-9a-zA-Z]*\/[0-9]{1,5}\/([0-9]{1,5}|[0-9]{1,5}_.*)\.pdf\?dl=1+)"' | cut -d'"' -f2 | sed -e 's/_sd_/_/g' -e 's/.mov/.pdf/g' | while read line; do
+		session_number=`echo $line | grep -o -E '\/([0-9]+|[0-9]+_.*)\.pdf' | grep -o -E "[0-9]{3,4}"`
 		if [ ${SELECTIVE_SESSION_MODE} == true ];
 		then
 			if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
@@ -122,7 +122,7 @@ doGetWWDC2013 () {
 		((i+=1))
 	done
 
-	echo "******* DOWNLOADING ${FORMAT} VIDEOS ********"
+    echo "******* DOWNLOADING ${FORMAT} VIDEOS ********"
 
 	# Videos ${FORMAT}
 	mkdir -p "${WWDC_DIRNAME}"/${FORMAT}-VIDEOs
@@ -139,83 +139,61 @@ doGetWWDC2013 () {
 	fi
 
 	i=0
-	# TODO: This extra if then elif test should not be there (duplicated code), but I don't know so far how to use $FORMAT in the grep -o -E regex! :(
-	# Word boundaries should help like \<$FORMAT\>, but I'm not sure this is compliant with all grep versions. And I don't want to use egrep (non standard).
-	# I know even with if then, this can be improved in terms or number of code lines. But hey, I'm a Marketing guys. Sorry for the very quick and dirty bit :(((
-	if [ ${FORMAT} = "HD" ];
-	then
-		# TODO: / WARNING (for possible future doGetXXX2013 function merge): note that devstreaming url does use hard coded "wwdc" in it, were tech-talks function url is "techtalks" (whithout dash)
-		cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/2013/[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}-HD\.mov\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
-			session_number=`echo $line | grep -o -E '/[0-9]+-HD.mov' | grep -o -E [0-9]+`
-			if [ ${SELECTIVE_SESSION_MODE} == true ];
-			then
-				if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
-				then
-					dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
-					if [ -f "${dest_path}" ]
-					then
-						echo "${dest_path} already downloaded (nothing to do!)"
-					else
-						echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
+	# TODO: / WARNING (for possible future function merge): note that devstreaming url does use hard coded "wwdc" in it, were tech-talks function url is "techtalks" (whithout dash)
+    
+    if [ ${YEAR} = "2013" ];
+    then
+        REGEXFILE="[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}-${FORMAT}\.mov"
+    elif [ ${YEAR} = "2014" ];
+    then
+        if [ ${FORMAT} = "HD" ];
+        then
+            LC_FORMAT="hd"
+        else
+            LC_FORMAT="sd"
+        fi
+        REGEXFILE="[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}_${LC_FORMAT}_.*\.mov"
+    else
+        echo "coucou"
+    fi
 
-						curl $line > "${dest_path}.download"
+    cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'/'${REGEXFILE}'\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
 
-						mv "${dest_path}.download" "${dest_path}"
-					fi
-				fi
-			else
-				dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
-				if [ -f "${dest_path}" ]
-				then
-					echo "${dest_path} already downloaded (nothing to do!)"
-				else
-					echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
+    echo $line
+    session_number=`echo $line | grep -o -E '/[0-9]+-'${FORMAT}'.mov' | grep -o -E [0-9]+`
+        if [ ${SELECTIVE_SESSION_MODE} == true ];
+        then
+            if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
+            then
+                dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
+                if [ -f "${dest_path}" ]
+                then
+                    echo "${dest_path} already downloaded (nothing to do!)"
+                else
+                    echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
 
-					curl $line > "${dest_path}.download"
+                    curl $line > "${dest_path}.download"
 
-					mv "${dest_path}.download" "${dest_path}"
-				fi
-			fi
-			((i+=1))
-		done
-	elif [ ${FORMAT} = "SD" ];
-	then
-		cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/2013/[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}-SD\.mov\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
-			session_number=`echo $line | grep -o -E '/[0-9]+-SD.mov' | grep -o -E [0-9]+`
-			if [ ${SELECTIVE_SESSION_MODE} == true ];
-			then
-				if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
-				then
-					dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
-					if [ -f "${dest_path}" ]
-					then
-						echo "${dest_path} already downloaded (nothing to do!)"
-					else
-						echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
+                    mv "${dest_path}.download" "${dest_path}"
+                fi
+            fi
+        else
+            dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
+            if [ -f "${dest_path}" ]
+            then
+                echo "${dest_path} already downloaded (nothing to do!)"
+            else
+                echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
 
-						curl $line > "${dest_path}.download"
+                curl $line > "${dest_path}.download"
 
-						mv "${dest_path}.download" "${dest_path}"
-					fi
-				fi
-			else
-				dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
-				if [ -f "${dest_path}" ]
-				then
-					echo "${dest_path} already downloaded (nothing to do!)"
-				else
-					echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
-
-					curl $line > "${dest_path}.download"
-
-					mv "${dest_path}.download" "${dest_path}"
-				fi
-			fi
-			((i+=1))
-		done
-	fi
-
-	rm -Rf ${TMP_DIR}
+                mv "${dest_path}.download" "${dest_path}"
+            fi
+        fi
+        ((i+=1))
+    done
+exit
+    rm -Rf ${TMP_DIR}
 }
 
 #**************************************************************************************#
@@ -428,7 +406,7 @@ doGet2012 () {
 	ituneslogin=$1
 	itunespassword=$2
 	FORMAT=$3
-	echo "DEBUG: do 2012 (login=${ituneslogin} - password=${itunespassword} - format=${FORMAT})"
+	#echo "DEBUG: do 2012 (login=${ituneslogin} - password=${itunespassword} - format=${FORMAT})"
 	WWDC_DIRNAME="/Users/${USER}/Desktop/WWDC-2012"
 	TMP_DIR="/tmp/wwdc2012.tmp"
 	mkdir -p $TMP_DIR
@@ -461,41 +439,45 @@ while getopts ":hy:f:s:vo:e:" opt; do
   case $opt in
     h)
 	  	echo "WWDC Videos and PDFs downloader (version ${VERSION})" >&2
+        echo "Author: Olivier HO-A-CHUCK"
       	echo ""
 	  	echo "Usage: 	`basename $0` [options] <Apple dev login>"
 	  	echo "Options:"
-      	echo "	-y <year>: select year (ex: -y 2012). Default year is 2013" >&2
-      	echo "		Possible values for year: 2012, 2013, all" >&2
-      	echo "		Warning: year 2012 videos download is not yet available" >&2
+      	echo "	-y <year>: select year (ex: -y 2013). Default year is 2014" >&2
+      	echo "		Possible values for year: 2013 or 2014" >&2
+      	echo "		For info: year 2012 videos download is not yet available - to be honest, I'm too lazy to do it!" >&2
       	echo "	-e <event>: select event type between \"wwdc\" and \"tech-talks\"" >&2
       	echo "		default value is \"wwdc\"" >&2
       	echo "	-f <format>: select video format type (SD or HD). Default video format is SD" >&2
       	echo "	-s <comma separated session numbers>: select which sessions you want to download" >&2
       	echo "	-v : verbose mode" >&2
-      	echo "	-o <output path>: path where to download content (default is /Users/${USER}/Documents/WWDC-2013)" >&2
+      	echo "	-o <output path>: path where to download content (default is /Users/${USER}/Documents/WWDC-<selected year|default=2014>)" >&2
       	echo ""  >&2
-      	echo "Examples:"  >&2
-      	echo "	- Download all PDFs and SD videos for wwdc 2013:"  >&2
+        echo ""
+      	echo "Most common usage:"  >&2
+      	echo "	- Download all PDFs and SD videos for wwdc 2014:"  >&2
       	echo "  		`basename $0` john.doe@me.com"  >&2
+        echo ""
+      	echo "Other examples:"  >&2
       	echo "	- Download all PDFs and SD videos for tech-talks 2013:"  >&2
-      	echo "  		`basename $0` -e tech-talks john.doe@me.com"  >&2
-      	echo "	- Download all PDFs and HD videos for wwdc 2013:"  >&2
+      	echo "  		`basename $0` -y 2013 -e tech-talks john.doe@me.com"  >&2
+      	echo "	- Download all PDFs and HD videos for wwdc 2014:"  >&2
       	echo "  		`basename $0` -f HD john.doe@me.com"  >&2
-      	echo "	- Download only session 201, 400 and 401 with SD videos for wwdc 2013:"  >&2
+      	echo "	- Download only session 201, 400 and 401 with SD videos for wwdc 2014:"  >&2
       	echo "  		`basename $0` -s 201,400,401 john.doe@me.com"  >&2
-      	echo "	- Download only session 201 and 400 with HD video for wwdc 2013:"  >&2
+      	echo "	- Download only session 201 and 400 with HD video for wwdc 2014:"  >&2
       	echo "  		`basename $0` -s 201,400 -f HD john.doe@me.com"  >&2
-      	echo "	- Download all PDFs and HD videos for wwdc 2013 in /Users/oho/Documents/WWDC-SESSIONS using verbose mode:"  >&2
-      	echo "  		`basename $0` -v -f HD -o /Users/oho/Documents/WWDC-SESSIONS john.doe@me.com"  >&2
+      	echo "	- Download all PDFs and HD videos for wwdc 2014 in /Users/oho/Documents/WWDC-2014 using verbose mode:"  >&2
+      	echo "  		`basename $0` -v -f HD -o /Users/oho/Documents/WWDC-2014 john.doe@me.com"  >&2
       	echo ""
       	exit 0;
       	;;
     y)
-      	if [ $OPTARG = "2012" ] || [ $OPTARG = "2013" ] || [ $OPTARG = "all" ];
+      	if [ $OPTARG = "2012" ] || [ $OPTARG = "2013" ] || [ $OPTARG = "2014" ];
       	then
 	  		YEAR=$OPTARG
 	  	else
-	  		echo "Unknown specified year. Using ${YEAR}!"
+	  		echo "Unknown specified year. Using default (${YEAR})!"
 	  	fi
       	;;
     f)
@@ -542,6 +524,8 @@ while getopts ":hy:f:s:vo:e:" opt; do
   esac
 done
   
+WWDC_DIRNAME="/Users/${USER}/Documents/WWDC-${YEAR}"
+
 case "${YEAR}" in
 "2012")
 	read -r -s -p Password: itunespassword ; echo
@@ -551,21 +535,29 @@ case "${YEAR}" in
 	read -r -s -p Password: itunespassword ; echo
 	if [ ${EVENT} == "wwdc" ];
 	then
-		VIDEO_URL=${VIDEO_URL_WWDC}
-		doGetWWDC2013 ${ituneslogin} ${itunespassword} ${FORMAT}
+		VIDEO_URL=${VIDEO_URL_WWDC}/2013/
+		doGetWWDCPost2012 ${ituneslogin} ${itunespassword} ${FORMAT}
 	elif [ ${EVENT} == "tech-talks" ];
 	then
 		VIDEO_URL=${VIDEO_URL_TECHTALK}
 		doGetTT2013 ${ituneslogin} ${itunespassword} ${FORMAT}
 	fi
 	;;
-"all" | "ALL")
+"2014")
 	read -r -s -p Password: itunespassword ; echo
-	doGet2012 ${ituneslogin} ${itunespassword} ${FORMAT}
-	doGet2013 ${ituneslogin} ${itunespassword} ${FORMAT}
+	if [ ${EVENT} == "wwdc" ];
+	then
+		VIDEO_URL=${VIDEO_URL_WWDC}/2014/
+		doGetWWDCPost2012 ${ituneslogin} ${itunespassword} ${FORMAT}
+	elif [ ${EVENT} == "tech-talks" ];
+	then
+		#VIDEO_URL=${VIDEO_URL_TECHTALK}
+		#doGetTT2013 ${ituneslogin} ${itunespassword} ${FORMAT}
+        echo "No yet available session download other than 'wwdc' for 2014! Sorry man."
+	fi
 	;;
 *)
-	echo "Sorry: can't process requested year. Please choose between \"2012\", \"2013\" or \"all\"."
+	echo "Sorry: can't process requested year. Please choose between \"2012\", \"2013\" or \"2014\"."
 	;;
 esac
 
