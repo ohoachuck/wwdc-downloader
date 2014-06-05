@@ -39,10 +39,12 @@ Options:
 
 
 Most common usage:
+
 		- Download all PDFs and SD videos for wwdc 2014:
 			wwdcVideoPDFGet-curlVersion.sh john.doe@me.com
 
 Other examples:
+
 		- Download all PDFs and SD videos for tech-talks 2013:
 			wwdcVideoPDFGet-curlVersion.sh -y 2013 -e tech-talks john.doe@me.com
 		- Download all PDFs and HD videos for wwdc 2014:
