@@ -1,6 +1,13 @@
 WWDC 2014, 2013 & Tech-talks 2013 <br/>Videos and sessions PDFs downloader
 ================
 
+*****
+WARNING!!! THE SCRIPT CURRENTLY DOES MIX SESSIONS NAMES BECAUSE NOT ALL SESSION HAVE UPLOADED THEIR PRESENTATION PDFs FILES.
+I RECOMMEND TO WAIT A DAY OR 2 SO THAT EVERYTHING WILL BE UPLOADED AND THE SCRIPT SHOULD WORK JUST FINE.
+IF APPLE DECIDE NOT TO UPLOAD PDF FOR ALL SESSIONS, THE I WILL UPDATE THE SCRIPT TO GET ONLY SD OR HD VIDEOS WITHOUT PDF.
+*****
+
+
 This script is a bash script that should **work out of the box** without any needs of extra software or development package.
 
 It's main purpose is to let you (as an Apple registered developer) bulk download all WWDC videos and session presentations (pdf) in one shot.
