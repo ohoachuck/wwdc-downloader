@@ -11,7 +11,7 @@ Video resources and PDFs for 2013 take about 52GB of disk space for HD videos (h
 
 The spirit of the script is to be working on everybody's mac environment without need of special tools. That's why it is based on curl (vs wget).
 
-Your password is not displayed on the screen nor store locally. It is used to login within Apple developer portal using http**s** as you would do from the web (you can see it in ligne 54 or line 229).
+Your password is not displayed on the screen nor store locally. It is used to login within Apple developer portal using **https** as you would do from the web (you can see it in ligne 54 or line 229).
 
 Note: I know the script name is crap, but believe me, if you knew me you'll know that it could have been even worse ... :)
 
@@ -24,32 +24,34 @@ You will be prompted for your Apple Developer password then WWDC 2014 SD videos 
 You can try `wwdcVideoPDFGet-curlVersion.sh -h` for more options.
 
 Usage: 	wwdcVideoPDFGet-curlVersion.sh [options] <Apple dev login>
+
 Options:
-	-y <year>: select year (ex: -y 2013). Default year is 2014
+
+		-y <year>: select year (ex: -y 2013). Default year is 2014
 		Possible values for year: 2013 or 2014
 		For info: year 2012 videos download is not yet available - to be honest, I'm too lazy to do it!
-	-e <event>: select event type between "wwdc" and "tech-talks"
+		-e <event>: select event type between "wwdc" and "tech-talks"
 		default value is "wwdc"
-	-f <format>: select video format type (SD or HD). Default video format is SD
-	-s <comma separated session numbers>: select which sessions you want to download
-	-v : verbose mode
-	-o <output path>: path where to download content (default is /Users/oho/Documents/WWDC-<selected year|default=2014>)
+		-f <format>: select video format type (SD or HD). Default video format is SD
+		-s <comma separated session numbers>: select which sessions you want to download
+		-v : verbose mode
+		-o <output path>: path where to download content (default is /Users/oho/Documents/WWDC-<selected year|default=2014>)
 
 
 Most common usage:
-	- Download all PDFs and SD videos for wwdc 2014:
+		- Download all PDFs and SD videos for wwdc 2014:
 			wwdcVideoPDFGet-curlVersion.sh john.doe@me.com
 
 Other examples:
-	- Download all PDFs and SD videos for tech-talks 2013:
+		- Download all PDFs and SD videos for tech-talks 2013:
 			wwdcVideoPDFGet-curlVersion.sh -y 2013 -e tech-talks john.doe@me.com
-	- Download all PDFs and HD videos for wwdc 2014:
+		- Download all PDFs and HD videos for wwdc 2014:
 			wwdcVideoPDFGet-curlVersion.sh -f HD john.doe@me.com
-	- Download only session 201, 400 and 401 with SD videos for wwdc 2014:
+		- Download only session 201, 400 and 401 with SD videos for wwdc 2014:
 			wwdcVideoPDFGet-curlVersion.sh -s 201,400,401 john.doe@me.com
-	- Download only session 201 and 400 with HD video for wwdc 2014:
+		- 	Download only session 201 and 400 with HD video for wwdc 2014:
 			wwdcVideoPDFGet-curlVersion.sh -s 201,400 -f HD john.doe@me.com
-	- Download all PDFs and HD videos for wwdc 2014 in /Users/oho/Documents/WWDC-2014 using verbose mode:
+		- Download all PDFs and HD videos for wwdc 2014 in /Users/oho/Documents/WWDC-2014 using verbose mode:
 			wwdcVideoPDFGet-curlVersion.sh -v -f HD -o /Users/oho/Documents/WWDC-2014 john.doe@me.com
 		
 
