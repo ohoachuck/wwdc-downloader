@@ -19,7 +19,6 @@ DEFAULT_EVENT="wwdc"
 SELECTIVE_SESSION_MODE=false
 VERBOSE=false
 TMP_DIR="/tmp/wwdc-session.tmp"
-WWDC_DIRNAME="/Users/${USER}/Documents/WWDC-SESSIONS"
 VIDEO_URL_WWDC="https://developer.apple.com/videos/wwdc"
 VIDEO_URL_TECHTALK="https://developer.apple.com/tech-talks/videos/"
 
@@ -407,7 +406,6 @@ doGet2012 () {
 	itunespassword=$2
 	FORMAT=$3
 	#echo "DEBUG: do 2012 (login=${ituneslogin} - password=${itunespassword} - format=${FORMAT})"
-	WWDC_DIRNAME="/Users/${USER}/Desktop/WWDC-2012"
 	TMP_DIR="/tmp/wwdc2012.tmp"
 	mkdir -p $TMP_DIR
 
@@ -524,7 +522,7 @@ while getopts ":hy:f:s:vo:e:" opt; do
   esac
 done
   
-WWDC_DIRNAME="/Users/${USER}/Documents/WWDC-${YEAR}"
+WWDC_DIRNAME=${WWDC_DIRNAME:-"/Users/${USER}/Documents/WWDC-${YEAR}"}
 
 case "${YEAR}" in
 "2012")
