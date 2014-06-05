@@ -35,7 +35,7 @@ Options:
 		-f <format>: select video format type (SD or HD). Default video format is SD
 		-s <comma separated session numbers>: select which sessions you want to download
 		-v : verbose mode
-		-o <output path>: path where to download content (default is /Users/oho/Documents/WWDC-<selected year|default=2014>)
+		-o <output path>: path where to download content (default is /Users/<your user>/Documents/WWDC-<selected year|default=2014>)
 
 
 Most common usage:
@@ -53,8 +53,8 @@ Other examples:
 			wwdcVideoPDFGet-curlVersion.sh -s 201,400,401 john.doe@me.com
 		- 	Download only session 201 and 400 with HD video for wwdc 2014:
 			wwdcVideoPDFGet-curlVersion.sh -s 201,400 -f HD john.doe@me.com
-		- Download all PDFs and HD videos for wwdc 2014 in /Users/oho/Documents/WWDC-2014 using verbose mode:
-			wwdcVideoPDFGet-curlVersion.sh -v -f HD -o /Users/oho/Documents/WWDC-2014 john.doe@me.com
+		- Download all PDFs and HD videos for wwdc 2014 in /Users/<your user>/Documents/WWDC-2014 using verbose mode:
+			wwdcVideoPDFGet-curlVersion.sh -v -f HD -o /Users/<your user>/Documents/WWDC-2014 john.doe@me.com
 		
 
 More information on http://blog.hoachuck.biz/blog/2013/06/15/script-to-download-wwdc-2013-videos/
