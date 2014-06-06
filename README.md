@@ -2,7 +2,7 @@ WWDC 2014, 2013 & Tech-talks 2013 <br/>Videos and sessions PDFs downloader
 ================
 
 *****
-LAST MINUTES INFO:
+LAST MINUTE INFO:
 
 THE SCRIPT IS FINALY OPERATIONAL. SOME WORKAROUND HAVE BEEN FOUND TO BYPASS THE FACT THAT APPLE HAVE NOT YET UPLOADED ALL SESSIONS.
 ENJOY!
@@ -11,13 +11,13 @@ ENJOY!
 
 This script is a bash script that should **work out of the box** without any needs of extra software or development package.
 
-It's main purpose is to let you (as an Apple registered developer) bulk download all WWDC videos and session presentations (pdf) in one shot.
+Its main purpose is to let you (as an Apple registered developer) bulk download all WWDC videos and session presentations (pdf) in one shot.
 Current script version does support **WWDC 2014**, WWDC 2013 and Tech Talk 2013.
 Using options, you can choose to retrieve HD or SD videos and set destination folder.
 
-Video resources and PDFs for 2013 take about 52GB of disk space for HD videos (half of it for SD), so if for some reason you do not have downloaded it in one shot, the script take it back when it have been stopped and does not download again everything. I still have to figure out how big will be WWDC 2014 sessions (not yet closed when I'm writing this).
+Video resources and PDFs for 2013 take about 52GB of disk space for HD videos (half of it for SD), so if for some reason you do not have downloaded it in one shot, the script will resume where you left off and does not download again everything. I still have to figure out how big WWDC 2014 sessions will be (not yet finished as of writing).
 
-The spirit of the script is to be working on everybody's mac environment without need of special tools. That's why it is based on curl (vs wget).
+The spirit of the script is to be working on everybody's Mac environment without need of special tools. That's why it is based on curl (vs wget).
 
 Your password is not displayed on the screen nor store locally. It is used to login within Apple developer portal using **https** as you would do from the web (you can see it in ligne 54 or line 229).
 
@@ -68,11 +68,11 @@ Other examples:
 More information on http://blog.hoachuck.biz/blog/2013/06/15/script-to-download-wwdc-2013-videos/
 
 ### Add-ons
-If you have Alfred 2, there is a workflow to search for sessions by title name or alternatively search in session speach transcription with asciwwdc.com.
+If you have Alfred 2, there is a workflow to search for sessions by title name or alternatively search in session speach transcription with [asciiwwdc.com](http://asciiwwdc.com).
 
 
 ### Requirements
 Works on MAC OS X.
 
-Should be working on Linux systems (as long as you change output directory): never tested!
+Should also work on Linux systems (as long as you change output directory): never tested!
 
