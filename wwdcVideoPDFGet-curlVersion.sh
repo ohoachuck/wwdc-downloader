@@ -87,7 +87,10 @@ doGetWWDCPost2012 () {
 		echo "Cleaning non fully downloaded files: OK." 
 	fi
 	i=0
-	cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'\/[0-9a-zA-Z]*\/[0-9]{1,5}\/([0-9]{1,5}|[0-9]{1,5}_.*)\.pdf\?dl=1+)"' | cut -d'"' -f2 | sed -e 's/_sd_/_/g' -e 's/.mov/.pdf/g' | while read line; do
+	cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'\/[0-9a-zA-Z]*\/[0-9]{1,5}\/([0-9]{1,5}|[0-9]{1,5}_.*)\.pdf\?dl=1+)"' | cut -d'"' -f2 | sed -e 's/_sd_/_/g' -e 's/.mov/.pdf/g' | while read line; do    
+
+        filename=`echo ${line} | cut -d'/' -f9 | cut -d'?' -f1`
+
 		session_number=`echo $line | grep -o -E '\/([0-9]+|[0-9]+_.*)\.pdf' | grep -o -E "[0-9]{3,4}"`
 		if [ ${SELECTIVE_SESSION_MODE} == true ];
 		then
@@ -106,7 +109,9 @@ doGetWWDCPost2012 () {
 				fi
 			fi
 		else
-			dest_path="${WWDC_DIRNAME}/PDFs/${session_number} - ${title_array[$i]}.pdf"
+			#dest_path="${WWDC_DIRNAME}/PDFs/${session_number} - ${title_array[$i]}.pdf"
+			dest_path="${WWDC_DIRNAME}/PDFs/${filename}"
+            
 			if [ -f "${dest_path}" ]
 			then
 				echo "${dest_path} already downloaded (nothing to do!)"
@@ -158,8 +163,10 @@ doGetWWDCPost2012 () {
 
     cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'/'${REGEXFILE}'\?dl=1+)"' | cut -d'"' -f2 | while read line; do 
 
-    echo $line
-    session_number=`echo $line | grep -o -i -E '/[0-9]+[_-]'${FORMAT}'[^/]*.mov' | grep -o -E '[0-9]+' | head -1`
+        #echo $line
+        filename=`echo ${line} | cut -d'/' -f9 | cut -d'?' -f1`
+
+        session_number=`echo $line | grep -o -i -E '/[0-9]+[_-]'${FORMAT}'[^/]*.mov' | grep -o -E '[0-9]+' | head -1`
         if [ ${SELECTIVE_SESSION_MODE} == true ];
         then
             if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
@@ -177,7 +184,9 @@ doGetWWDCPost2012 () {
                 fi
             fi
         else
-            dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
+            #dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
+            dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${filename}"
+
             if [ -f "${dest_path}" ]
             then
                 echo "${dest_path} already downloaded (nothing to do!)"
@@ -191,7 +200,7 @@ doGetWWDCPost2012 () {
         fi
         ((i+=1))
     done
-exit
+
     rm -Rf ${TMP_DIR}
 }
 
