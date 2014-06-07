@@ -1,10 +1,10 @@
 #!/bin/sh
 
 # Author: Olivier HO-A-CHUCK
-# Date: June 27th 2013 (update June 5th 2014)
+# Date: June 27th 2013 (update June 7th 2014)
 # License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
-# Usage: wwdcVideoGet-curlVersion.sh <Apple-dev-account-login>
-# To get 2013 tech-talks content: ./wwdcVideoGet-curlVersion.sh -e tech-talks <Apple-dev-account-login>
+# Usage: wwdcVideoGet-curlVersion.sh
+# To get 2013 tech-talks content: ./wwdcVideoGet-curlVersion.sh -e tech-talks
 #
 # TODO: 
 #	- make 2012 videos download possible (it's feasible but more painful than for 2013 and 2014, so time consuming...)
@@ -12,12 +12,14 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.4"
+VERSION="1.5"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2014"
 DEFAULT_EVENT="wwdc"
 SELECTIVE_SESSION_MODE=false
 VERBOSE=false
+LOGIN=false
+ITUNES_LOGIN=""
 TMP_DIR="/tmp/wwdc-session.tmp"
 VIDEO_URL_WWDC="https://developer.apple.com/videos/wwdc"
 VIDEO_URL_TECHTALK="https://developer.apple.com/tech-talks/videos/"
@@ -36,25 +38,32 @@ doGetWWDCPost2012 () {
 	fi
 
 	mkdir -p $TMP_DIR
-	# Dynamically get the key value as this can change (it did change for instance when Apple had to turn down their developer Portal for a week)
-	if [ ${VERBOSE} == true ];
-	then
-		echo "Getting appIDKey..."
-	fi
-	key=$(curl -s -L https://developer.apple.com/iphone | grep 'login?&appIdKey=' | sed -e 's/\(.*login?&appIdKey=\)\(.*\)\(&.*\)/\2/' | awk 'NR==1 {print $1}')
-	if [ ${VERBOSE} == true ];
-	then
-		echo "appIDKey: ${key}"	
-	fi
-	cookies=(--cookies=on --keep-session-cookies)
+    
+    if [ -z "${ituneslogin}" ];
+    then
+        # Dynamically get the key value as this can change (it did change for instance when Apple had to turn down their developer Portal for a week)
+        if [ ${VERBOSE} == true ];
+        then
+            echo "Getting appIDKey..."
+        fi
+        key=$(curl -s -L https://developer.apple.com/iphone | grep 'login?&appIdKey=' | sed -e 's/\(.*login?&appIdKey=\)\(.*\)\(&.*\)/\2/' | awk 'NR==1 {print $1}')
+        if [ ${VERBOSE} == true ];
+        then
+            echo "appIDKey: ${key}"	
+        fi
+        cookies=(--cookies=on --keep-session-cookies)
 
-	action=$(curl -s 'https://daw.apple.com/cgi-bin/WebObjects/DSAuthWeb.woa/wa/login?appIdKey='"${key}" | grep '\ action=' | awk '{ print $4 }' | cut -f2 -d"=" | sed -e "s/^.*\"\(.*\)\".*$/\1/") 
+        action=$(curl -s 'https://daw.apple.com/cgi-bin/WebObjects/DSAuthWeb.woa/wa/login?appIdKey='"${key}" | grep '\ action=' | awk '{ print $4 }' | cut -f2 -d"=" | sed -e "s/^.*\"\(.*\)\".*$/\1/") 
 
-	curl -s --cookie-jar $TMP_DIR/cookies.txt "https://daw.apple.com${action}" -d theAccountName="${ituneslogin}" -d theAccountPW="${itunespassword}" > /dev/null 
+        curl -s --cookie-jar $TMP_DIR/cookies.txt "https://daw.apple.com${action}" -d theAccountName="${ituneslogin}" -d theAccountPW="${itunespassword}" > /dev/null 
 
-	curl  -s --cookie $TMP_DIR/cookies.txt \
-		 --cookie-jar $TMP_DIR/cookies.txt \
-		 ${VIDEO_URL} > $TMP_DIR/video.html
+        curl  -s --cookie $TMP_DIR/cookies.txt \
+             --cookie-jar $TMP_DIR/cookies.txt \
+             ${VIDEO_URL} > $TMP_DIR/video.html
+    else
+        curl ${VIDEO_URL} > $TMP_DIR/video.html
+    fi
+
 
     cat ${TMP_DIR}/video.html | sed -e '/class="thumbnail-title/,/<div class="error">/!d' > $TMP_DIR/video-cleaned.html
 
@@ -150,7 +159,7 @@ doGetWWDCPost2012 () {
         REGEXFILE="[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}-${FORMAT}\.mov"
     elif [ ${YEAR} = "2014" ];
     then
-        if [ ${FORMAT} = "HD" ];
+        if [ "${FORMAT}" = "HD" ];
         then
             LC_FORMAT="hd"
         else
@@ -429,26 +438,26 @@ doGet2012 () {
 #######                      		   MAIN 									##########
 ##########################################################################################
 
-if [ $# -eq "0" ]
-then
-  echo "WWDC videos and PDFs downloader (version ${VERSION})" >&2
-  echo "Usage: `basename $0` [options] <Apple dev login>"
-  echo "Please use -h for more options"
-  exit 1
-fi
+#if [ $# -eq "0" ]
+#then
+#  echo "WWDC videos and PDFs downloader (version ${VERSION})" >&2
+#  echo "Usage: `basename $0` [options] <Apple dev login>"
+#  echo "Please use -h for more options"
+#  exit 1
+#fi
 
 ituneslogin=${@: -1}
 FORMAT=${DEFAULT_FORMAT}
 YEAR=${DEFAULT_YEAR}
 EVENT=${DEFAULT_EVENT}
 
-while getopts ":hy:f:s:vo:e:" opt; do
+while getopts ":hl:y:f:s:vo:e:" opt; do
   case $opt in
     h)
 	  	echo "WWDC Videos and PDFs downloader (version ${VERSION})" >&2
-        echo "Author: Olivier HO-A-CHUCK"
+        echo "Author: Olivier HO-A-CHUCK (http://blog.hoachuck.biz)"
       	echo ""
-	  	echo "Usage: 	`basename $0` [options] <Apple dev login>"
+	  	echo "Usage: 	`basename $0` [options]"
 	  	echo "Options:"
       	echo "	-y <year>: select year (ex: -y 2013). Default year is 2014" >&2
       	echo "		Possible values for year: 2013 or 2014" >&2
@@ -459,26 +468,33 @@ while getopts ":hy:f:s:vo:e:" opt; do
       	echo "	-s <comma separated session numbers>: select which sessions you want to download" >&2
       	echo "	-v : verbose mode" >&2
       	echo "	-o <output path>: path where to download content (default is /Users/${USER}/Documents/WWDC-<selected year|default=2014>)" >&2
+      	echo "	-l <iTunes login>: Give your Developer portal login (so far you don't need to login anymore (Apple bug?). If this does change, please use -l option)." >&2
       	echo ""  >&2
         echo ""
       	echo "Most common usage:"  >&2
       	echo "	- Download all PDFs and SD videos for wwdc 2014:"  >&2
-      	echo "  		`basename $0` john.doe@me.com"  >&2
+      	echo "  		`basename $0`"  >&2
         echo ""
       	echo "Other examples:"  >&2
+      	echo "	- Download all PDFs and SD videos for wwdc 2014 if Apple change his mind and ask for login:" >&2
+        echo "  		`basename $0` -l john.doe@me.com"  >&2
       	echo "	- Download all PDFs and SD videos for tech-talks 2013:"  >&2
-      	echo "  		`basename $0` -y 2013 -e tech-talks john.doe@me.com"  >&2
+      	echo "  		`basename $0` -y 2013 -e tech-talks -l john.doe@me.com"  >&2
       	echo "	- Download all PDFs and HD videos for wwdc 2014:"  >&2
-      	echo "  		`basename $0` -f HD john.doe@me.com"  >&2
+      	echo "  		`basename $0` -f HD -l john.doe@me.com"  >&2
       	echo "	- Download only session 201, 400 and 401 with SD videos for wwdc 2014:"  >&2
-      	echo "  		`basename $0` -s 201,400,401 john.doe@me.com"  >&2
+      	echo "  		`basename $0` -s 201,400,401 -l john.doe@me.com"  >&2
       	echo "	- Download only session 201 and 400 with HD video for wwdc 2014:"  >&2
-      	echo "  		`basename $0` -s 201,400 -f HD john.doe@me.com"  >&2
+      	echo "  		`basename $0` -s 201,400 -f HD -l john.doe@me.com"  >&2
       	echo "	- Download all PDFs and HD videos for wwdc 2014 in /Users/oho/Documents/WWDC-2014 using verbose mode:"  >&2
-      	echo "  		`basename $0` -v -f HD -o /Users/oho/Documents/WWDC-2014 john.doe@me.com"  >&2
+      	echo "  		`basename $0` -v -f HD -o /Users/oho/Documents/WWDC-2014 -l john.doe@me.com"  >&2
       	echo ""
       	exit 0;
       	;;
+    l)
+	  	ITUNES_LOGIN=${OPTARG}
+        LOGIN=true
+	  	;;
     y)
       	if [ $OPTARG = "2012" ] || [ $OPTARG = "2013" ] || [ $OPTARG = "2014" ];
       	then
@@ -535,11 +551,39 @@ WWDC_DIRNAME=${WWDC_DIRNAME:-"/Users/${USER}/Documents/WWDC-${YEAR}"}
 
 case "${YEAR}" in
 "2012")
-	read -r -s -p Password: itunespassword ; echo
+    if [ -z ${ITUNES_LOGIN} ];
+    then   
+        read -r -p Login: ituneslogin ; echo
+    fi
+    if $LOGIN ;
+    then
+        read -r -s -p Password: itunespassword ; echo
+    else
+        echo ""
+        echo "Using 'no password' mode (this is possible since WWDC 2014 sessions addition => Apple bug ?)!"
+        echo "try using -l option if download does not work."
+        echo ""
+        ituneslogin="<no-login>"
+        itunespassword="<no-password>"
+    fi
 	doGet2012 ${ituneslogin} ${itunespassword} ${FORMAT}
 	;;
 "2013")
-	read -r -s -p Password: itunespassword ; echo
+    #if [ -z ${ITUNES_LOGIN} ];
+    #then   
+    #    read -r -p Login: ituneslogin ; echo
+    #fi
+    if $LOGIN ;
+    then
+        read -r -s -p Password: itunespassword ; echo
+    else
+        echo ""
+        echo "Using 'no password' mode (this is possible since WWDC 2014 sessions addition => Apple bug ?)!"
+        echo "try using -l option if download does not work."
+        echo ""
+        ituneslogin="<no-login>"
+        itunespassword="<no-password>"
+    fi
 	if [ ${EVENT} == "wwdc" ];
 	then
 		VIDEO_URL=${VIDEO_URL_WWDC}/2013/
@@ -551,7 +595,17 @@ case "${YEAR}" in
 	fi
 	;;
 "2014")
-	read -r -s -p Password: itunespassword ; echo
+    if $LOGIN ;
+    then
+        read -r -s -p Password: itunespassword ; echo
+    else
+        echo ""
+        echo "Using 'no password' mode (this is possible since WWDC 2014 sessions addition => Apple bug ?)!"
+        echo "try using -l option if download does not work."
+        echo ""
+        ituneslogin="<no-login>"
+        itunespassword="<no-password>"
+    fi
 	if [ ${EVENT} == "wwdc" ];
 	then
 		VIDEO_URL=${VIDEO_URL_WWDC}/2014/
