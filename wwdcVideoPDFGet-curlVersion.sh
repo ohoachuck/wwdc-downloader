@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # Author: Olivier HO-A-CHUCK
-# Date: June 27th 2013 (update June 7th 2014)
+# Date: June 27th 2013 (update June 12th 2014)
+# Last update: bring better file naming anf fix possible issue on per session download
 # License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
 # Usage: wwdcVideoGet-curlVersion.sh
 # To get 2013 tech-talks content: ./wwdcVideoGet-curlVersion.sh -e tech-talks
@@ -12,7 +13,7 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.5"
+VERSION="1.6"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2014"
 DEFAULT_EVENT="wwdc"
@@ -70,14 +71,18 @@ doGetWWDCPost2012 () {
 	if [ -f ${TMP_DIR}/titles.txt ] ; then
 		rm ${TMP_DIR}/titles.txt
 	fi
-
     cat ${TMP_DIR}/video-cleaned.html | while read line; do 
-		echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | cut -d'>' -f2 | sed 's/\<\/li$//g' >> $TMP_DIR/titles.txt
+		sessionNum=`echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | grep -o -E 'Session [0-9]*' | cut -d' ' -f2`
+        title_array[$sessionNum]=`echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | cut -d'>' -f2 | sed 's/\<\/li$//g'`
+        echo "$sessionNum,${title_array[$sessionNum]}" >> $TMP_DIR/titles.txt
 	done
+    `sed -n '/^,/!p' $TMP_DIR/titles.txt > $TMP_DIR/titles.txt.tmp && mv $TMP_DIR/titles.txt.tmp $TMP_DIR/titles.txt` 
 
 	while read line
 	do
-		title_array+=("$line")
+        sessionNum=`echo $line | cut -d',' -f1`
+        sessionTitle=`echo $line | cut -d',' -f2`
+		title_array[$sessionNum]=${sessionTitle}
 	done < ${TMP_DIR}/titles.txt
 
 	echo "******* DOWNLOADING PDF FILES ********"
@@ -105,7 +110,7 @@ doGetWWDCPost2012 () {
 		then
 			if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
 			then
-				dest_path="${WWDC_DIRNAME}/PDFs/${session_number} - ${title_array[$i]}.pdf"
+				dest_path="${WWDC_DIRNAME}/PDFs/${session_number} - ${title_array[$session_number]}.pdf"
 				if [ -f "${dest_path}" ]
 				then
 					echo "${dest_path} already downloaded (nothing to do!)"
@@ -118,8 +123,8 @@ doGetWWDCPost2012 () {
 				fi
 			fi
 		else
-			#dest_path="${WWDC_DIRNAME}/PDFs/${session_number} - ${title_array[$i]}.pdf"
-			dest_path="${WWDC_DIRNAME}/PDFs/${filename}"
+			dest_path="${WWDC_DIRNAME}/PDFs/${session_number} - ${title_array[$session_number]}.pdf"
+			#dest_path="${WWDC_DIRNAME}/PDFs/${filename}"
             
 			if [ -f "${dest_path}" ]
 			then
@@ -180,7 +185,7 @@ doGetWWDCPost2012 () {
         then
             if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
             then
-                dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
+                dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$session_number]}-${FORMAT}.mov"
                 if [ -f "${dest_path}" ]
                 then
                     echo "${dest_path} already downloaded (nothing to do!)"
@@ -193,8 +198,8 @@ doGetWWDCPost2012 () {
                 fi
             fi
         else
-            #dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$i]}-${FORMAT}.mov"
-            dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${filename}"
+            dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$session_number]}-${FORMAT}.mov"
+            #dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${filename}"
 
             if [ -f "${dest_path}" ]
             then
