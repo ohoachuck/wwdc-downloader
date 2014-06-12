@@ -2,7 +2,7 @@
 
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013 (update June 12th 2014)
-# Last update: bring better file naming anf fix possible issue on per session download
+# Last update: bring better file naming anf fix possible issue on per session download + rename file with old naming
 # License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
 # Usage: wwdcVideoGet-curlVersion.sh
 # To get 2013 tech-talks content: ./wwdcVideoGet-curlVersion.sh -e tech-talks
@@ -13,7 +13,7 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.6"
+VERSION="1.7"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2014"
 DEFAULT_EVENT="wwdc"
@@ -111,9 +111,14 @@ doGetWWDCPost2012 () {
 			if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
 			then
 				dest_path="${WWDC_DIRNAME}/PDFs/${session_number} - ${title_array[$session_number]}.pdf"
-				if [ -f "${dest_path}" ]
+                old_dest_path="${WWDC_DIRNAME}/PDFs/${filename}"
+				if [ -f "${dest_path}" ];
 				then
 					echo "${dest_path} already downloaded (nothing to do!)"
+                elif  [ -f "${old_dest_path}" ];
+                then
+                    echo "Rename existing file: ${old_dest_path} => ${dest_path}"
+                    mv  "${old_dest_path}" "${dest_path}"                    
 				else
 					echo "downloading PDF for session ${session_number}: $line" 
 
@@ -124,11 +129,15 @@ doGetWWDCPost2012 () {
 			fi
 		else
 			dest_path="${WWDC_DIRNAME}/PDFs/${session_number} - ${title_array[$session_number]}.pdf"
-			#dest_path="${WWDC_DIRNAME}/PDFs/${filename}"
+			old_dest_path="${WWDC_DIRNAME}/PDFs/${filename}"
             
-			if [ -f "${dest_path}" ]
+			if [ -f "${dest_path}" ];
 			then
 				echo "${dest_path} already downloaded (nothing to do!)"
+            elif  [ -f "${old_dest_path}" ];
+            then
+                echo "Rename existing file: ${old_dest_path} => ${dest_path}"
+                mv  "${old_dest_path}" "${dest_path}"
 			else
 				echo "downloading PDF for session ${session_number}: $line" 
 
@@ -186,9 +195,14 @@ doGetWWDCPost2012 () {
             if `echo ${SESSION_WANTED} | grep "${session_number}" 1>/dev/null 2>&1`
             then
                 dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$session_number]}-${FORMAT}.mov"
+                old_dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${filename}"
                 if [ -f "${dest_path}" ]
                 then
                     echo "${dest_path} already downloaded (nothing to do!)"
+                elif  [ -f "${old_dest_path}" ];
+                then
+                    echo "Rename existing file: ${old_dest_path} => ${dest_path}"
+                    mv  "${old_dest_path}" "${dest_path}"
                 else
                     echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
 
@@ -199,11 +213,15 @@ doGetWWDCPost2012 () {
             fi
         else
             dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${session_number} - ${title_array[$session_number]}-${FORMAT}.mov"
-            #dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${filename}"
+            old_dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${filename}"
 
             if [ -f "${dest_path}" ]
             then
                 echo "${dest_path} already downloaded (nothing to do!)"
+            elif  [ -f "${old_dest_path}" ];
+            then
+                echo "Rename existing file: ${old_dest_path} => ${dest_path}"
+                mv  "${old_dest_path}" "${dest_path}"
             else
                 echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
 
