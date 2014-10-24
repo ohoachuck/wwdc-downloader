@@ -73,7 +73,7 @@ doGetWWDCPost2012 () {
 	fi
     cat ${TMP_DIR}/video-cleaned.html | while read line; do 
 		sessionNum=`echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | grep -o -E 'Session [0-9]*' | cut -d' ' -f2`
-        title_array[$sessionNum]=`echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | cut -d'>' -f2 | sed 's/\<\/li$//g'`
+        title_array[$sessionNum]=`echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | cut -d'>' -f2 | sed 's/<\/li$//g'`
         echo "$sessionNum,${title_array[$sessionNum]}" >> $TMP_DIR/titles.txt
 	done
     `sed -n '/^,/!p' $TMP_DIR/titles.txt > $TMP_DIR/titles.txt.tmp && mv $TMP_DIR/titles.txt.tmp $TMP_DIR/titles.txt` 
