@@ -2,7 +2,7 @@
 
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013 (update June 10th 2015)
-# Last update: Add wwdc 2015 video download
+# Last update: Add wwdc 2015 video download (+ fixed issue with "Managing 3D Assets with Model I/O" session label).
 # License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
 # Usage: wwdcVideoGet-curlVersion.sh
 # To get 2013 tech-talks content: ./wwdcVideoGet-curlVersion.sh -e tech-talks
@@ -13,7 +13,7 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.8"
+VERSION="1.8.1"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2015"
 DEFAULT_EVENT="wwdc"
@@ -74,7 +74,7 @@ doGetWWDCPost2012 () {
 	fi
     cat ${TMP_DIR}/video-cleaned.html | while read line; do 
 		sessionNum=`echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | grep -o -E 'Session [0-9]*' | cut -d' ' -f2`
-        title_array[$sessionNum]=`echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | cut -d'>' -f2 | sed 's/\<\/li$//g'`
+        title_array[$sessionNum]=`echo $line | grep -o -E '<li class="thumbnail-title">(.*)</li><li class="thumbnail-(id|play)">(.*)</li>' | cut -d'>' -f2 | sed 's/<\/li$//g'`
         echo "$sessionNum,${title_array[$sessionNum]}" >> $TMP_DIR/titles.txt
 	done
     `sed -n '/^,/!p' $TMP_DIR/titles.txt > $TMP_DIR/titles.txt.tmp && mv $TMP_DIR/titles.txt.tmp $TMP_DIR/titles.txt` 
@@ -517,6 +517,13 @@ doGetWWDC2015 () {
     `sed '/^,/d' $TMP_DIR/titles.txt > $TMP_DIR/titles.txt.tmp && mv $TMP_DIR/titles.txt.tmp $TMP_DIR/titles.txt` 
 
 
+    # escape special char for downloading issues (ex: I/O string)
+    # Ok this is dirty, but quick ! ;)
+    mv ${TMP_DIR}/titles.txt ${TMP_DIR}/titles-to-be-escaped.txt 
+    sed -e 's/\//\-/g' ${TMP_DIR}/titles-to-be-escaped.txt > ${TMP_DIR}/titles.txt
+    mv ${TMP_DIR}/titles.txt ${TMP_DIR}/titles-to-be-escaped.txt 
+    sed -e 's/&/AND/g' ${TMP_DIR}/titles-to-be-escaped.txt > ${TMP_DIR}/titles.txt
+
 
     while read line
 	do
@@ -537,7 +544,6 @@ doGetWWDC2015 () {
         done;
         exit
     fi
-
 
     echo "******* DOWNLOADING ${FORMAT} VIDEOS ********"
 
@@ -826,4 +832,4 @@ case "${YEAR}" in
 	;;
 esac
 
-exit 0;
+exit 0
