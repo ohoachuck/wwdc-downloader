@@ -69,3 +69,5 @@ Works on MAC OS X.
 
 Should also work on Linux systems (as long as you change output directory): never tested!
 
+### Related content
+You might want to discover the great **WWDC mac app** from Guilherme Rambo:  https://github.com/insidegui/WWDC
