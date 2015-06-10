@@ -595,7 +595,7 @@ doGetWWDC2015 () {
             if [ -f "${dest_path}" ]
             then
                 echo "${dest_path} already downloaded (nothing to do!)"
-            elsevideoURL
+            else
                 echo "downloading ${FORMAT} Video for session ${line}: ${title_array[$line]}" 
 
                 curl "${videoURL}" > "${dest_path}.download"
@@ -627,7 +627,7 @@ FORMAT=${DEFAULT_FORMAT}
 YEAR=${DEFAULT_YEAR}
 EVENT=${DEFAULT_EVENT}
 
-while getopts ":hl:y:f:s:vo:e:" opt; do
+while getopts ":hl:y:f:s:vLo:e:" opt; do
   case $opt in
     h)
 	  	echo "WWDC Videos and PDFs downloader (version ${VERSION})" >&2
@@ -702,6 +702,9 @@ while getopts ":hl:y:f:s:vo:e:" opt; do
     v)
       	echo "Verbose mode on"
       	VERBOSE=true
+      	;;
+    L)
+      	LIST_MODE=true
       	;;
     o)
 	  	WWDC_DIRNAME=${OPTARG}
