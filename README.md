@@ -8,6 +8,8 @@ This script is a bash script that should **work out of the box** without any nee
 Its main purpose is to let you bulk download all WWDC videos and session presentations (pdf) in one shot.
 Current script version does support **WWDC 2015**, WWDC 2014, WWDC 2013 and Tech Talk 2013.
 
+Please note that **2015 sessions** does not come with pdf, but associated **sample codes are getting downloaded**.
+
 Using options, you can choose to retrieve HD or SD videos and set destination folder (default is SD).
 
 Video resources and PDFs for 2013 take about 52GB of disk space for HD videos (half of it for SD). For WWDC 2014 it is so far around 30Go HD videos (this might increase a bit as this note is written 2 days after the sessions are finished. Size for 2015 sessions is unknow yet as WWDC still going on while writing those lines. Some more videos might be uploaded later. So if for some reason you do not have downloaded it in one shot, the script will resume where you left off and does not download again everything. 
