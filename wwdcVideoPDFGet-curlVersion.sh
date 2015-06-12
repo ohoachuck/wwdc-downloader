@@ -3,6 +3,8 @@
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013 (update June 12th 2015)
 # Last update: 
+#   - fixed -L for years earlier than 2015
+#   - "/Users/${USER}" changed for "${HOME}" for better compliancy with home directory differents than /Users
 #   - Add wwdc 2015 video download (+ fixed issue with "Managing 3D Assets with Model I/O" session label).
 #   - fixed issue with names like I/O
 #   - adding download of ALL sample code (including those to grab on Apple documentation web site)
@@ -93,6 +95,18 @@ doGetWWDCPost2012 () {
         sessionTitle=`echo $line | cut -d',' -f2`
 		title_array[$sessionNum]=${sessionTitle}
 	done < ${TMP_DIR}/titles.txt
+
+    if [ ${LIST_MODE} == true ];
+    then
+        echo "Available videos:"
+        echo "-----------------"
+        cat ${TMP_DIR}/titles.txt | cut -d',' -f1 | while read line; do
+        echo "${line}: ${title_array[$line]}"
+        #printf '%s\n' "${title_array[@]}"
+        done;
+        exit
+    fi
+
 
 	echo "******* DOWNLOADING PDF FILES ********"
 
@@ -294,6 +308,19 @@ doGetTT2013 () {
 	do
 		title_array+=("$line")
 	done < ${TMP_DIR}/titles.txt
+
+
+    if [ ${LIST_MODE} == true ];
+    then
+        echo "Available videos:"
+        echo "-----------------"
+        cat ${TMP_DIR}/titles.txt | cut -d';' -f1 | while read line; do
+        echo "$line: ${title_array[$line]}"
+        #printf '%s\n' "${title_array[@]}"
+        done;
+        exit
+    fi
+
 
     echo "******* DOWNLOADING PDF FILES ********"
 
@@ -832,7 +859,7 @@ while getopts ":hl:y:f:s:vLo:e:" opt; do
   esac
 done
   
-WWDC_DIRNAME=${WWDC_DIRNAME:-"/Users/${USER}/Documents/WWDC-${YEAR}"}
+WWDC_DIRNAME=${WWDC_DIRNAME:-"${HOME}/Documents/WWDC-${YEAR}"}
 
 case "${YEAR}" in
 "2012")
@@ -840,7 +867,7 @@ case "${YEAR}" in
     then   
         read -r -p Login: ituneslogin ; echo
     fi
-    if $LOGIN ;
+    if $LOGIN
     then
         read -r -s -p Password: itunespassword ; echo
     else
