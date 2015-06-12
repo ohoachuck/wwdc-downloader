@@ -1,6 +1,11 @@
 WWDC 2015, 2014, 2013 & Tech-talks 2013 <br/>Videos and sessions PDFs downloader
 ================
 
+**IMPORTANT NOTE:**
+Current script version does not download all sample code. it appear that getting them all is a bit trickyer than expected. I'm currently working on it, but tonight I'm at the bear bash... ;)
+
+** **
+
 This script is a bash script that should **work out of the box** without any needs of extra software or development package.
 
 Its main purpose is to let you bulk download all WWDC videos and session presentations (pdf) in one shot.
