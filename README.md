@@ -2,7 +2,7 @@ WWDC 2015, 2014, 2013 & Tech-talks 2013 <br/>Videos and sessions PDFs downloader
 ================
 
 **IMPORTANT NOTE:**
-Current script version does not download all sample code. it appear that getting them all is a bit trickyer than expected. I'm currently working on it, but tonight I'm at the bear bash... ;)
+Current script version does not download all sample codes. It appear that getting them all is a bit trickyer than expected. I'll work on it asap, but tonight I'm at the beer bash... Walking to the moon ;)
 
 ** **
 
