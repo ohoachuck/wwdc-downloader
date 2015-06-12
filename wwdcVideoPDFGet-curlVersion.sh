@@ -1,13 +1,14 @@
 #!/bin/sh
 
 # Author: Olivier HO-A-CHUCK
-# Date: June 27th 2013 (update June 11th 2015)
+# Date: June 27th 2013 (update June 12th 2015)
 # Last update: 
 #   - Add wwdc 2015 video download (+ fixed issue with "Managing 3D Assets with Model I/O" session label).
 #   - fixed issue with names like I/O
-#   - adding download of sample code (including those to grab on Apple documentation web site)
+#   - adding download of ALL sample code (including those to grab on Apple documentation web site)
 #   - adding check for network connectivity (bash does not handle connectivity error for you)
 #   - fixing issue with name using comma in title (like ", part 1") - some might download them twice if using an early script - sorry ;(
+# 
 #
 # License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
 # Usage: wwdcVideoGet-curlVersion.sh
@@ -19,7 +20,7 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.8.3"
+VERSION="1.8.4"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2015"
 DEFAULT_EVENT="wwdc"
@@ -554,7 +555,7 @@ doGetWWDC2015 () {
     echo "******* DOWNLOADING ${FORMAT} VIDEOS ********"
 
 	# Videos ${FORMAT}
-	mkdir -p "${WWDC_DIRNAME}"/${FORMAT}-VIDEOs
+	mkdir -p "${WWDC_DIRNAME}/${FORMAT}-VIDEOs"
 	# do the rm *.download only if files exist
 	FILES_LIST="$(ls "${WWDC_DIRNAME}"/${FORMAT}-VIDEOs/*.download 2>/dev/null)"
 	if [ -z "$FILES_LIST" ]; then
@@ -568,7 +569,7 @@ doGetWWDC2015 () {
     
     
     # Prepare for SAMPLE-CODE
-    mkdir -p "${WWDC_DIRNAME}"/SAMPLE-CODE
+    mkdir -p "${WWDC_DIRNAME}/SAMPLE-CODE"
 	# do the rm *.download only if files exist
 	FILES_LIST="$(ls "${WWDC_DIRNAME}"/SAMPLE-CODE/*.download 2>/dev/null)"
 	if [ -z "$FILES_LIST" ]; then
@@ -600,21 +601,42 @@ doGetWWDC2015 () {
         #echo ${line}: ${videoURL}
         
         # Get sample codes
-        #sampleCodeURL=`cat ${TMP_DIR}/$line-video.html | grep -o -E 'href="/sample-code/wwdc/2015/downloads/(.*)</a>' | cut -d'"' -f2`
-        #sampleCodeName=`cat ${TMP_DIR}/$line-video.html | grep -o -E 'href="/sample-code/wwdc/2015/downloads/(.*)</a>' | cut -d'>' -f2 | cut -d'<' -f1`
-        sampleCodeURL=`cat ${TMP_DIR}/$line-video.html | grep -o -E '(class="sample-code"|class="playground")(.*)</a>' | cut -d'"' -f4`
-        sampleCodeName=`cat ${TMP_DIR}/$line-video.html | grep -o -E '(class="sample-code"|class="playground")(.*)</a>' | cut -d'>' -f3 | cut -d'<' -f1`
-        if [[ ! ${sampleCodeURL} =~ \.zip$ && -n "${sampleCodeName}" ]]; # warning this might not be a very secure test
-        then
-            #echo "sample code does not have zip extension - need to get hacked"
-            sampleCodePATH=${sampleCodeURL}
-            curl -silent -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodeURL}/book.json" > "${TMP_DIR}/$line-book.json";
-            sampleCodeURL=`cat "${TMP_DIR}/$line-book.json" | grep -o -E '"sampleCode":".*\.zip"' | cut -d'"' -f4`
-            #sampleCodeURL=${SAMPLE_CODE_ROOT_URL}${sampleCodeURL}
-            sampleCodeName=${sampleCodeURL%.*}
-            #echo "${sampleCodeName}: ${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL}"
+        cat ${TMP_DIR}/$line-video.html | grep -o -E '(class="sample-code"|class="playground")(.*)</a>' | cut -d'"' -f4 > "${TMP_DIR}/${line}-sampleCodeURL.txt"
+        cat ${TMP_DIR}/$line-video.html | grep -o -E '(class="sample-code"|class="playground")(.*)</a>' | cut -d'>' -f3 | cut -d'<' -f1 > "${TMP_DIR}/${line}-sampleCodeName.txt"
+        paste -d';' "${TMP_DIR}/${line}-sampleCodeName.txt" "${TMP_DIR}/${line}-sampleCodeURL.txt" > "${TMP_DIR}/${line}-sampleCode.txt"
+        
+        # escape special char for downloading issues (ex: I/O string)
+        # Ok this is dirty, but it need to be quick ! ;)
+        mv ${TMP_DIR}/${line}-sampleCode.txt ${TMP_DIR}/${line}-sampleCode-to-be-escaped.txt 
+        sed -e 's/I\/O/I\-O/g' ${TMP_DIR}/${line}-sampleCode-to-be-escaped.txt > ${TMP_DIR}/${line}-sampleCode.txt
+        mv ${TMP_DIR}/${line}-sampleCode.txt ${TMP_DIR}/${line}-sampleCode-to-be-escaped.txt 
+        sed -e 's/&/AND/g' ${TMP_DIR}/${line}-sampleCode-to-be-escaped.txt > ${TMP_DIR}/${line}-sampleCode.txt
 
-        fi
+
+        sampleCodeURL=()
+        sampleCodeName=()
+        nb_lines=0
+        while read lineURL; do
+            sampleCodePATHOnLine=`echo ${lineURL} | cut -d';' -f2`
+            sampleCodeNameOnLine=`echo ${lineURL} | cut -d';' -f1`
+            replacement=" -"
+            sampleCodeNameOnLine="${sampleCodeNameOnLine/:/${replacement}}"
+            if [[ ! ${lineURL} =~ \.zip$ ]];
+            then
+                curl -silent -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATHOnLine}/book.json" > "${TMP_DIR}/$line-book.json";
+                sampleCodeURL[nb_lines]=`cat "${TMP_DIR}/$line-book.json" | grep -o -E '"sampleCode":".*\.zip"' | cut -d'"' -f4`
+                sampleCodeName[nb_lines]=${sampleCodeNameOnLine}
+                sampleCodePATH=${sampleCodePATHOnLine}
+                #echo " (${nb_lines})${sampleCodeName[nb_lines]}: ${SAMPLE_CODE_ROOT_URL}/${sampleCodePATHOnLine}/${sampleCodeURL[nb_lines]}"
+            else
+                sampleCodeURL[nb_lines]=${sampleCodePATHOnLine}
+                #sampleCodeName[nb_lines]=${lineURL%.*}
+                sampleCodeName[nb_lines]=${sampleCodeNameOnLine}
+                sampleCodePATH=${sampleCodeURL[nb_lines]}
+                #echo "==> Direct zip: ${sampleCodeName[nb_lines]}: ${SAMPLE_CODE_ROOT_URL}/${sampleCodeURL[nb_lines]}/${sampleCodeURL[nb_lines]}"
+            fi            
+            ((nb_lines+=1))
+        done < "${TMP_DIR}/${line}-sampleCode.txt"
         
         if [ ${SELECTIVE_SESSION_MODE} == true ];
         then
@@ -632,17 +654,20 @@ doGetWWDC2015 () {
                 fi
 
                 # downloading sample codes files
-                if [ -n "${sampleCodeName}" ]; then
-                    dest_path="${WWDC_DIRNAME}/SAMPLE-CODE/${line} - ${sampleCodeName}.zip"
-                    if [ -f "${dest_path}" ]
-                    then
-                        echo "${dest_path} already downloaded (nothing to do!)"
-                    else
-                        echo "downloading sample code for session ${line}: ${sampleCodeName}" 
-                        curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL}" > "${dest_path}.download"
-                        mv "${dest_path}.download" "${dest_path}"
-                    fi
-                fi
+                for i in "${!sampleCodeURL[@]}"; do
+                    #if [ -n "${sampleCodeURL[$i]}" ]; then
+                        dest_path="${WWDC_DIRNAME}/SAMPLE-CODE/${line} - ${sampleCodeName[$i]}.zip"
+                        if [ -f "${dest_path}" ]
+                        then
+                            echo "${dest_path} already downloaded (nothing to do!)"
+                        else
+                            echo "downloading sample code for session ${line}: ${sampleCodeName[$i]}" 
+                            echo "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}"
+                            curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download"
+                            mv "${dest_path}.download" "${dest_path}"
+                        fi
+                    #fi
+                done
             fi
         else
             dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${line} - ${title_array[$line]}-${FORMAT}.mov"
@@ -656,17 +681,19 @@ doGetWWDC2015 () {
             fi
 
             # downloading sample codes files
-            if [ -n "${sampleCodeName}" ]; then
-                dest_path="${WWDC_DIRNAME}/SAMPLE-CODE/${line} - ${sampleCodeName}.zip"
-                if [ -f "${dest_path}" ]
-                then
-                    echo "${dest_path} already downloaded (nothing to do!)"
-                else
-                    echo "downloading sample code for session ${line}: ${sampleCodeName}" 
-                    curl "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL}" > "${dest_path}.download"
-                    mv "${dest_path}.download" "${dest_path}"
-                fi
-            fi
+            for i in "${!sampleCodeURL[@]}"; do
+                #if [ -n "${sampleCodeName[$i]}" ]; then
+                    dest_path="${WWDC_DIRNAME}/SAMPLE-CODE/${line} - ${sampleCodeName[$i]}.zip"
+                    if [ -f "${dest_path}" ]
+                    then
+                        echo "${dest_path} already downloaded (nothing to do!)"
+                    else
+                        echo "downloading sample code for session ${line}: ${sampleCodeName[$i]}" 
+                        curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download"
+                        mv "${dest_path}.download" "${dest_path}"
+                    fi
+                #fi
+            done
         fi
         ((i+=1))
 
