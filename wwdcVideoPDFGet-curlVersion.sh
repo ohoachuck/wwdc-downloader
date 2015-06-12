@@ -3,6 +3,7 @@
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013 (update June 12th 2015)
 # Last update: 
+#   - adding PDFs download (wasn't there first then I forget !)
 #   - fixed -L for years earlier than 2015
 #   - "/Users/${USER}" changed for "${HOME}" for better compliancy with home directory differents than /Users
 #   - Add wwdc 2015 video download (+ fixed issue with "Managing 3D Assets with Model I/O" session label).
@@ -22,7 +23,7 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.8.4"
+VERSION="1.8.5"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2015"
 DEFAULT_EVENT="wwdc"
@@ -579,7 +580,20 @@ doGetWWDC2015 () {
         exit
     fi
 
-    echo "******* DOWNLOADING ${FORMAT} VIDEOS ********"
+    echo "########## DOWNLOADING ${FORMAT} VIDEOS and PDFs files ##########"
+
+    # PDFs
+    mkdir -p "${WWDC_DIRNAME}/PDFs"
+    # do the rm *.download only if files exist
+	FILES_LIST="$(ls "${WWDC_DIRNAME}"/PDFs/*.download 2>/dev/null)"
+	if [ -z "$FILES_LIST" ]; then
+		# echo "Hello, de Lu!"
+		:
+	else
+		echo "Some download was aborted last time you ran this script."
+		rm "${WWDC_DIRNAME}"/PDFs/*.download	
+		echo "Cleaning non fully downloaded files: OK." 
+	fi
 
 	# Videos ${FORMAT}
 	mkdir -p "${WWDC_DIRNAME}/${FORMAT}-VIDEOs"
@@ -611,8 +625,7 @@ doGetWWDC2015 () {
 
 
 	i=0
-	# TODO: / WARNING (for possible future function merge): note that devstreaming url does use hard coded "wwdc" in it, were tech-talks function url is "techtalks" (whithout dash)
-    
+
     if [ "${FORMAT}" = "HD" ];
     then
         LC_FORMAT="hd"
@@ -620,12 +633,14 @@ doGetWWDC2015 () {
         LC_FORMAT="sd"
     fi
     REGEXFILE="[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}_${LC_FORMAT}_.*\.mp4"
+    REGEXPDFFILE="[0-9a-zA-Z]*\/[0-9]{1,5}\/[0-9]{1,5}_.*\.pdf"
     
     # get individuals video pages
     cat ${TMP_DIR}/titles.txt | cut -d';' -f1 | while read line; do 
         curl -silent "${VIDEO_URL}?id=$line" > "${TMP_DIR}/$line-video.html";
         videoURL=`cat ${TMP_DIR}/$line-video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'/'${REGEXFILE}'\?dl=1+)"'| cut -d'"' -f2`
-        #echo ${line}: ${videoURL}
+        pdfURL=`echo ${videoURL} | sed 's/_hd_/_/g' | sed 's/\.mp4/\.pdf/g'`
+        #echo ${line}: ${pdfURL}
         
         # Get sample codes
         cat ${TMP_DIR}/$line-video.html | grep -o -E '(class="sample-code"|class="playground")(.*)</a>' | cut -d'"' -f4 > "${TMP_DIR}/${line}-sampleCodeURL.txt"
@@ -669,6 +684,18 @@ doGetWWDC2015 () {
         then
             if `echo ${SESSION_WANTED} | grep "${line}" 1>/dev/null 2>&1`
             then
+
+                # downloading PDF file
+                dest_path="${WWDC_DIRNAME}/PDFs/${line} - ${title_array[$line]}.pdf"
+                if [ -f "${dest_path}" ]
+                then
+                    echo "${dest_path} already downloaded (nothing to do!)"
+                else
+                    echo "downloading PDF doc for session ${line}: ${title_array[$line]}" 
+                    curl "${pdfURL}" > "${dest_path}.download"
+                    mv "${dest_path}.download" "${dest_path}"
+                fi
+
                 # downloading video files
                 dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${line} - ${title_array[$line]}-${FORMAT}.mov"
                 if [ -f "${dest_path}" ]
@@ -697,6 +724,19 @@ doGetWWDC2015 () {
                 done
             fi
         else
+
+            # downloading PDF file
+            dest_path="${WWDC_DIRNAME}/PDFs/${line} - ${title_array[$line]}.pdf"
+            if [ -f "${dest_path}" ]
+            then
+                echo "${dest_path} already downloaded (nothing to do!)"
+            else
+                echo "downloading PDF doc for session ${line}: ${title_array[$line]}" 
+                curl -L "${pdfURL}" > "${dest_path}.download"
+                mv "${dest_path}.download" "${dest_path}"
+            fi
+
+            # downloading videos
             dest_path="${WWDC_DIRNAME}/${FORMAT}-VIDEOs/${line} - ${title_array[$line]}-${FORMAT}.mov"
             if [ -f "${dest_path}" ]
             then
@@ -958,7 +998,7 @@ case "${YEAR}" in
 	;;
 *)
 	echo "Sorry: can't process requested year. Please choose between \"2012\", \"2013\" , \"2014\" or \"2015\"."
-	;;
+#	;;
 esac
 
 exit 0
