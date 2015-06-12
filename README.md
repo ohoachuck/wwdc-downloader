@@ -12,11 +12,17 @@ Please note that **2015 sessions** does come with associated **sample codes**.
 
 Using options, you can choose to retrieve HD or SD videos and set destination folder (default is SD).
 
-Video resources and PDFs for 2013 take about 52GB of disk space for HD videos (half of it for SD). For WWDC 2014 it is so far around 30Go HD videos (this might increase a bit as this note is written 2 days after the sessions are finished. Size for 2015 sessions is unknow yet as WWDC still going on while writing those lines. Some more videos might be uploaded later. So if for some reason you do not have downloaded it in one shot, the script will resume where you left off and does not download again everything. 
+__Storage size required for 2015 resources:__
+
+* HD videos: 126 Go
+* SD videos: 33 Go
+* Sample codes: 600 MB
+* PDFs: 262 MB
+
+
+If for some reason you do not have downloaded all in one shot, the script will resume where you left off and does not download again everything. 
 
 The spirit of the script is to be working on everybody's Mac environment without need of special tools. That's why it is based on curl (vs wget).
-
-**Login/password are not needed anymore**, but if used and by using -l option, password will not displayed on the screen nor store locally. It is used to login within Apple developer portal using **https** as you would do from the web (you can check it in code).
 
 Note: I know the script name is crap, but believe me, if you knew me you'll know that it could have been even worse ... :).
 
