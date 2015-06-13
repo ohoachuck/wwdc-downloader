@@ -3,6 +3,7 @@
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013 (update June 12th 2015)
 # Last update: 
+#   - fixing bug that get corrupted PDF while using -f SD mode (default mode ;( ).
 #   - adding PDFs download (wasn't there first then I forget !)
 #   - fixed -L for years earlier than 2015
 #   - "/Users/${USER}" changed for "${HOME}" for better compliancy with home directory differents than /Users
@@ -23,7 +24,7 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.8.5"
+VERSION="1.8.6"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2015"
 DEFAULT_EVENT="wwdc"
@@ -36,7 +37,7 @@ TMP_DIR="/tmp/wwdc-session.tmp"
 VIDEO_URL_WWDC="https://developer.apple.com/videos/wwdc"
 VIDEO_URL_TECHTALK="https://developer.apple.com/tech-talks/videos/"
 SAMPLE_CODE_ROOT_URL="https://developer.apple.com/"
-
+MINIMUM_SIZE_TO_DETECT_CORRUPTED_PDF=20
 
 doGetWWDCPost2012 () {
 
@@ -594,6 +595,8 @@ doGetWWDC2015 () {
 		rm "${WWDC_DIRNAME}"/PDFs/*.download	
 		echo "Cleaning non fully downloaded files: OK." 
 	fi
+    # cleaning possible corrupted pdf (downloaded with wrong path then with size of 16 octets)
+    find "${WWDC_DIRNAME}"/PDFs/ -name "*.pdf" -size -2 -delete
 
 	# Videos ${FORMAT}
 	mkdir -p "${WWDC_DIRNAME}/${FORMAT}-VIDEOs"
@@ -640,6 +643,7 @@ doGetWWDC2015 () {
         curl -silent "${VIDEO_URL}?id=$line" > "${TMP_DIR}/$line-video.html";
         videoURL=`cat ${TMP_DIR}/$line-video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'/'${REGEXFILE}'\?dl=1+)"'| cut -d'"' -f2`
         pdfURL=`echo ${videoURL} | sed 's/_hd_/_/g' | sed 's/\.mp4/\.pdf/g'`
+        pdfURL=`echo ${videoURL} | sed 's/_sd_/_/g' | sed 's/\.mp4/\.pdf/g'`
         #echo ${line}: ${pdfURL}
         
         # Get sample codes
