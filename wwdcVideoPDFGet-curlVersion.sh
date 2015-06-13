@@ -3,7 +3,7 @@
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013 (update June 12th 2015)
 # Last update: 
-#   - fixing bug that get corrupted PDF while using -f SD mode (default mode ;( ).
+#   - fixing bug that get corrupted PDFs while using -f SD mode (default mode ;( ).
 #   - adding PDFs download (wasn't there first then I forget !)
 #   - fixed -L for years earlier than 2015
 #   - "/Users/${USER}" changed for "${HOME}" for better compliancy with home directory differents than /Users
@@ -125,8 +125,12 @@ doGetWWDCPost2012 () {
 		rm "${WWDC_DIRNAME}"/PDFs/*.download	
 		echo "Cleaning non fully downloaded files: OK." 
 	fi
+    # cleaning possible corrupted pdf (downloaded with wrong path then with size of 16 octets)
+    find "${WWDC_DIRNAME}"/PDFs/ -name "*.pdf" -size -2 -delete
+
 	i=0
-	cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'\/[0-9a-zA-Z]*\/[0-9]{1,5}\/([0-9]{1,5}|[0-9]{1,5}_.*)\.pdf\?dl=1+)"' | cut -d'"' -f2 | sed -e 's/_sd_/_/g' -e 's/.mov/.pdf/g' | while read line; do    
+#	cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'\/[0-9a-zA-Z]*\/[0-9]{1,5}\/([0-9]{1,5}|[0-9]{1,5}_.*)\.pdf\?dl=1+)"' | cut -d'"' -f2 | sed -e 's/_sd_/_/g' -e 's/.mov/.pdf/g' | while read line; do    
+	cat ${TMP_DIR}/video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'\/[0-9a-zA-Z]*\/[0-9]{1,5}\/([0-9]{1,5}|[0-9]{1,5}_.*)\.pdf\?dl=1+)"' | cut -d'"' -f2 | sed -e 's/_sd_/_/g' -e 's/_hd_/_/g' -e 's/.mov/.pdf/g' | while read line; do    
 
         filename=`echo ${line} | cut -d'/' -f9 | cut -d'?' -f1`
 
