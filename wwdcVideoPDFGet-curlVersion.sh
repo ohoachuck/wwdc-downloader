@@ -3,6 +3,7 @@
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013 (update June 12th 2015)
 # Last update: 
+#   - fixing download of pdfs that does not exist in real life (Apple award and Keynote)
 #   - fixing bug that get corrupted PDFs while using -f SD mode (default mode ;( ).
 #   - adding PDFs download (wasn't there first then I forget !)
 #   - fixed -L for years earlier than 2015
@@ -24,7 +25,7 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.8.6"
+VERSION="1.8.7"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2015"
 DEFAULT_EVENT="wwdc"
@@ -739,9 +740,12 @@ doGetWWDC2015 () {
             then
                 echo "${dest_path} already downloaded (nothing to do!)"
             else
-                echo "downloading PDF doc for session ${line}: ${title_array[$line]}" 
-                curl -L "${pdfURL}" > "${dest_path}.download"
-                mv "${dest_path}.download" "${dest_path}"
+                if [[ ${line} != "103" && ${line} != "101" ]] #there is no point having pdf for Apple design Award or the Keynote
+                then 
+                    echo "downloading PDF doc for session ${line}: ${title_array[$line]}" 
+                    curl -L "${pdfURL}" > "${dest_path}.download"
+                    mv "${dest_path}.download" "${dest_path}"
+                fi
             fi
 
             # downloading videos
