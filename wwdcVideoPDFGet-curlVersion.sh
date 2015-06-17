@@ -3,6 +3,7 @@
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013 (update June 12th 2015)
 # Last update: 
+#   - fixing pdf regression bug while using -f HD option. Thanx to Richard Watt (botsmack) for pointing this out
 #   - fixing download of pdfs that does not exist in real life (Apple award and Keynote)
 #   - fixing bug that get corrupted PDFs while using -f SD mode (default mode ;( ).
 #   - adding PDFs download (wasn't there first then I forget !)
@@ -25,7 +26,7 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.8.7"
+VERSION="1.8.8"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2015"
 DEFAULT_EVENT="wwdc"
@@ -647,8 +648,7 @@ doGetWWDC2015 () {
     cat ${TMP_DIR}/titles.txt | cut -d';' -f1 | while read line; do 
         curl -silent "${VIDEO_URL}?id=$line" > "${TMP_DIR}/$line-video.html";
         videoURL=`cat ${TMP_DIR}/$line-video.html | grep -o -E 'href="(http:\/\/devstreaming.apple.com\/videos\/wwdc\/'${YEAR}'/'${REGEXFILE}'\?dl=1+)"'| cut -d'"' -f2`
-        pdfURL=`echo ${videoURL} | sed 's/_hd_/_/g' | sed 's/\.mp4/\.pdf/g'`
-        pdfURL=`echo ${videoURL} | sed 's/_sd_/_/g' | sed 's/\.mp4/\.pdf/g'`
+        pdfURL=`echo ${videoURL} | sed 's/_'${LC_FORMAT}'_/_/g' | sed 's/\.mp4/\.pdf/g'`
         #echo ${line}: ${pdfURL}
         
         # Get sample codes
