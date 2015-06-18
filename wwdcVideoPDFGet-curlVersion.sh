@@ -3,6 +3,7 @@
 # Author: Olivier HO-A-CHUCK
 # Date: June 27th 2013 (update June 12th 2015)
 # Last update: 
+#   - fixing duplicated download of source code (creating sim link instead)
 #   - fixing pdf regression bug while using -f HD option. Thanx to Richard Watt (botsmack) for pointing this out
 #   - fixing download of pdfs that does not exist in real life (Apple award and Keynote)
 #   - fixing bug that get corrupted PDFs while using -f SD mode (default mode ;( ).
@@ -26,7 +27,7 @@
 #	- display some statistics: total time of download (+ begin and end), total downloaded size of content
 #   - check available disk space for possible alert (in particular if HD video are getting donwloaded with less than 60 GB of disk space)
 
-VERSION="1.8.8"
+VERSION="1.8.9"
 DEFAULT_FORMAT="SD"
 DEFAULT_YEAR="2015"
 DEFAULT_EVENT="wwdc"
@@ -724,10 +725,17 @@ doGetWWDC2015 () {
                         then
                             echo "${dest_path} already downloaded (nothing to do!)"
                         else
-                            echo "downloading sample code for session ${line}: ${sampleCodeName[$i]}" 
-                            echo "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}"
-                            curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download"
-                            mv "${dest_path}.download" "${dest_path}"
+                            fileToLink=`find "${WWDC_DIRNAME}/SAMPLE-CODE/" -name "* ${sampleCodeName[$i]}.zip" | sed -n 1p`
+                            echo "fileToLink=${fileToLink}"
+                            if [[ -z "${fileToLink}" ]]; then
+                                echo "downloading sample code for session ${line}: ${sampleCodeName[$i]}" 
+                                echo "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}"
+                                curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download"
+                                mv "${dest_path}.download" "${dest_path}"
+                            else
+                                echo "==> package already exist: creating simlink for (${line}: ${sampleCodeName[$i]})"
+                                ln -s "${fileToLink}" "${WWDC_DIRNAME}/SAMPLE-CODE/${line} - ${sampleCodeName[$i]}.zip"
+                            fi
                         fi
                     #fi
                 done
@@ -767,9 +775,15 @@ doGetWWDC2015 () {
                     then
                         echo "${dest_path} already downloaded (nothing to do!)"
                     else
-                        echo "downloading sample code for session ${line}: ${sampleCodeName[$i]}" 
-                        curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download"
-                        mv "${dest_path}.download" "${dest_path}"
+                        fileToLink=`find "${WWDC_DIRNAME}/SAMPLE-CODE/" -name "* ${sampleCodeName[$i]}.zip" | sed -n 1p`
+                        if [[ -z "${fileToLink}" ]]; then
+                            echo "downloading sample code for session ${line}: ${sampleCodeName[$i]}" 
+                            curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download"
+                            mv "${dest_path}.download" "${dest_path}"
+                        else
+                            echo "==> package already exist: creating simlink for (${line}: ${sampleCodeName[$i]})"
+                            ln -s "${fileToLink}" "${WWDC_DIRNAME}/SAMPLE-CODE/${line} - ${sampleCodeName[$i]}.zip"
+                        fi
                     fi
                 #fi
             done
