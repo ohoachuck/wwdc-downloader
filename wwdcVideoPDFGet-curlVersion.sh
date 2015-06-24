@@ -702,8 +702,7 @@ doGetWWDC2015 () {
                     echo "${dest_path} already downloaded (nothing to do!)"
                 else
                     echo "downloading PDF doc for session ${line}: ${title_array[$line]}" 
-                    curl "${pdfURL}" > "${dest_path}.download"
-                    mv "${dest_path}.download" "${dest_path}"
+                    curl "${pdfURL}" > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
                 fi
 
                 # downloading video files
@@ -713,8 +712,7 @@ doGetWWDC2015 () {
                     echo "${dest_path} already downloaded (nothing to do!)"
                 else
                     echo "downloading ${FORMAT} Video for session ${line}: ${title_array[$line]}" 
-                    curl "${videoURL}" > "${dest_path}.download"
-                    mv "${dest_path}.download" "${dest_path}"
+                    curl "${videoURL}" > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
                 fi
 
                 # downloading sample codes files
@@ -730,8 +728,7 @@ doGetWWDC2015 () {
                             if [[ -z "${fileToLink}" ]]; then
                                 echo "downloading sample code for session ${line}: ${sampleCodeName[$i]}" 
                                 echo "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}"
-                                curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download"
-                                mv "${dest_path}.download" "${dest_path}"
+                                curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
                             else
                                 echo "==> package already exist: creating simlink for (${line}: ${sampleCodeName[$i]})"
                                 ln -s "${fileToLink}" "${WWDC_DIRNAME}/SAMPLE-CODE/${line} - ${sampleCodeName[$i]}.zip"
@@ -751,8 +748,7 @@ doGetWWDC2015 () {
                 if [[ ${line} != "103" && ${line} != "101" ]] #there is no point having pdf for Apple design Award or the Keynote
                 then 
                     echo "downloading PDF doc for session ${line}: ${title_array[$line]}" 
-                    curl -L "${pdfURL}" > "${dest_path}.download"
-                    mv "${dest_path}.download" "${dest_path}"
+                    curl -L "${pdfURL}" > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
                 fi
             fi
 
@@ -763,8 +759,7 @@ doGetWWDC2015 () {
                 echo "${dest_path} already downloaded (nothing to do!)"
             else
                 echo "downloading ${FORMAT} Video for session ${line}: ${title_array[$line]}" 
-                curl -L "${videoURL}" > "${dest_path}.download"
-                mv "${dest_path}.download" "${dest_path}"
+                curl -L "${videoURL}" > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
             fi
 
             # downloading sample codes files
@@ -778,8 +773,7 @@ doGetWWDC2015 () {
                         fileToLink=`find "${WWDC_DIRNAME}/SAMPLE-CODE/" -name "* ${sampleCodeName[$i]}.zip" | sed -n 1p`
                         if [[ -z "${fileToLink}" ]]; then
                             echo "downloading sample code for session ${line}: ${sampleCodeName[$i]}" 
-                            curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download"
-                            mv "${dest_path}.download" "${dest_path}"
+                            curl -L "${SAMPLE_CODE_ROOT_URL}/${sampleCodePATH}/${sampleCodeURL[$i]}" > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
                         else
                             echo "==> package already exist: creating simlink for (${line}: ${sampleCodeName[$i]})"
                             ln -s "${fileToLink}" "${WWDC_DIRNAME}/SAMPLE-CODE/${line} - ${sampleCodeName[$i]}.zip"
