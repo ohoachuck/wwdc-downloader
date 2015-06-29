@@ -36,7 +36,8 @@ LIST_MODE=false
 VERBOSE=false
 LOGIN=false
 ITUNES_LOGIN=""
-TMP_DIR="/tmp/wwdc-session.tmp"
+UNIQID=`uuidgen`
+TMP_DIR="/tmp/wwdc-session-$UNIQID.tmp"
 VIDEO_URL_WWDC="https://developer.apple.com/videos/wwdc"
 VIDEO_URL_TECHTALK="https://developer.apple.com/tech-talks/videos/"
 SAMPLE_CODE_ROOT_URL="https://developer.apple.com/"
@@ -492,7 +493,7 @@ doGet2012 () {
 	itunespassword=$2
 	FORMAT=$3
 	#echo "DEBUG: do 2012 (login=${ituneslogin} - password=${itunespassword} - format=${FORMAT})"
-	TMP_DIR="/tmp/wwdc2012.tmp"
+	TMP_DIR="/tmp/wwdc2012-$UNIQID.tmp"
 	mkdir -p $TMP_DIR
 
 	echo ""
