@@ -14,8 +14,8 @@ Using options, you can choose to retrieve HD or SD videos and set destination fo
 
 __Storage size required for 2015 resources:__
 
-* HD videos: 126 Go
-* SD videos: 33 Go
+* HD videos: 126 GB
+* SD videos: 33 GB
 * Sample codes: 600 MB
 * PDFs: 262 MB
 
