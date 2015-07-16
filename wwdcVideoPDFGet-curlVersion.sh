@@ -155,9 +155,7 @@ doGetWWDCPost2012 () {
 				else
 					echo "downloading PDF for session ${session_number}: $line" 
 
-					curl $line > "${dest_path}.download"
-		
-					mv "${dest_path}.download" "${dest_path}"
+					curl $line > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
 				fi
 			fi
 		else
@@ -174,9 +172,7 @@ doGetWWDCPost2012 () {
 			else
 				echo "downloading PDF for session ${session_number}: $line" 
 
-				curl $line > "${dest_path}.download"
-	
-				mv "${dest_path}.download" "${dest_path}"
+				curl $line > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
 			fi
 		fi
 		((i+=1))
@@ -239,9 +235,7 @@ doGetWWDCPost2012 () {
                 else
                     echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
 
-                    curl $line > "${dest_path}.download"
-
-                    mv "${dest_path}.download" "${dest_path}"
+                    curl $line > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
                 fi
             fi
         else
@@ -258,9 +252,7 @@ doGetWWDCPost2012 () {
             else
                 echo "downloading ${FORMAT} Video for session ${session_number}: $line" 
 
-                curl $line > "${dest_path}.download"
-
-                mv "${dest_path}.download" "${dest_path}"
+                curl $line > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
             fi
         fi
         ((i+=1))
@@ -362,9 +354,7 @@ doGetTT2013 () {
 				else
 					echo "downloading PDF for session ${session_number}: $line" 
 
-					curl $line > "${dest_path}.download"
-		
-					mv "${dest_path}.download" "${dest_path}"
+					curl $line > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
 				fi
 			fi
 		else
@@ -375,9 +365,7 @@ doGetTT2013 () {
 			else
 				echo "downloading PDF for session ${session_number}: $line" 
 
-				curl $line > "${dest_path}.download"
-	
-				mv "${dest_path}.download" "${dest_path}"
+				curl $line > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
 			fi
 		fi
 		((i+=1))
@@ -420,9 +408,7 @@ doGetTT2013 () {
 
 						# little trick to be consistant with upercase HD of wwdc file name types
 						lineWithUperCaseHD="${line/-HD/-hd}" 
-						curl $lineWithUperCaseHD > "${dest_path}.download"
-
-						mv "${dest_path}.download" "${dest_path}"
+						curl $lineWithUperCaseHD > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
 					fi
 				fi
 			else
@@ -435,9 +421,7 @@ doGetTT2013 () {
 
 					# little trick to be consistant with upercase HD of wwdc file name types
 					lineWithUperCaseHD="${line/-HD/-hd}" 
-					curl $lineWithUperCaseHD > "${dest_path}.download"
-
-					mv "${dest_path}.download" "${dest_path}"
+					curl $lineWithUperCaseHD > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
 				fi
 			fi
 			((i+=1))
@@ -459,9 +443,7 @@ doGetTT2013 () {
 
 						# little trick to be consistant with upercase SD of wwdc file name types
 						lineWithUperCaseSD="${line/-SD/-sd}"
-						curl $lineWithUperCaseSD > "${dest_path}.download"
-
-						mv "${dest_path}.download" "${dest_path}"
+						curl $lineWithUperCaseSD > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
 					fi
 				fi
 			else
@@ -474,9 +456,7 @@ doGetTT2013 () {
 
 					# little trick to be consistant with upercase SD of wwdc file name types
 					lineWithUperCaseSD="${line/-SD/-sd}" 
-					curl $lineWithUperCaseSD > "${dest_path}.download"
-
-					mv "${dest_path}.download" "${dest_path}"
+					curl $lineWithUperCaseSD > "${dest_path}.download" && mv "${dest_path}.download" "${dest_path}"
 				fi
 			fi
 			((i+=1))
