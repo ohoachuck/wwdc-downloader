@@ -112,12 +112,12 @@ for argument in Process.arguments {
  switch argument {
 	case "-h":
 		print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-		print("usage: wwdc2006.swift [--hd] [--sd] [--help]\n")
+		print("usage: wwdc2016.swift [--hd] [--sd] [--help]\n")
 		exit(0)
 	
 	case "--help":
 		print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-		print("usage: wwdc2006.swift [--hd] [--sd] [--help]\n")
+		print("usage: wwdc2016.swift [--hd] [--sd] [--help]\n")
 		exit(0)
 
 	case "--hd":
