@@ -3,23 +3,23 @@
 /*
 	Author: Olivier HO-A-CHUCK
 	Date: June 17th 2016
-	About this script: 
-		WWDC 2016 is ending today and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
-		I Still need to get my video doggy bag to fly back home. And Moscone alsways provide with great bandwidth.
-		So as I had never really started to code in Swift I decided to start here (I know it's late - but I'm no more a developer) and copy/pasted some internet peace
-		of codes to get a Swift Script that bulk download all sessions.
-		You may have understand my usual disclamer : "I'm a Marketing guy" so don't blame my messy (Swift beginer) code.
-		Please feel free to make this script better if you feel like so. There is plenty to do.
+	About this script:
+ WWDC 2016 is ending today and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
+ I Still need to get my video doggy bag to fly back home. And Moscone alsways provide with great bandwidth.
+ So as I had never really started to code in Swift I decided to start here (I know it's late - but I'm no more a developer) and copy/pasted some internet peace
+ of codes to get a Swift Script that bulk download all sessions.
+ You may have understand my usual disclamer : "I'm a Marketing guy" so don't blame my messy (Swift beginer) code.
+ Please feel free to make this script better if you feel like so. There is plenty to do.
 	
 	License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
 	Usage: wwdc2016.swift
 	Default behavior: without any options the script will download all available hd videos. And will re-take non fully downloaded ones.
 	Please use --help option to get currently available options
-
-	TODO: 
-		- baasically all previosu script option (previuous years, checks, cleaner code, etc.)
-
-*/
+ 
+	TODO:
+ - baasically all previosu script option (previuous years, checks, cleaner code, etc.)
+ 
+ */
 
 
 import Cocoa
@@ -37,7 +37,7 @@ class wwdcVideosController {
                 testStr.startIndex.advancedBy(range.location+range.length)
             videoURL = testStr.substringWithRange(r)
         }
-    
+        
         return videoURL
     }
     
@@ -82,7 +82,7 @@ class wwdcVideosController {
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER)
         return result
     }
-
+    
     class func getSessionsListFromString(htmlSessionList: String) -> Array<String> {
         let pat = "\\b.*\\/videos\\/play\\/wwdc2016\\/([0-9]*)\\/\"><h5\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
@@ -102,8 +102,7 @@ class wwdcVideosController {
             }
         }
         return sessionsListArray
-    }
-
+    }    
 }
 
 /* Managing options */
@@ -112,12 +111,12 @@ for argument in Process.arguments {
  switch argument {
 	case "-h":
 		print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-		print("usage: wwdc2016.swift [--hd] [--sd] [--help]\n")
+		print("usage: wwdc2006.swift [--hd] [--sd] [--help]\n")
 		exit(0)
 	
 	case "--help":
 		print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-		print("usage: wwdc2016.swift [--hd] [--sd] [--help]\n")
+		print("usage: wwdc2006.swift [--hd] [--sd] [--help]\n")
 		exit(0)
 
 	case "--hd":
@@ -133,12 +132,12 @@ for argument in Process.arguments {
 	}
 }
 
+
 /* Retreiving list of all video session */
 let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2016/")
-print("Let me ask Apple about currently available sessions. This can take some times ...")
+print("Let me ask Apple about currently available sessions. This can take some times (15 to 20 sec.) ...")
 let sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessionListString)
 let fileManager = NSFileManager.defaultManager()
-if fileManager.fileExistsAtPath("./index.html") { system("rm ./index.html") }
 
 /* getting individual videos */
 for (index, value) in sessionsListArray.enumerate() {
@@ -147,9 +146,7 @@ for (index, value) in sessionsListArray.enumerate() {
     if videoURL.isEmpty {
         print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
     } else {
-        var fileName = NSURL(fileURLWithPath: videoURL).lastPathComponent!
-        
-        /* Check if file exist - remove otherwize */
+        var fileName = NSURL(fileURLWithPath: videoURL).lastPathComponent!        
         if fileManager.fileExistsAtPath("./" + fileName) {
             print("\(fileName): already exists, nothing to do!")
         } else {
@@ -157,9 +154,13 @@ for (index, value) in sessionsListArray.enumerate() {
             var cmd = "curl \(videoURL) > ./\(fileName).download"
             system(cmd)
             
-            print("echo mv ./\(fileName).download ./\(fileName)")
-            cmd = "mv ./\(fileName).download ./\(fileName)"
-            system(cmd)
+            print("moving ./\(fileName).download to ./\(fileName)")
+            do {
+                try fileManager.moveItemAtPath("./\(fileName).download", toPath: "./\(fileName)")
+            }
+            catch let error as NSError {
+                print("Ooops! Something went wrong: \(error)")
+            }
             print("Done!")
         }
     }
