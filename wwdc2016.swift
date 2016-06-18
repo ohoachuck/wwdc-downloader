@@ -109,15 +109,10 @@ class wwdcVideosController {
 var format = ""
 for argument in Process.arguments {
  switch argument {
-	case "-h":
-		print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-		print("usage: wwdc2006.swift [--hd] [--sd] [--help]\n")
-		exit(0)
-	
-	case "--help":
-		print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-		print("usage: wwdc2006.swift [--hd] [--sd] [--help]\n")
-		exit(0)
+	case "-h", "--help":
+        print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
+        print("usage: wwdc2006.swift [--hd] [--sd] [--help]\n")
+        exit(0)
 
 	case "--hd":
 		print("Downloading HD videos in current directory")
