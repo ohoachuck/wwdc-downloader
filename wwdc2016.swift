@@ -17,17 +17,21 @@
 	Please use --help option to get currently available options
  
 	TODO:
- - baasically all previosu script option (previuous years, checks, cleaner code, etc.)
+ - basically all previous script option (previuous years, checks, cleaner code, etc.)
  
  */
 
-
 import Cocoa
+
+enum VideoQuality: String {
+  case HD = "hd"
+  case SD = "sd"
+}
 
 class wwdcVideosController {
     
-    class func getHDorSDdURLsFromStringAndFormat(testStr: String, format: String) -> (String) {
-        let pat = "\\b.*(http.*" + format + ".*\\.mp4)\\b"
+    class func getHDorSDdURLsFromStringAndFormat(testStr: String, format: VideoQuality) -> (String) {
+        let pat = "\\b.*(http.*" + format.rawValue + ".*\\.mp4)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matchesInString(testStr, options: [], range: NSRange(location: 0, length: testStr.characters.count))
         var videoURL = ""
@@ -106,7 +110,8 @@ class wwdcVideosController {
 }
 
 /* Managing options */
-var format = ""
+var format = VideoQuality.HD
+
 for argument in Process.arguments {
  switch argument {
 	case "-h", "--help":
@@ -116,17 +121,16 @@ for argument in Process.arguments {
 
 	case "--hd":
 		print("Downloading HD videos in current directory")
-		format = "hd"
+		format = .HD
 
 	case "--sd":
 		print("Downloading SD videos in current directory")
-		format = "sd"
+		format = .SD
 
 	default:
 		break
 	}
 }
-
 
 /* Retreiving list of all video session */
 let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2016/")
@@ -160,4 +164,3 @@ for (index, value) in sessionsListArray.enumerate() {
         }
     }
 }
-
