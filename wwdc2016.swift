@@ -17,10 +17,9 @@
 	Please use --help option to get currently available options
  
 	TODO:
- - baasically all previosu script option (previuous years, checks, cleaner code, etc.)
+ - basically all previous script option (previuous years, checks, cleaner code, etc.)
  
  */
-
 
 import Cocoa
 
@@ -132,7 +131,6 @@ for argument in Process.arguments {
 	}
 }
 
-
 /* Retreiving list of all video session */
 let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2016/")
 print("Let me ask Apple about currently available sessions. This can take some times (15 to 20 sec.) ...")
@@ -165,4 +163,3 @@ for (index, value) in sessionsListArray.enumerate() {
         }
     }
 }
-
