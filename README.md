@@ -30,7 +30,7 @@ Usage: 	wwdc2006.swift [--hd] [--sd] [--help]
 Examples:
 
 		- Download all SD videos for wwdc 2016:
-			wwdc2016.swift -sd
+			wwdc2016.swift --sd
 		
 ### Requirements
 Works on macOS.
