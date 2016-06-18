@@ -25,7 +25,7 @@ downloads by default WWDC 2016 HD videos sessions.
 ### Options
 You can try `wwdc2016.swift -h` for more options.
 
-Usage: 	wwdc2006.swift [--hd] [--sd] [--help]
+Usage: 	wwdc2016.swift [--hd] [--sd] [--help]
 
 Examples:
 
