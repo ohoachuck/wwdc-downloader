@@ -45,6 +45,21 @@ class wwdcVideosController {
         return videoURL
     }
     
+    class func getPDFResourceURLFromString(testStr: String) -> (String) {
+        let pat = "\\b.*(http.*\\.pdf)\\b"
+        let regex = try! NSRegularExpression(pattern: pat, options: [])
+        let matches = regex.matchesInString(testStr, options: [], range: NSRange(location: 0, length: testStr.characters.count))
+        var pdfResourceURL = ""
+        if !matches.isEmpty {
+            let range = matches[0].rangeAtIndex(1)
+            let r = testStr.startIndex.advancedBy(range.location) ..<
+                testStr.startIndex.advancedBy(range.location+range.length)
+            pdfResourceURL = testStr.substringWithRange(r)
+        }
+        
+        return pdfResourceURL
+    }
+    
     class func getStringContentFromURL(url: String) -> (String) {
         /* Configure session, choose between:
          * defaultSessionConfiguration
@@ -106,51 +121,16 @@ class wwdcVideosController {
             }
         }
         return sessionsListArray
-    }    
-}
-
-/* Managing options */
-var format = VideoQuality.HD
-
-for argument in Process.arguments {
- switch argument {
-	case "-h", "--help":
-        print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-        print("usage: wwdc2006.swift [--hd] [--sd] [--help]\n")
-        exit(0)
-
-	case "--hd":
-		print("Downloading HD videos in current directory")
-		format = .HD
-
-	case "--sd":
-		print("Downloading SD videos in current directory")
-		format = .SD
-
-	default:
-		break
-	}
-}
-
-/* Retreiving list of all video session */
-let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2016/")
-print("Let me ask Apple about currently available sessions. This can take some times (15 to 20 sec.) ...")
-let sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessionListString)
-let fileManager = NSFileManager.defaultManager()
-
-/* getting individual videos */
-for (index, value) in sessionsListArray.enumerate() {
-    let htmlText = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
-    let videoURL = wwdcVideosController.getHDorSDdURLsFromStringAndFormat(htmlText, format: format)
-    if videoURL.isEmpty {
-        print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
-    } else {
-        var fileName = NSURL(fileURLWithPath: videoURL).lastPathComponent!        
+    }
+    
+    class func downloadFileFromURLString(urlString: String, forSession session: String = "???") {
+        let fileName = NSURL(fileURLWithPath: urlString).lastPathComponent!
+        let fileManager = NSFileManager.defaultManager()
         if fileManager.fileExistsAtPath("./" + fileName) {
             print("\(fileName): already exists, nothing to do!")
         } else {
-            print("[Session \(value)] Getting \(fileName) (\(videoURL)):")
-            var cmd = "curl \(videoURL) > ./\(fileName).download"
+            print("[Session \(session)] Getting \(fileName) (\(urlString)):")
+            let cmd = "curl \(urlString) > ./\(fileName).download"
             system(cmd)
             
             print("moving ./\(fileName).download to ./\(fileName)")
@@ -161,6 +141,58 @@ for (index, value) in sessionsListArray.enumerate() {
                 print("Ooops! Something went wrong: \(error)")
             }
             print("Done!")
+        }
+    }
+}
+
+/* Managing options */
+var format = VideoQuality.HD
+var shouldDownloadPDFResource = false
+
+for argument in Process.arguments {
+ switch argument {
+	case "-h", "--help":
+        print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
+        print("usage: wwdc2006.swift [--hd] [--sd] [--pdf] [--help]\n")
+        exit(0)
+
+	case "--hd":
+		print("Downloading HD videos in current directory")
+		format = .HD
+
+	case "--sd":
+		print("Downloading SD videos in current directory")
+		format = .SD
+    
+    case "--pdf":
+        shouldDownloadPDFResource = true
+    
+	default:
+		break
+	}
+}
+
+/* Retreiving list of all video session */
+let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2016/")
+print("Let me ask Apple about currently available sessions. This can take some times (15 to 20 sec.) ...")
+let sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessionListString)
+
+/* getting individual videos */
+for (index, value) in sessionsListArray.enumerate() {
+    let htmlText = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
+    let videoURLString = wwdcVideosController.getHDorSDdURLsFromStringAndFormat(htmlText, format: format)
+    if videoURLString.isEmpty {
+        print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
+    } else {
+        wwdcVideosController.downloadFileFromURLString(videoURLString, forSession: value)
+    }
+    
+    if shouldDownloadPDFResource {
+        let pdfResourceURLString = wwdcVideosController.getPDFResourceURLFromString(htmlText)
+        if pdfResourceURLString.isEmpty {
+            print("[Session \(value)] PDF RESOURCE NOT (YET?) AVAILABLE !!!")
+        } else {
+            wwdcVideosController.downloadFileFromURLString(pdfResourceURLString, forSession: value)
         }
     }
 }
