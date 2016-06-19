@@ -6,16 +6,16 @@ Note: the previous **wwdcVideoPDFGet-curlVersion.sh** bas beed deprecated (see [
 **wwdc2016.swift** script is a Swift script that should **work out of the box** without any needs of extra software or development package.
 ** **
 
-Its main purpose is to let you bulk download all WWDC **videos** session presentations in one shot.
+Its main purpose is to let you bulk download all WWDC session **videos** and **pdf resources** in one shot.
 Current script version only supports **WWDC 2016**.
 
 So far the script is basic and does not come with as many options as the previous deprecated script. Indeed Apple have changed its Video locations.
 
 As the point of this script is to play with code for a marketing guy, I decided this time to play with Swift (My first time coding in Swift) and copy/paste some Google pieces of codes together. Hopefully this help downloads in one shot all sessions for take away.
 
-Using the options below, you can choose to retrieve HD or SD videos.
+Using the options below, you can choose to retrieve HD or SD videos and whether to download the pdf resource as well.
 
-Warning: script will download videos in the current directory.
+Warning: script will download videos/pdfs in the current directory.
 
 ### Usage
 `wwdc2016.swift`
@@ -25,12 +25,15 @@ downloads by default WWDC 2016 HD videos sessions.
 ### Options
 You can try `wwdc2016.swift -h` for more options.
 
-Usage: 	wwdc2016.swift [--hd] [--sd] [--help]
+Usage: 	wwdc2016.swift [--hd] [--sd] [--pdf] [--help]
 
 Examples:
 
 		- Download all SD videos for wwdc 2016:
 			wwdc2016.swift --sd
+			
+		- Download all SD videos & the slides PDF for wwdc 2016:
+			wwdc2016.swift --sd --pdf
 		
 ### Requirements
 Works on macOS.
