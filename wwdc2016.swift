@@ -148,12 +148,13 @@ class wwdcVideosController {
 /* Managing options */
 var format = VideoQuality.HD
 var shouldDownloadPDFResource = false
+var shouldDownloadVideoResource = true
 
 for argument in Process.arguments {
  switch argument {
 	case "-h", "--help":
         print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-        print("usage: wwdc2006.swift [--hd] [--sd] [--pdf] [--help]\n")
+        print("usage: wwdc2006.swift [--hd] [--sd] [--pdf] [--pdf-only] [--help]\n")
         exit(0)
 
 	case "--hd":
@@ -167,6 +168,10 @@ for argument in Process.arguments {
     case "--pdf":
         shouldDownloadPDFResource = true
     
+    case "--pdf-only":
+        shouldDownloadPDFResource = true
+        shouldDownloadVideoResource = false
+
 	default:
 		break
 	}
@@ -180,12 +185,14 @@ let sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessi
 /* getting individual videos */
 for (index, value) in sessionsListArray.enumerate() {
     let htmlText = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
-    let videoURLString = wwdcVideosController.getHDorSDdURLsFromStringAndFormat(htmlText, format: format)
-    if videoURLString.isEmpty {
-        print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
-    } else {
-        wwdcVideosController.downloadFileFromURLString(videoURLString, forSession: value)
-    }
+	if shouldDownloadVideoResource {
+	    let videoURLString = wwdcVideosController.getHDorSDdURLsFromStringAndFormat(htmlText, format: format)
+	    if videoURLString.isEmpty {
+	        print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
+	    } else {
+	        wwdcVideosController.downloadFileFromURLString(videoURLString, forSession: value)
+	    }
+	}
     
     if shouldDownloadPDFResource {
         let pdfResourceURLString = wwdcVideosController.getPDFResourceURLFromString(htmlText)
