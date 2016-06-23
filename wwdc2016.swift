@@ -177,10 +177,19 @@ for argument in Process.arguments {
 	}
 }
 
+func sortFunc(value1: String, value2: String) -> Bool {
+    
+    let filteredVal1 = value1.substringToIndex(value1.startIndex.advancedBy(3))
+    let filteredVal2 = value2.substringToIndex(value2.startIndex.advancedBy(3))
+    
+    return filteredVal1 < filteredVal2;
+}
+
 /* Retreiving list of all video session */
 let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2016/")
 print("Let me ask Apple about currently available sessions. This can take some times (15 to 20 sec.) ...")
-let sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessionListString)
+var sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessionListString)
+sessionsListArray.sortInPlace(sortFunc)
 
 /* getting individual videos */
 for (index, value) in sessionsListArray.enumerate() {
