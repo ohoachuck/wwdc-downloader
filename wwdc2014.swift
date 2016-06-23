@@ -31,14 +31,14 @@ enum VideoQuality: String {
 class wwdcVideosController {
     
     class func getHDorSDdURLsFromStringAndFormat(testStr: String, format: VideoQuality) -> (String) {
-        let pat = "\\b.*(http.*" + format.rawValue + ".*\\.mp4)\\b"
+        let pat = "\\b.*(http.*" + format.rawValue + ".*\\.mov)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matchesInString(testStr, options: [], range: NSRange(location: 0, length: testStr.characters.count))
+        print (matches)
         var videoURL = ""
         if !matches.isEmpty {
             let range = matches[0].rangeAtIndex(1)
-            let r = testStr.startIndex.advancedBy(range.location) ..<
-                testStr.startIndex.advancedBy(range.location+range.length)
+            let r = testStr.startIndex.advancedBy(range.location) ..< testStr.startIndex.advancedBy(range.location+range.length)
             videoURL = testStr.substringWithRange(r)
         }
         
@@ -52,8 +52,7 @@ class wwdcVideosController {
         var pdfResourceURL = ""
         if !matches.isEmpty {
             let range = matches[0].rangeAtIndex(1)
-            let r = testStr.startIndex.advancedBy(range.location) ..<
-                testStr.startIndex.advancedBy(range.location+range.length)
+            let r = testStr.startIndex.advancedBy(range.location) ..< testStr.startIndex.advancedBy(range.location+range.length)
             pdfResourceURL = testStr.substringWithRange(r)
         }
         
@@ -88,8 +87,7 @@ class wwdcVideosController {
                 /* Success */
                 // let statusCode = (response as! NSHTTPURLResponse).statusCode
                 // print("URL Session Task Succeeded: HTTP \(statusCode)")
-                result = NSString(data: data!, encoding:
-                    NSASCIIStringEncoding)! as String
+                result = NSString(data: data!, encoding:NSASCIIStringEncoding)! as String
             }
             else {
                 /* Failure */
@@ -103,7 +101,7 @@ class wwdcVideosController {
     }
     
     class func getSessionsListFromString(htmlSessionList: String) -> Array<String> {
-        let pat = "\\b.*\\/videos\\/play\\/wwdc2016\\/([0-9]*)\\/\"><h5\\b"
+        let pat = "\\b.*\\/videos\\/play\\/wwdc2014\\/([0-9]*)\\/\"><h5\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matchesInString(htmlSessionList, options: [], range: NSRange(location: 0, length: htmlSessionList.characters.count))
         var sessionsListArray = [String]()
@@ -185,19 +183,22 @@ func sortFunc(value1: String, value2: String) -> Bool {
     return filteredVal1 < filteredVal2;
 }
 
+
 /* Retreiving list of all video session */
-let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2016/")
+let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2014/")
 print("Let me ask Apple about currently available sessions. This can take some times (15 to 20 sec.) ...")
 var sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessionListString)
 sessionsListArray.sortInPlace(sortFunc)
 
 /* getting individual videos */
 for (index, value) in sessionsListArray.enumerate() {
-    let htmlText = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
+    let baseURL = "https://developer.apple.com/videos/play/wwdc2014/" + value + "/"
+    let htmlText = wwdcVideosController.getStringContentFromURL(baseURL)
 	if shouldDownloadVideoResource {
 	    let videoURLString = wwdcVideosController.getHDorSDdURLsFromStringAndFormat(htmlText, format: format)
 	    if videoURLString.isEmpty {
-	        print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
+	        print("[Session \(baseURL)] NO VIDEO YET AVAILABLE !!!")
+            exit(0)
 	    } else {
 	        wwdcVideosController.downloadFileFromURLString(videoURLString, forSession: value)
 	    }
