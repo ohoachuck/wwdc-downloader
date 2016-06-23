@@ -1,7 +1,7 @@
 WWDC 2016 Video sessions bulk download (wwdc2016.swift)
 ================
 
-Note: the previous **wwdcVideoPDFGet-curlVersion.sh** bas beed deprecated (see [previous readme](https://github.com/ohoachuck/wwdc-downloader/blob/master/DEPRECATED-README.md))
+Note: the previous **wwdcVideoPDFGet-curlVersion.sh** has been deprecated (see [previous readme](https://github.com/ohoachuck/wwdc-downloader/blob/master/DEPRECATED-README.md))
 
 **wwdc2016.swift** script is a Swift script that should **work out of the box** without any needs of extra software or development package.
 ** **
