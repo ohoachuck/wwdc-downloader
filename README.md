@@ -25,7 +25,7 @@ downloads by default WWDC 2016 HD videos sessions.
 ### Options
 You can try `wwdc2016.swift -h` for more options.
 
-Usage: 	wwdc2016.swift [--hd] [--sd] [--pdf] [--help]
+Usage: 	wwdc2016.swift [--hd] [--sd] [--pdf] [--pdf-only] [--help]
 
 Examples:
 
@@ -35,6 +35,9 @@ Examples:
 		- Download all SD videos & the slides PDF for wwdc 2016:
 			wwdc2016.swift --sd --pdf
 		
+		- Download only all PDF for wwdc 2016:
+			wwdc2016.swift --pdf-only
+
 ### Requirements
 Works on macOS.
 
