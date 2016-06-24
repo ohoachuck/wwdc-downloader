@@ -28,8 +28,83 @@ enum VideoQuality: String {
   case SD = "sd"
 }
 
-class wwdcVideosController {
+class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
     
+    static let sharedInstance = DownloadSessionManager()
+    var filePath : NSString?
+    let semaphore = dispatch_semaphore_create(0)
+    var session : NSURLSession!
+        
+    override init() {
+        super.init()
+        self.session = NSURLSession(configuration: NSURLSessionConfiguration.defaultSessionConfiguration(), delegate: self, delegateQueue: nil)
+    }
+    
+    func downloadFile(fromURL url: NSURL, toPath path: String) {
+        self.filePath = path
+        
+        let task = session.downloadTaskWithURL(url)
+        task.resume()
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER)
+    }
+    
+    func showProgress(progress: Int, barWidth: Int) {
+        print("\r[", terminator: "")
+        let pos = Int(Double(barWidth*progress)/100.0)
+        for i in 0...barWidth {
+            switch(i) {
+            case _ where i < pos:
+                print("=", terminator:"")
+                break
+            case pos:
+                print(">", terminator:"")
+                break
+            default:
+                print(" ", terminator:"")
+                break
+            }
+        }
+        
+        print("] \(progress)%", terminator:"")
+        fflush(__stdoutp)
+    }
+    
+    //MARK : NSURLSessionDownloadDelegate stuff
+    
+    func URLSession(session: NSURLSession,
+                    downloadTask: NSURLSessionDownloadTask,
+                    didWriteData bytesWritten: Int64,
+                                 totalBytesWritten: Int64,
+                                 totalBytesExpectedToWrite: Int64) {
+        showProgress(Int(Double(totalBytesWritten)/Double(totalBytesExpectedToWrite)*100.0), barWidth: 70)
+    }
+    
+    func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didFinishDownloadingToURL location: NSURL) {
+        defer {
+            dispatch_semaphore_signal(semaphore)
+        }
+        
+        print("")
+        
+        guard let _ = filePath else {
+            print("No destination path to copy the downloaded file at \(location)")
+            return
+        }
+        
+        let fileManager = NSFileManager.defaultManager()
+        
+        print("moving \(location) to \(filePath!)")
+        
+        do {
+            try fileManager.moveItemAtURL(location, toURL: NSURL.fileURLWithPath("\(filePath!)"))
+        }
+        catch let error as NSError {
+            print("Ooops! Something went wrong: \(error)")
+        }
+    }
+}
+
+class wwdcVideosController {
     class func getHDorSDdURLsFromStringAndFormat(testStr: String, format: VideoQuality) -> (String) {
         let pat = "\\b.*(http.*" + format.rawValue + ".*\\.mp4)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
@@ -123,25 +198,23 @@ class wwdcVideosController {
         return sessionsListArray
     }
     
-    class func downloadFileFromURLString(urlString: String, forSession session: String = "???") {
+    class func downloadFileFromURLString(urlString: String, forSession sessionIdentifier: String = "???") {
         let fileName = NSURL(fileURLWithPath: urlString).lastPathComponent!
         let fileManager = NSFileManager.defaultManager()
-        if fileManager.fileExistsAtPath("./" + fileName) {
+        
+        guard !fileManager.fileExistsAtPath("./" + fileName) else {
             print("\(fileName): already exists, nothing to do!")
-        } else {
-            print("[Session \(session)] Getting \(fileName) (\(urlString)):")
-            let cmd = "curl \(urlString) > ./\(fileName).download"
-            system(cmd)
-            
-            print("moving ./\(fileName).download to ./\(fileName)")
-            do {
-                try fileManager.moveItemAtPath("./\(fileName).download", toPath: "./\(fileName)")
-            }
-            catch let error as NSError {
-                print("Ooops! Something went wrong: \(error)")
-            }
-            print("Done!")
+            return
         }
+        
+        print("[Session \(sessionIdentifier)] Getting \(fileName) (\(urlString)):")
+        
+        guard let url = NSURL(string: urlString) else {
+            print("\(urlString) is not valid URL!")
+            return
+        }
+        
+        DownloadSessionManager.sharedInstance.downloadFile(fromURL: url, toPath: "\(fileName)")
     }
 }
 
@@ -192,6 +265,7 @@ var sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessi
 sessionsListArray.sortInPlace(sortFunc)
 
 /* getting individual videos */
+
 for (index, value) in sessionsListArray.enumerate() {
     let htmlText = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
 	if shouldDownloadVideoResource {
@@ -199,7 +273,7 @@ for (index, value) in sessionsListArray.enumerate() {
 	    if videoURLString.isEmpty {
 	        print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
 	    } else {
-	        wwdcVideosController.downloadFileFromURLString(videoURLString, forSession: value)
+            wwdcVideosController.downloadFileFromURLString(videoURLString, forSession: value)
 	    }
 	}
     
