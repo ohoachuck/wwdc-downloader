@@ -29,6 +29,7 @@ enum VideoQuality: String {
     case SD = "sd"
 }
 
+//http://stackoverflow.com/a/30743763
 class Reachability {
     
     class func isConnectedToNetwork() -> Bool {
