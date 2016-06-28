@@ -22,30 +22,77 @@
  */
 
 import Cocoa
+import SystemConfiguration
 
 enum VideoQuality: String {
-  case HD = "hd"
-  case SD = "sd"
+    case HD = "hd"
+    case SD = "sd"
+}
+
+//http://stackoverflow.com/a/30743763
+class Reachability {
+    
+    class func isConnectedToNetwork() -> Bool {
+        var zeroAddress = sockaddr_in()
+        zeroAddress.sin_len = UInt8(sizeofValue(zeroAddress))
+        zeroAddress.sin_family = sa_family_t(AF_INET)
+        let defaultRouteReachability = withUnsafePointer(&zeroAddress) {
+            SCNetworkReachabilityCreateWithAddress(nil, UnsafePointer($0))
+        }
+        var flags = SCNetworkReachabilityFlags()
+        if !SCNetworkReachabilityGetFlags(defaultRouteReachability!, &flags) {
+            return false
+        }
+        let isReachable = (flags.rawValue & UInt32(kSCNetworkFlagsReachable)) != 0
+        let needsConnection = (flags.rawValue & UInt32(kSCNetworkFlagsConnectionRequired)) != 0
+        return (isReachable && !needsConnection)
+    }
+    
 }
 
 class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
     
     static let sharedInstance = DownloadSessionManager()
-    var filePath : NSString?
+    var filePath : String?
+    var url: NSURL?
+    var resumeData: NSData?
+    
     let semaphore = dispatch_semaphore_create(0)
     var session : NSURLSession!
-        
+    
     override init() {
         super.init()
+        self.resetSession()
+    }
+    
+    func resetSession() {
         self.session = NSURLSession(configuration: NSURLSessionConfiguration.defaultSessionConfiguration(), delegate: self, delegateQueue: nil)
     }
     
     func downloadFile(fromURL url: NSURL, toPath path: String) {
         self.filePath = path
+        self.url = url
+        self.resumeData = nil
         
         let task = session.downloadTaskWithURL(url)
         task.resume()
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER)
+    }
+    
+    func resumeDownload() {
+        //TODO: reset session in appropriate NSURLSessionDelegate function?
+        self.resetSession()
+        
+        if let resumeData = self.resumeData {
+            print("resuming file download...")
+            let task = session.downloadTaskWithResumeData(resumeData)
+            task.resume()
+            self.resumeData = nil
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER)
+        } else {
+            print("retrying file download...")
+            self.downloadFile(fromURL: self.url!, toPath: self.filePath!)
+        }
     }
     
     func showProgress(progress: Int, barWidth: Int) {
@@ -86,14 +133,14 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
         
         print("")
         
-        guard let _ = filePath else {
+        guard let _ = self.filePath else {
             print("No destination path to copy the downloaded file at \(location)")
             return
         }
         
         let fileManager = NSFileManager.defaultManager()
         
-        print("moving \(location) to \(filePath!)")
+        print("moving \(location) to \(self.filePath!)")
         
         do {
             try fileManager.moveItemAtURL(location, toURL: NSURL.fileURLWithPath("\(filePath!)"))
@@ -101,6 +148,37 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
         catch let error as NSError {
             print("Ooops! Something went wrong: \(error)")
         }
+    }
+    
+    func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
+        defer {
+            defer {
+                dispatch_semaphore_signal(semaphore)
+            }
+            
+            if !Reachability.isConnectedToNetwork() {
+                print("Waiting for connection to be restored")
+                repeat {
+                    sleep(1)
+                } while !Reachability.isConnectedToNetwork()
+            }
+            
+            self.resumeDownload()
+        }
+        
+        print("")
+        
+        guard let _ = error else {
+            print("Ooops! Something went wrong : unknown error")
+            return
+        }
+        
+        print("Ooops! Something went wrong: \(error!.localizedDescription)")
+        
+        guard let resumeData = error!.userInfo[NSURLSessionDownloadTaskResumeData] as! NSData? else {
+            return
+        }
+        self.resumeData = resumeData
     }
 }
 
@@ -224,30 +302,30 @@ var shouldDownloadPDFResource = false
 var shouldDownloadVideoResource = true
 
 for argument in Process.arguments {
- switch argument {
-	case "-h", "--help":
+    switch argument {
+    case "-h", "--help":
         print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
         print("usage: wwdc2006.swift [--hd] [--sd] [--pdf] [--pdf-only] [--help]\n")
         exit(0)
-
-	case "--hd":
-		print("Downloading HD videos in current directory")
-		format = .HD
-
-	case "--sd":
-		print("Downloading SD videos in current directory")
-		format = .SD
-    
+        
+    case "--hd":
+        print("Downloading HD videos in current directory")
+        format = .HD
+        
+    case "--sd":
+        print("Downloading SD videos in current directory")
+        format = .SD
+        
     case "--pdf":
         shouldDownloadPDFResource = true
-    
+        
     case "--pdf-only":
         shouldDownloadPDFResource = true
         shouldDownloadVideoResource = false
-
-	default:
-		break
-	}
+        
+    default:
+        break
+    }
 }
 
 func sortFunc(value1: String, value2: String) -> Bool {
@@ -268,14 +346,14 @@ sessionsListArray.sortInPlace(sortFunc)
 
 for (index, value) in sessionsListArray.enumerate() {
     let htmlText = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
-	if shouldDownloadVideoResource {
-	    let videoURLString = wwdcVideosController.getHDorSDdURLsFromStringAndFormat(htmlText, format: format)
-	    if videoURLString.isEmpty {
-	        print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
-	    } else {
+    if shouldDownloadVideoResource {
+        let videoURLString = wwdcVideosController.getHDorSDdURLsFromStringAndFormat(htmlText, format: format)
+        if videoURLString.isEmpty {
+            print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
+        } else {
             wwdcVideosController.downloadFileFromURLString(videoURLString, forSession: value)
-	    }
-	}
+        }
+    }
     
     if shouldDownloadPDFResource {
         let pdfResourceURLString = wwdcVideosController.getPDFResourceURLFromString(htmlText)
