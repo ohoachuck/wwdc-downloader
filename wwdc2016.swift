@@ -80,6 +80,7 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
     }
     
     func resumeDownload() {
+        //TODO: reset session in appropriate NSURLSessionDelegate function?
         self.resetSession()
         
         if let resumeData = self.resumeData {
