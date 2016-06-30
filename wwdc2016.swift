@@ -151,6 +151,11 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
     }
     
     func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
+        guard let _ = error else {
+            //No error. Already handled in URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didFinishDownloadingToURL location: NSURL)
+            return
+        }
+        
         defer {
             defer {
                 dispatch_semaphore_signal(semaphore)
@@ -167,11 +172,6 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
         }
         
         print("")
-        
-        guard let _ = error else {
-            print("Ooops! Something went wrong : unknown error")
-            return
-        }
         
         print("Ooops! Something went wrong: \(error!.localizedDescription)")
         
