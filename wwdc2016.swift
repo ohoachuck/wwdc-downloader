@@ -358,16 +358,18 @@ for argument in arguments {
     }
 }
 
-switch format {
-    
-case .HD:
-    print("Downloading HD videos in current directory")
-    break
-    
-case .SD:
-    print("Downloading SD videos in current directory")
-    break
-    
+if(shouldDownloadVideoResource) {
+    switch format {
+        
+    case .HD:
+        print("Downloading HD videos in current directory")
+        break
+        
+    case .SD:
+        print("Downloading SD videos in current directory")
+        break
+        
+    }
 }
 
 func sortFunc(value1: String, value2: String) -> Bool {
