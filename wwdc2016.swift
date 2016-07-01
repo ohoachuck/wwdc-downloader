@@ -316,9 +316,6 @@ arguments.removeAtIndex(0)
 for argument in arguments {
     switch argument {
         
-    case #file:
-        break
-        
     case "-h", "--help":
         showHelpAndExit()
         break
