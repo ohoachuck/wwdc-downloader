@@ -184,7 +184,7 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
 
 class wwdcVideosController {
     class func getHDorSDdURLsFromStringAndFormat(testStr: String, format: VideoQuality) -> (String) {
-        let pat = "\\b.*(http.*" + format.rawValue + ".*\\.mp4)\\b"
+        let pat = "\\b.*(http://.*" + format.rawValue + ".*\\.mp4)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matchesInString(testStr, options: [], range: NSRange(location: 0, length: testStr.characters.count))
         var videoURL = ""
@@ -199,7 +199,7 @@ class wwdcVideosController {
     }
     
     class func getPDFResourceURLFromString(testStr: String) -> (String) {
-        let pat = "\\b.*(http.*\\.pdf)\\b"
+        let pat = "\\b.*(http://.*\\.pdf)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matchesInString(testStr, options: [], range: NSRange(location: 0, length: testStr.characters.count))
         var pdfResourceURL = ""
