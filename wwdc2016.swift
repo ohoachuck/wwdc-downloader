@@ -121,8 +121,8 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
     func URLSession(session: NSURLSession,
                     downloadTask: NSURLSessionDownloadTask,
                     didWriteData bytesWritten: Int64,
-                                 totalBytesWritten: Int64,
-                                 totalBytesExpectedToWrite: Int64) {
+                    totalBytesWritten: Int64,
+                    totalBytesExpectedToWrite: Int64) {
         showProgress(Int(Double(totalBytesWritten)/Double(totalBytesExpectedToWrite)*100.0), barWidth: 70)
     }
     
@@ -296,36 +296,78 @@ class wwdcVideosController {
     }
 }
 
+func showHelpAndExit() {
+    print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
+    print("usage: wwdc2006.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--help]\n")
+    exit(0)
+}
+
 /* Managing options */
 var format = VideoQuality.HD
 var shouldDownloadPDFResource = false
 var shouldDownloadVideoResource = true
 
-for argument in Process.arguments {
+var gettingSessions = false
+var sessionsSet:Set<String> = Set()
+
+var arguments = Process.arguments
+arguments.removeAtIndex(0)
+
+for argument in arguments {
     switch argument {
+        
+    case #file:
+        break
+        
     case "-h", "--help":
-        print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-        print("usage: wwdc2006.swift [--hd] [--sd] [--pdf] [--pdf-only] [--help]\n")
-        exit(0)
+        showHelpAndExit()
+        break
         
     case "--hd":
-        print("Downloading HD videos in current directory")
         format = .HD
+        gettingSessions = false
         
     case "--sd":
-        print("Downloading SD videos in current directory")
         format = .SD
+        gettingSessions = false
         
     case "--pdf":
         shouldDownloadPDFResource = true
+        gettingSessions = false
         
     case "--pdf-only":
         shouldDownloadPDFResource = true
         shouldDownloadVideoResource = false
+        gettingSessions = false
+        
+    case "--sessions", "-s":
+        gettingSessions = true
+        break
+        
+    case _ where Int(argument) != nil:
+        if(!gettingSessions) {
+            fallthrough
+        }
+        
+        sessionsSet.insert(argument)
+        break
         
     default:
-        break
+        print("\(argument) is not a \(#file) command.\n")
+        showHelpAndExit()
     }
+}
+
+switch format {
+    
+case .HD:
+    print("Downloading HD videos in current directory")
+    break
+    
+case .SD:
+    print("Downloading SD videos in current directory")
+    break
+    
 }
 
 func sortFunc(value1: String, value2: String) -> Bool {
@@ -340,9 +382,14 @@ func sortFunc(value1: String, value2: String) -> Bool {
 let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2016/")
 print("Let me ask Apple about currently available sessions. This can take some times (15 to 20 sec.) ...")
 var sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessionListString)
-sessionsListArray.sortInPlace(sortFunc)
 
 /* getting individual videos */
+if sessionsSet.count != 0 {
+    let sessionsListSet = Set(sessionsListArray)
+    sessionsListArray = Array(sessionsSet.intersect(sessionsListSet))
+}
+
+sessionsListArray.sortInPlace(sortFunc)
 
 for (index, value) in sessionsListArray.enumerate() {
     let htmlText = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
