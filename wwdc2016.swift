@@ -101,10 +101,10 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
         for i in 0...barWidth {
             switch(i) {
             case _ where i < pos:
-                print("=", terminator:"")
+                print("🁢", terminator:"")
                 break
             case pos:
-                print(">", terminator:"")
+                print("🁢", terminator:"")
                 break
             default:
                 print(" ", terminator:"")
