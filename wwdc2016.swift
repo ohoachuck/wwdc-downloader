@@ -73,7 +73,7 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
         self.filePath = path
         self.url = url
         self.resumeData = nil
-        
+        taskStartedAt = NSDate();
         let task = session.downloadTaskWithURL(url)
         task.resume()
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER)
@@ -95,7 +95,7 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
         }
     }
     
-    func showProgress(progress: Int, barWidth: Int) {
+  func showProgress(progress: Int, barWidth: Int, speedInK: Int) {
         print("\r[", terminator: "")
         let pos = Int(Double(barWidth*progress)/100.0)
         for i in 0...barWidth {
@@ -112,18 +112,21 @@ class DownloadSessionManager : NSObject, NSURLSessionDownloadDelegate {
             }
         }
         
-        print("] \(progress)%", terminator:"")
+        print("] \(progress)% \(speedInK)KB/s", terminator:"")
         fflush(__stdoutp)
     }
-    
+
+    var taskStartedAt : NSDate?;
     //MARK : NSURLSessionDownloadDelegate stuff
-    
     func URLSession(session: NSURLSession,
                     downloadTask: NSURLSessionDownloadTask,
                     didWriteData bytesWritten: Int64,
                     totalBytesWritten: Int64,
                     totalBytesExpectedToWrite: Int64) {
-        showProgress(Int(Double(totalBytesWritten)/Double(totalBytesExpectedToWrite)*100.0), barWidth: 70)
+      let now = NSDate();
+      let timeDownloaded = now.timeIntervalSinceDate(taskStartedAt!);
+      let kbs = Int( floor( Float(totalBytesWritten) / 1024.0 / Float(timeDownloaded) ) );
+      showProgress(Int(Double(totalBytesWritten)/Double(totalBytesExpectedToWrite)*100.0), barWidth: 70, speedInK: kbs)
     }
     
     func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didFinishDownloadingToURL location: NSURL) {
