@@ -215,7 +215,62 @@ class wwdcVideosController {
         
         return pdfResourceURL
     }
-    
+
+    class func getTitleFromString(testStr: String) -> (String) {
+        let pat = ".*(<h3>.*h3)"
+        let regex = try! NSRegularExpression(pattern: pat, options: [])
+        let matches = regex.matchesInString(testStr, options: [], range: NSRange(location: 0, length: testStr.characters.count))
+        var title = ""
+        if !matches.isEmpty {
+            let range = matches[0].rangeAtIndex(1)
+            let r = testStr.startIndex.advancedBy(range.location) ..<
+                testStr.startIndex.advancedBy(range.location+range.length)
+            title = testStr.substringWithRange(r)
+            title = title.stringByReplacingOccurrencesOfString("<h3>", withString: "")
+            title = title.stringByReplacingOccurrencesOfString("</h3", withString: "")
+        }
+
+        return title
+    }
+
+    class func getSampleCodeURLFromString(testStr: String) -> [String] {
+        let pat = "\\b.*(href=\".*/content/samplecode/.*\")\\b"
+        let regex = try! NSRegularExpression(pattern: pat, options: [])
+        let matches = regex.matchesInString(testStr, options: [], range: NSRange(location: 0, length: testStr.characters.count))
+        var sampleURLPaths : [String] = []
+        for match in matches {
+            let range = match.rangeAtIndex(1)
+            let r = testStr.startIndex.advancedBy(range.location) ..<
+                testStr.startIndex.advancedBy(range.location+range.length)
+            var path = testStr.substringWithRange(r)
+            path = path.stringByReplacingOccurrencesOfString("href=\"", withString: "https://developer.apple.com")
+            path = path.stringByReplacingOccurrencesOfString("\" target=\"", withString: "/")
+            sampleURLPaths.append(path)
+        }
+
+        var sampleArchivePaths : [String] = []
+        for urlPath in sampleURLPaths {
+            var archivePath = ""
+            let jsonText = getStringContentFromURL(urlPath + "book.json") as NSString
+            if let data = jsonText.dataUsingEncoding(NSUTF8StringEncoding) {
+                let object = try? NSJSONSerialization.JSONObjectWithData(data, options: .AllowFragments)
+                if let dictionary = object as? NSDictionary {
+                    if let title = dictionary["title"] as? String {
+                        archivePath += title + "  ->  "
+                    }
+                    if let relativePath = dictionary["sampleCode"] as? String {
+                        archivePath += urlPath + relativePath
+                    }
+                }
+            }
+            if !archivePath.isEmpty {
+                sampleArchivePaths.append(archivePath)
+            }
+        }
+
+        return sampleArchivePaths
+    }
+
     class func getStringContentFromURL(url: String) -> (String) {
         /* Configure session, choose between:
          * defaultSessionConfiguration
@@ -309,6 +364,7 @@ func showHelpAndExit() {
 var format = VideoQuality.HD
 var shouldDownloadPDFResource = false
 var shouldDownloadVideoResource = true
+var shouldDownloadSampleCodeResource = false
 
 var gettingSessions = false
 var sessionsSet:Set<String> = Set()
@@ -339,7 +395,11 @@ for argument in arguments {
         shouldDownloadPDFResource = true
         shouldDownloadVideoResource = false
         gettingSessions = false
-        
+
+    case "--sample":
+        shouldDownloadSampleCodeResource = true
+        gettingSessions = false
+
     case "--sessions", "-s":
         gettingSessions = true
         break
@@ -395,21 +455,40 @@ sessionsListArray.sortInPlace(sortFunc)
 
 for (index, value) in sessionsListArray.enumerate() {
     let htmlText = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
+
+    let title = wwdcVideosController.getTitleFromString(htmlText)
+    print("\n[Session \(value)] : \(title)")
+
     if shouldDownloadVideoResource {
         let videoURLString = wwdcVideosController.getHDorSDdURLsFromStringAndFormat(htmlText, format: format)
         if videoURLString.isEmpty {
-            print("[Session \(value)] NO VIDEO YET AVAILABLE !!!")
+            print("Video : Video is not yet available !!!")
         } else {
+            print("Video : \(videoURLString)")
             wwdcVideosController.downloadFileFromURLString(videoURLString, forSession: value)
         }
     }
-    
+
     if shouldDownloadPDFResource {
         let pdfResourceURLString = wwdcVideosController.getPDFResourceURLFromString(htmlText)
         if pdfResourceURLString.isEmpty {
-            print("[Session \(value)] PDF RESOURCE NOT (YET?) AVAILABLE !!!")
+            print("PDF : PDF is not yet available !!!")
         } else {
+            print("PDF : \(pdfResourceURLString)")
             wwdcVideosController.downloadFileFromURLString(pdfResourceURLString, forSession: value)
+        }
+    }
+
+    if shouldDownloadSampleCodeResource {
+        let sampleURLPaths = wwdcVideosController.getSampleCodeURLFromString(htmlText)
+        if sampleURLPaths.isEmpty {
+            print("SampleCode: Resource not yet available !!!")
+        } else {
+            print("SampleCode: ")
+            for path in sampleURLPaths {
+                print("\(path)")
+	            wwdcVideosController.downloadFileFromURLString(path, forSession: value)
+            }
         }
     }
 }
