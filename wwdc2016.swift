@@ -1,4 +1,4 @@
-#!/usr/bin/env xcrun swift
+#!/usr/bin/env xcrun --toolchain "com.apple.dt.toolchain.Swift_2_3" swift
 
 /*
 	Author: Olivier HO-A-CHUCK
