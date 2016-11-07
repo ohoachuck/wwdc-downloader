@@ -1,50 +1,49 @@
-WWDC Video and PDF downloader
+WWDC 2016 Video sessions bulk download (wwdc2016.swift)
 ================
 
-This script is a bash script that should work out of the box without any needs of extra software or development package.
+Note: the previous **wwdcVideoPDFGet-curlVersion.sh** has been deprecated (see [previous readme](https://github.com/ohoachuck/wwdc-downloader/blob/master/DEPRECATED-README.md))
 
-Its main purpose is to login into your Apple Developer account and retrieve all videos and associated documentation into a local folder arbitrary created on your Desktop (Mac OS architecture).
-Video resources (SD) and PDF take about 52GB of disk space, so if for some reason you couldn't download it in one shot, the script resumes where it has stopped and does not download everything again.
+**wwdc2016.swift** script is a Swift script that should **work out of the box** without any needs of extra software or development package.
+** **
+
+Its main purpose is to let you bulk download all WWDC session **videos** and **pdf resources** in one shot.
+Current script version only supports **WWDC 2016**.
+
+So far the script is basic and does not come with as many options as the previous deprecated script. Indeed Apple have changed its Video locations.
+
+As the point of this script is to play with code for a marketing guy, I decided this time to play with Swift (My first time coding in Swift) and copy/paste some Google pieces of codes together. Hopefully this help downloads in one shot all sessions for take away.
+
+Using the options below, you can choose to retrieve HD or SD videos and whether to download the pdf resource as well.
+
+Note: script will download videos/pdfs in the current directory.
 
 ### Usage
-`wwdcDownloader.sh <Apple Developer account login>`
+`./wwdc2016.swift`
 
-You will be prompted for your Apple Developer password. And SD videos will be downloaded by default.
+downloads by default WWDC 2016 HD videos sessions.
 
 ### Options
-You can try `wwdcDownloader.sh -h` for more options.
+You can try `wwdc2016.swift --help` for more options.
 
-This second script allows you to choose between SD and HD videos to download. But also would let you choose for instance to get only some specific sessions instead of all videos.
+Usage: 	wwdc2016.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions <s1 s2 ...>] [--help]
 
-See what's `wwdcDownloader.sh -h` option currently say:
+Examples:
 
-		Usage: 	wwdcDownloader.sh [options] <Apple dev login>
-		Options:
-			-y <year>: select year (ex: -y 2012). Default year is 2013
-				Possible values for year: 2012, 2013, all
-				Warning: year 2012 videos download is not yet available
-			-f <format>: select video format type (SD or HD). Default video format is SD
-			-s <comma separated session numbers>: select which sessions you want to download
-			-v : verbose mode
-			-o <output path>: path where to download content (default is /Users/${USER}/Desktop/WWDC-2013)
+		- Download all SD videos for wwdc 2016:
+			./wwdc2016.swift --sd
 			
-		Examples:
-			- Download all PDFs and SD videos for 2013:
-  				wwdcDownloader.sh john.doe@me.com
-			- Download all PDFs and HD videos for 2013:
-  				wwdcDownloader.sh -f HD john.doe@me.com
-			- Download only session 201, 400 and 401 with SD videos for 2013:
-  				wwdcDownloader.sh -s 201,400,401 john.doe@me.com
-			- Download only session 201 and 400 with HD video for 2013:
-  				wwdcDownloader.sh -s 201,400 -f HD john.doe@me.com
-			- Download all PDFs and HD videos for 2013 in /Users/oho/Documents/WWDC-SESSIONS using verbose mode:
-  				wwdcDownloader.sh -v -f HD -o /Users/oho/Documents/WWDC-SESSIONS john.doe@me.com
+		- Download all SD videos & the slides PDF for wwdc 2016:
+			./wwdc2016.swift --sd --pdf
 		
+		- Download only all PDF for wwdc 2016:
+			./wwdc2016.swift --pdf-only
 
-More information on http://blog.hoachuck.biz/blog/2013/06/15/script-to-download-wwdc-2013-videos/
+		- Download only SD videos + PDFs for sessions 503 and 504 for wwdc 2016:
+			./wwdc2016.swift --sd --pdf --sessions 503 504
 
 ### Requirements
-Works on Mac OS X.
+Works on macOS.
 
-Should be working on Linux systems (as long as you change output directory): never tested!
 
+### Related content
+You might want to discover the great **WWDC Mac app** from Guilherme Rambo:  https://github.com/insidegui/WWDC
