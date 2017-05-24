@@ -15,28 +15,31 @@ As the point of this script is to play with code for a marketing guy, I decided 
 
 Using the options below, you can choose to retrieve HD or SD videos and whether to download the pdf resource as well.
 
-Warning: script will download videos/pdfs in the current directory.
+Note: script will download videos/pdfs in the current directory.
 
 ### Usage
-`wwdc2016.swift`
+`./wwdc2016.swift`
 
 downloads by default WWDC 2016 HD videos sessions.
 
 ### Options
-You can try `wwdc2016.swift -h` for more options.
+You can try `wwdc2016.swift --help` for more options.
 
-Usage: 	wwdc2016.swift [--hd] [--sd] [--pdf] [--pdf-only] [--help]
+Usage: 	wwdc2016.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions <s1 s2 ...>] [--help]
 
 Examples:
 
 		- Download all SD videos for wwdc 2016:
-			wwdc2016.swift --sd
+			./wwdc2016.swift --sd
 			
 		- Download all SD videos & the slides PDF for wwdc 2016:
-			wwdc2016.swift --sd --pdf
+			./wwdc2016.swift --sd --pdf
 		
 		- Download only all PDF for wwdc 2016:
-			wwdc2016.swift --pdf-only
+			./wwdc2016.swift --pdf-only
+
+		- Download only SD videos + PDFs for sessions 503 and 504 for wwdc 2016:
+			./wwdc2016.swift --sd --pdf --sessions 503 504
 
 ### Requirements
 Works on macOS.

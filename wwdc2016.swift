@@ -260,6 +260,7 @@ class wwdcVideosController {
         return pdfResourceURL
     }
 
+
     class func getTitle(fromHTML: String) -> (String) {
         let pat = "<h1>(.*)</h1>"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
@@ -287,6 +288,7 @@ class wwdcVideosController {
             var path = fromHTML.substring(with: r)
             path = path.replacingOccurrences(of: "href=\"", with: "https://developer.apple.com")
             path = path.replacingOccurrences(of: "\" target=\"", with: "/")
+
             sampleURLPaths.append(path)
         }
 
@@ -390,7 +392,7 @@ class wwdcVideosController {
 
 func showHelpAndExit() {
     print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-    print("usage: wwdc2006.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--help]\n")
+    print("usage: wwdc2006.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--sample] [--help]\n")
     exit(0)
 }
 
@@ -489,7 +491,6 @@ if sessionsSet.count != 0 {
 
 sessionsListArray.sort(by: sortFunc)
 
-
 for (index, value) in sessionsListArray.enumerated() {
     let htmlText = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
 
@@ -502,6 +503,7 @@ for (index, value) in sessionsListArray.enumerated() {
             print("Video : Video is not yet available !!!")
         } else {
             print("Video : \(videoURLString)")
+
             wwdcVideosController.downloadFile(urlString: videoURLString, forSession: value)
         }
     }
