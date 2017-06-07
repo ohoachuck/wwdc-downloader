@@ -4,7 +4,7 @@
 	Author: Olivier HO-A-CHUCK
 	Date: June 17th 2017
 	About this script:
- WWDC 2016 is ending today and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
+ WWDC 2017 is ending today and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
  I Still need to get my video doggy bag to fly back home. And Moscone alsways provide with great bandwidth.
  So as I had never really started to code in Swift I decided to start here (I know it's late - but I'm no more a developer) and copy/pasted some internet peace
  of codes to get a Swift Script that bulk download all sessions.
