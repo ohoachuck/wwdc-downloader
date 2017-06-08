@@ -492,7 +492,7 @@ if sessionsSet.count != 0 {
 
 sessionsListArray.sort(by: sortFunc)
 
-for (index, value) in sessionsListArray.enumerated() {
+for (_, value) in sessionsListArray.enumerated() {
     let htmlText = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/play/wwdc2017/" + value + "/")
 
     let title = wwdcVideosController.getTitle(fromHTML: htmlText)
