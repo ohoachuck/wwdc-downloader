@@ -483,7 +483,7 @@ func sortFunc(value1: String, value2: String) -> Bool {
 
 /* Retreiving list of all video session */
 let htmlSessionListString = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/wwdc2017/")
-print("Let me ask Apple about currently available sessions. This can take some times (15 to 20 sec.) ...")
+print("Let me ask Apple about currently available sessions. This can take some time (15 to 20 sec.) ...")
 var sessionsListArray = wwdcVideosController.getSessionsList(fromHTML: htmlSessionListString)
 //get unique values
 sessionsListArray=Array(Set(sessionsListArray))
