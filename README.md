@@ -31,10 +31,10 @@ Examples:
 
 		- Download all SD videos for wwdc 2017:
 			./wwdc2017.swift --sd
-			
+
 		- Download all SD videos & the slides PDF for wwdc 2017:
 			./wwdc2017.swift --sd --pdf
-		
+
 		- Download only all PDF for wwdc 2017:
 			./wwdc2017.swift --pdf-only
 
@@ -43,6 +43,9 @@ Examples:
 
 		- List titles of known sessions for wwdc 2017:
 			./wwdc2017.swift --list-only
+
+			- List download urls of known sessions for wwdc 2017:
+				./wwdc2017.swift --url-only
 
 ### Requirements
 Works on macOS.
