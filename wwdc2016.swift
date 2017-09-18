@@ -286,8 +286,19 @@ class wwdcVideosController {
             let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
                 fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
             var path = fromHTML.substring(with: r)
-            path = path.replacingOccurrences(of: "href=\"", with: "https://developer.apple.com")
-            path = path.replacingOccurrences(of: "\" target=\"", with: "/")
+			
+			// Tack on the hostname if it's not already there (some URLs are listed as
+			// relative URL while some are fully-qualified).
+			let prefixReplacementString: String
+			if path.contains("href=\"http") == false {
+				prefixReplacementString = "https://developer.apple.com"
+			} else {
+				prefixReplacementString = ""
+			}
+			path = path.replacingOccurrences(of: "href=\"", with: prefixReplacementString)
+
+			// Strip target attribute suffix
+			path = path.replacingOccurrences(of: "\" target=\"", with: "/")
 
             sampleURLPaths.append(path)
         }
@@ -372,9 +383,13 @@ class wwdcVideosController {
     }
     
     class func downloadFile(urlString: String, forSession sessionIdentifier: String = "???") {
-        let fileName = URL(fileURLWithPath: urlString).lastPathComponent
-        
-        guard !FileManager.default.fileExists(atPath: "./" + fileName) else {
+        var fileName = URL(fileURLWithPath: urlString).lastPathComponent
+
+		if fileName.hasPrefix(sessionIdentifier) == false {
+			fileName = "\(sessionIdentifier)_\(fileName)"
+		}
+
+		guard !FileManager.default.fileExists(atPath: "./" + fileName) else {
             print("\(fileName): already exists, nothing to do!")
             return
         }
@@ -435,6 +450,11 @@ for argument in arguments {
     case "--sample":
         shouldDownloadSampleCodeResource = true
         gettingSessions = false
+
+	case "--sample-only":
+		shouldDownloadSampleCodeResource = true
+		shouldDownloadVideoResource = false
+		gettingSessions = false
 
     case "--sessions", "-s":
         gettingSessions = true
