@@ -383,9 +383,13 @@ class wwdcVideosController {
     }
     
     class func downloadFile(urlString: String, forSession sessionIdentifier: String = "???") {
-        let fileName = URL(fileURLWithPath: urlString).lastPathComponent
-        
-        guard !FileManager.default.fileExists(atPath: "./" + fileName) else {
+        var fileName = URL(fileURLWithPath: urlString).lastPathComponent
+
+		if fileName.hasPrefix(sessionIdentifier) == false {
+			fileName = "\(sessionIdentifier)_\(fileName)"
+		}
+
+		guard !FileManager.default.fileExists(atPath: "./" + fileName) else {
             print("\(fileName): already exists, nothing to do!")
             return
         }
