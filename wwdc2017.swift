@@ -286,7 +286,18 @@ class wwdcVideosController {
             let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
                 fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
             var path = fromHTML.substring(with: r)
-            path = path.replacingOccurrences(of: "href=\"", with: "https://developer.apple.com")
+
+            // Tack on the hostname if it's not already there (some URLs are listed as
+            // relative URL while some are fully-qualified).
+            let prefixReplacementString: String
+            if path.contains("href=\"http") == false {
+                prefixReplacementString = "https://developer.apple.com"
+            } else {
+                prefixReplacementString = ""
+            }
+            path = path.replacingOccurrences(of: "href=\"", with: prefixReplacementString)
+
+            // Strip target attribute suffix
             path = path.replacingOccurrences(of: "\" target=\"", with: "/")
 
             sampleURLPaths.append(path)
