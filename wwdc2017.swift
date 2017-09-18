@@ -1,4 +1,4 @@
-#!/usr/bin/swift
+#!/usr/bin/swift -swift-version 3
 
 /*
 	Author: Olivier HO-A-CHUCK
