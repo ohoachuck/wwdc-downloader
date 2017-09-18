@@ -2,9 +2,9 @@
 
 /*
 	Author: Olivier HO-A-CHUCK
-	Date: June 17th 2016
+	Date: June 17th 2017
 	About this script:
- WWDC 2016 is ending today and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
+ WWDC 2017 is ending and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
  I Still need to get my video doggy bag to fly back home. And Moscone alsways provide with great bandwidth.
  So as I had never really started to code in Swift I decided to start here (I know it's late - but I'm no more a developer) and copy/pasted some internet peace
  of codes to get a Swift Script that bulk download all sessions.
@@ -12,7 +12,7 @@
  Please feel free to make this script better if you feel like so. There is plenty to do.
 	
 	License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
-	Usage: wwdc2016.swift
+	Usage: wwdc2017.swift
 	Default behavior: without any options the script will download all available hd videos. And will re-take non fully downloaded ones.
 	Please use --help option to get currently available options
  
@@ -231,7 +231,7 @@ class DownloadSessionManager : NSObject, URLSessionDownloadDelegate {
 
 class wwdcVideosController {
     class func getHDorSDdURLs(fromHTML: String, format: VideoQuality) -> (String) {
-        let pat = "\\b.*(http://.*" + format.rawValue + ".*\\.mp4)\\b"
+        let pat = "\\b.*(https://.*" + format.rawValue + ".*\\.mp4)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
         var videoURL = ""
@@ -246,7 +246,7 @@ class wwdcVideosController {
     }
     
     class func getPDFResourceURL(fromHTML: String) -> (String) {
-        let pat = "\\b.*(http://.*\\.pdf)\\b"
+        let pat = "\\b.*(https://.*\\.pdf)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
         var pdfResourceURL = ""
@@ -321,7 +321,8 @@ class wwdcVideosController {
         let session = URLSession(configuration: URLSessionConfiguration.default, delegate: nil, delegateQueue: nil)
         
         /* Create the Request:
-         My API (2) (GET https://developer.apple.com/videos/play/wwdc2016/201/)
+         My API (2) (GET https://developer.apple.com/videos/play/wwdc2017/201/)
+         https://developer.apple.com/videos/play/wwdc2017/102/
          */
         var result = ""
         guard let URL = URL(string: fromURL) else {return result}
@@ -351,7 +352,7 @@ class wwdcVideosController {
     }
     
     class func getSessionsList(fromHTML: String) -> Array<String> {
-        let pat = "\"\\/videos\\/play\\/wwdc2016\\/([0-9]*)\\/\""
+        let pat = "\"\\/videos\\/play\\/wwdc2017\\/([0-9]*)\\/\""
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
         var sessionsListArray = [String]()
@@ -391,8 +392,8 @@ class wwdcVideosController {
 }
 
 func showHelpAndExit() {
-    print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-    print("usage: wwdc2006.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--sample] [--help]\n")
+    print("wwdc2017 - a simple swifty video sessions bulk download.\nJust Get'em all!")
+    print("usage: wwdc2017.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--sample] [--list-only] [--help]\n")
     exit(0)
 }
 
@@ -439,7 +440,11 @@ for argument in arguments {
     case "--sessions", "-s":
         gettingSessions = true
         break
-        
+    
+    case "--list-only", "-l":
+        shouldDownloadVideoResource = false
+        break;
+
     case _ where Int(argument) != nil:
         if(!gettingSessions) {
             fallthrough
@@ -477,7 +482,7 @@ func sortFunc(value1: String, value2: String) -> Bool {
 }
 
 /* Retreiving list of all video session */
-let htmlSessionListString = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/wwdc2016/")
+let htmlSessionListString = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/wwdc2017/")
 print("Let me ask Apple about currently available sessions. This can take some time (15 to 20 sec.) ...")
 var sessionsListArray = wwdcVideosController.getSessionsList(fromHTML: htmlSessionListString)
 //get unique values
@@ -491,8 +496,8 @@ if sessionsSet.count != 0 {
 
 sessionsListArray.sort(by: sortFunc)
 
-for (index, value) in sessionsListArray.enumerated() {
-    let htmlText = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/play/wwdc2016/" + value + "/")
+for (_, value) in sessionsListArray.enumerated() {
+    let htmlText = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/play/wwdc2017/" + value + "/")
 
     let title = wwdcVideosController.getTitle(fromHTML: htmlText)
     print("\n[Session \(value)] : \(title)")
