@@ -1,4 +1,4 @@
-#!/usr/bin/swift -swift-version 3
+#!/usr/bin/swift -swift-version 4
 
 /*
 	Author: Olivier HO-A-CHUCK
@@ -233,13 +233,13 @@ class wwdcVideosController {
     class func getHDorSDdURLs(fromHTML: String, format: VideoQuality) -> (String) {
         let pat = "\\b.*(https://.*" + format.rawValue + ".*\\.mp4)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var videoURL = ""
         if !matches.isEmpty {
-            let range = matches[0].rangeAt(1)
+            let range = matches[0].range(at: 1)
             let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
                 fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
-            videoURL = fromHTML.substring(with: r)
+            videoURL = String(fromHTML[r])
         }
         
         return videoURL
@@ -248,13 +248,13 @@ class wwdcVideosController {
     class func getPDFResourceURL(fromHTML: String) -> (String) {
         let pat = "\\b.*(https://.*\\.pdf)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var pdfResourceURL = ""
         if !matches.isEmpty {
-            let range = matches[0].rangeAt(1)
+            let range = matches[0].range(at: 1)
             let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
                 fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
-            pdfResourceURL = fromHTML.substring(with: r)
+            pdfResourceURL = String(fromHTML[r])
         }
         
         return pdfResourceURL
@@ -264,13 +264,13 @@ class wwdcVideosController {
     class func getTitle(fromHTML: String) -> (String) {
         let pat = "<h1>(.*)</h1>"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var title = ""
         if !matches.isEmpty {
-            let range = matches[0].rangeAt(1)
+            let range = matches[0].range(at: 1)
             let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
                 fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
-            title = fromHTML.substring(with: r)
+            title = String(fromHTML[r])
         }
 
         return title
@@ -279,13 +279,13 @@ class wwdcVideosController {
     class func getSampleCodeURL(fromHTML: String) -> [String] {
         let pat = "\\b.*(href=\".*/content/samplecode/.*\")\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var sampleURLPaths : [String] = []
         for match in matches {
-            let range = match.rangeAt(1)
+            let range = match.range(at: 1)
             let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
                 fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
-            var path = fromHTML.substring(with: r)
+            var path = String(fromHTML[r])
 
             // Tack on the hostname if it's not already there (some URLs are listed as
             // relative URL while some are fully-qualified).
@@ -365,17 +365,17 @@ class wwdcVideosController {
     class func getSessionsList(fromHTML: String) -> Array<String> {
         let pat = "\"\\/videos\\/play\\/wwdc2017\\/([0-9]*)\\/\""
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var sessionsListArray = [String]()
         for match in matches {
             for n in 0..<match.numberOfRanges {
-                let range = match.rangeAt(n)
+                let range = match.range(at: n)
                 let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
                     fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
                 switch n {
                 case 1:
                     //print(htmlSessionList.substring(with: r))
-                    sessionsListArray.append(fromHTML.substring(with: r))
+                    sessionsListArray.append(String(fromHTML[r]))
                 default: break
                 }
             }
@@ -495,8 +495,8 @@ if(shouldDownloadVideoResource) {
 
 func sortFunc(value1: String, value2: String) -> Bool {
     
-    let filteredVal1 = value1.substring(to: value1.index(value1.startIndex, offsetBy: 3))
-    let filteredVal2 = value2.substring(to: value2.index(value2.startIndex, offsetBy: 3))
+    let filteredVal1 = value1[..<value1.index(value1.startIndex, offsetBy: 3)]
+    let filteredVal2 = value2[..<value2.index(value2.startIndex, offsetBy: 3)]
     
     return filteredVal1 < filteredVal2;
 }

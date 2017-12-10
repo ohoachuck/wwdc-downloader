@@ -1,4 +1,4 @@
-#!/usr/bin/env xcrun swift
+#!/usr/bin/swift -swift-version 4
 
 /*
 	Author: Olivier HO-A-CHUCK
@@ -30,110 +30,99 @@ enum VideoQuality: String {
 
 class wwdcVideosController {
     
-    class func getHDorSDdURLsFromStringAndFormat(testStr: String, format: VideoQuality) -> (String) {
-        let pat = "\\b.*(http.*" + format.rawValue + ".*\\.mov)\\b"
+    class func getHDorSDdURLsFromStringAndFormat(_ testStr: String, format: VideoQuality) -> (String) {
+        let pat = "\\b.*(http.*_" + format.rawValue + "[_.].*\\.{0,1}mov)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matchesInString(testStr, options: [], range: NSRange(location: 0, length: testStr.characters.count))
-        print (matches)
+        let matches = regex.matches(in: testStr, options: [], range: NSRange(location: 0, length: testStr.count))
         var videoURL = ""
         if !matches.isEmpty {
-            let range = matches[0].rangeAtIndex(1)
-            let r = testStr.startIndex.advancedBy(range.location) ..< testStr.startIndex.advancedBy(range.location+range.length)
-            videoURL = testStr.substringWithRange(r)
+            let range = matches[0].range(at: 1)
+            let r = testStr.index(testStr.startIndex, offsetBy: range.location) ..<
+                    testStr.index(testStr.startIndex, offsetBy: range.location+range.length)
+            videoURL = String(testStr[r])
         }
         
         return videoURL
     }
     
-    class func getPDFResourceURLFromString(testStr: String) -> (String) {
+    class func getPDFResourceURLFromString(_ testStr: String) -> (String) {
         let pat = "\\b.*(http.*\\.pdf)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matchesInString(testStr, options: [], range: NSRange(location: 0, length: testStr.characters.count))
+        let matches = regex.matches(in: testStr, options: [], range: NSRange(location: 0, length: testStr.count))
         var pdfResourceURL = ""
         if !matches.isEmpty {
-            let range = matches[0].rangeAtIndex(1)
-            let r = testStr.startIndex.advancedBy(range.location) ..< testStr.startIndex.advancedBy(range.location+range.length)
-            pdfResourceURL = testStr.substringWithRange(r)
+            let range = matches[0].range(at: 1)
+            let r = testStr.index(testStr.startIndex, offsetBy: range.location) ..<
+                    testStr.index(testStr.startIndex, offsetBy: range.location+range.length)
+            pdfResourceURL = String(testStr[r])
         }
         
         return pdfResourceURL
     }
     
-    class func getStringContentFromURL(url: String) -> (String) {
-        /* Configure session, choose between:
-         * defaultSessionConfiguration
-         * ephemeralSessionConfiguration
-         * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = NSURLSessionConfiguration.defaultSessionConfiguration()
-        
-        /* Create session, and optionally set a NSURLSessionDelegate. */
-        let session = NSURLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-        
-        /* Create the Request:
-         My API (2) (GET https://developer.apple.com/videos/play/wwdc2016/201/)
-         */
+    class func getStringContentFromURL(_ wwdcUrl: String) -> (String) {
+        guard let url = URL(string: wwdcUrl) else {
+            return ""
+        }
+
         var result = ""
-        guard let URL = NSURL(string: url) else {return result}
-        let request = NSMutableURLRequest(URL: URL)
-        request.HTTPMethod = "GET"
-        
-        /* Start a new Task */
-        let semaphore = dispatch_semaphore_create(0)
-        let task = session.dataTaskWithRequest(request, completionHandler: { (data: NSData?, response: NSURLResponse?, error: NSError?) -> Void in
-            if (error == nil) {
-                /* Success */
-                // let statusCode = (response as! NSHTTPURLResponse).statusCode
-                // print("URL Session Task Succeeded: HTTP \(statusCode)")
-                result = NSString(data: data!, encoding:NSASCIIStringEncoding)! as String
-            }
-            else {
-                /* Failure */
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-            dispatch_semaphore_signal(semaphore)
-        })
-        task.resume()
-        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER)
+        do {
+            let data = try Data(contentsOf: url)
+            result = String(data: data, encoding: .ascii)!
+            
+        } catch let error {
+            print("URL Session Task Failed: %@", error.localizedDescription)
+        }
+
         return result
     }
     
-    class func getSessionsListFromString(htmlSessionList: String) -> Array<String> {
-        let pat = "\\b.*\\/videos\\/play\\/wwdc2014\\/([0-9]*)\\/\"><h5\\b"
+    class func getSessionsListFromString(_ htmlSessionList: String) -> Array<String> {
+        let pat = "/videos/play/wwdc2014/([0-9]*)/\">"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matchesInString(htmlSessionList, options: [], range: NSRange(location: 0, length: htmlSessionList.characters.count))
+        let matches = regex.matches(in: htmlSessionList, options: [], range: NSRange(location: 0, length: htmlSessionList.count))
         var sessionsListArray = [String]()
         for match in matches {
             for n in 0..<match.numberOfRanges {
-                let range = match.rangeAtIndex(n)
-                let r = htmlSessionList.startIndex.advancedBy(range.location) ..<
-                    htmlSessionList.startIndex.advancedBy(range.location+range.length)
+                let range = match.range(at: n)
+                let r = htmlSessionList.index(htmlSessionList.startIndex, offsetBy: range.location) ..<
+                        htmlSessionList.index(htmlSessionList.startIndex, offsetBy: range.location+range.length)
                 switch n {
                 case 1:
                     //print(htmlSessionList.substringWithRange(r))
-                    sessionsListArray.append(htmlSessionList.substringWithRange(r))
+                    sessionsListArray.append(String(htmlSessionList[r]))
                 default: break
                 }
             }
         }
         return sessionsListArray
     }
-    
-    class func downloadFileFromURLString(urlString: String, forSession session: String = "???") {
-        let fileName = NSURL(fileURLWithPath: urlString).lastPathComponent!
-        let fileManager = NSFileManager.defaultManager()
-        if fileManager.fileExistsAtPath("./" + fileName) {
+
+    class func system(_ command: String) {
+        var args = command.components(separatedBy: " ")
+        let path = args.first
+        args.remove(at: 0)
+
+        let task = Process()
+        task.launchPath = path
+        task.arguments = args
+        task.launch()
+        task.waitUntilExit()
+    }
+
+    class func downloadFileFromURLString(_ urlString: String, forSession session: String = "???") {
+        let fileName = URL(fileURLWithPath: urlString).lastPathComponent
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: "./" + fileName) {
             print("\(fileName): already exists, nothing to do!")
         } else {
             print("[Session \(session)] Getting \(fileName) (\(urlString)):")
-            let cmd = "curl \(urlString) > ./\(fileName).download"
+            let cmd = "/usr/bin/curl \(urlString) -o ./\(fileName).download"
             system(cmd)
             
             print("moving ./\(fileName).download to ./\(fileName)")
             do {
-                try fileManager.moveItemAtPath("./\(fileName).download", toPath: "./\(fileName)")
+                try fileManager.moveItem(atPath: "./\(fileName).download", toPath: "./\(fileName)")
             }
             catch let error as NSError {
                 print("Ooops! Something went wrong: \(error)")
@@ -148,7 +137,7 @@ var format = VideoQuality.HD
 var shouldDownloadPDFResource = false
 var shouldDownloadVideoResource = true
 
-for argument in Process.arguments {
+for argument in CommandLine.arguments {
  switch argument {
 	case "-h", "--help":
         print("wwdc2016 - a simple swifty video sessions bulk download.\nJust Get'em all!")
@@ -177,8 +166,8 @@ for argument in Process.arguments {
 
 func sortFunc(value1: String, value2: String) -> Bool {
     
-    let filteredVal1 = value1.substringToIndex(value1.startIndex.advancedBy(3))
-    let filteredVal2 = value2.substringToIndex(value2.startIndex.advancedBy(3))
+    let filteredVal1 = String(value1[..<value1.index(value1.startIndex, offsetBy:3)])
+    let filteredVal2 = String(value2[..<value2.index(value2.startIndex, offsetBy:3)])
     
     return filteredVal1 < filteredVal2;
 }
@@ -188,10 +177,10 @@ func sortFunc(value1: String, value2: String) -> Bool {
 let htmlSessionListString = wwdcVideosController.getStringContentFromURL("https://developer.apple.com/videos/wwdc2014/")
 print("Let me ask Apple about currently available sessions. This can take some time (15 to 20 sec.) ...")
 var sessionsListArray = wwdcVideosController.getSessionsListFromString(htmlSessionListString)
-sessionsListArray.sortInPlace(sortFunc)
+sessionsListArray.sort(by: sortFunc)
 
 /* getting individual videos */
-for (index, value) in sessionsListArray.enumerate() {
+for (_, value) in sessionsListArray.enumerated() {
     let baseURL = "https://developer.apple.com/videos/play/wwdc2014/" + value + "/"
     let htmlText = wwdcVideosController.getStringContentFromURL(baseURL)
 	if shouldDownloadVideoResource {
