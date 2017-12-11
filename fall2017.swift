@@ -408,7 +408,7 @@ class wwdcVideosController {
 
 func showHelpAndExit() {
 	print("fall2017 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-	print("usage: fall2017.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--sample] [--list-only] [--help]\n")
+	print("usage: fall2017.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--sample] [--sample-only] [--list-only] [--help]\n")
 	exit(0)
 }
 
