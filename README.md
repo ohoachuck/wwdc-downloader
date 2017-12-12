@@ -25,7 +25,7 @@ downloads by default WWDC 2017 HD videos sessions.
 ### Options
 You can try `wwdc2017.swift --help` for more options.
 
-Usage: 	wwdc2017.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions <s1 s2 ...>] [--list-only] [--help]
+Usage: 	wwdc2017.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sample] [--sample-only] [--sessions <s1 s2 ...>] [--list-only] [--help]
 
 Examples:
 
@@ -34,9 +34,15 @@ Examples:
 			
 		- Download all SD videos & the slides PDF for wwdc 2017:
 			./wwdc2017.swift --sd --pdf
+
+		- Download all SD videos, slides PDF & the sample code for wwdc 2017:
+			./wwdc2017.swift --sd --pdf --sample
 		
 		- Download only all PDF for wwdc 2017:
 			./wwdc2017.swift --pdf-only
+		
+		- Download only all sample code for wwdc 2017:
+			./wwdc2017.swift --sample-only
 
 		- Download only SD videos + PDFs for sessions 503 and 504 for wwdc 2017:
 			./wwdc2017.swift --sd --pdf --sessions 503 504
