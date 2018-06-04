@@ -233,7 +233,7 @@ class wwdcVideosController {
     class func getHDorSDdURLs(fromHTML: String, format: VideoQuality) -> (String) {
         let pat = "\\b.*(https://.*" + format.rawValue + ".*\\.mp4)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var videoURL = ""
         if !matches.isEmpty {
             let range = matches[0].range(at: 1)
@@ -248,7 +248,7 @@ class wwdcVideosController {
     class func getPDFResourceURL(fromHTML: String) -> (String) {
         let pat = "\\b.*(https://.*\\.pdf)\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var pdfResourceURL = ""
         if !matches.isEmpty {
             let range = matches[0].range(at:1)
@@ -264,7 +264,7 @@ class wwdcVideosController {
     class func getTitle(fromHTML: String) -> (String) {
         let pat = "<h1>(.*)</h1>"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var title = ""
         if !matches.isEmpty {
             let range = matches[0].range(at:1)
@@ -279,7 +279,7 @@ class wwdcVideosController {
     class func getSampleCodeURL(fromHTML: String) -> [String] {
         let pat = "\\b.*(href=\".*/content/samplecode/.*\")\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var sampleURLPaths : [String] = []
         for match in matches {
             let range = match.range(at:1)
@@ -354,7 +354,7 @@ class wwdcVideosController {
     class func getSessionsList(fromHTML: String) -> Array<String> {
         let pat = "\"\\/videos\\/play\\/wwdc2018\\/([0-9]*)\\/\""
         let regex = try! NSRegularExpression(pattern: pat, options: [])
-        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.characters.count))
+        let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var sessionsListArray = [String]()
         for match in matches {
             for n in 0..<match.numberOfRanges {
