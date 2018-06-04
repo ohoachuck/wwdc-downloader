@@ -19,6 +19,8 @@
 	TODO:
  - basically all previous script option (previuous years, checks, cleaner code, etc.)
  
+ 
+ Note: SF Tested with Apple Swift version 4.1.2 (swiftlang-902.0.54 clang-902.0.39.2)
  */
 
 import Cocoa
@@ -237,9 +239,7 @@ class wwdcVideosController {
         var videoURL = ""
         if !matches.isEmpty {
             let range = matches[0].range(at: 1)
-            let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
-                fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
-            videoURL = fromHTML.substring(with: r)
+            videoURL = String(fromHTML[fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..< fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)])
         }
         
         return videoURL
@@ -252,9 +252,7 @@ class wwdcVideosController {
         var pdfResourceURL = ""
         if !matches.isEmpty {
             let range = matches[0].range(at:1)
-            let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
-                fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
-            pdfResourceURL = fromHTML.substring(with: r)
+            pdfResourceURL = String(fromHTML[fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..< fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)])
         }
         
         return pdfResourceURL
@@ -268,9 +266,7 @@ class wwdcVideosController {
         var title = ""
         if !matches.isEmpty {
             let range = matches[0].range(at:1)
-            let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
-                fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
-            title = fromHTML.substring(with: r)
+            title = String(fromHTML[fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..< fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)])
         }
 
         return title
@@ -283,9 +279,7 @@ class wwdcVideosController {
         var sampleURLPaths : [String] = []
         for match in matches {
             let range = match.range(at:1)
-            let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
-                fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
-            var path = fromHTML.substring(with: r)
+            var path = String(fromHTML[fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..< fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)])
             path = path.replacingOccurrences(of: "href=\"", with: "https://developer.apple.com")
             path = path.replacingOccurrences(of: "\" target=\"", with: "/")
 
@@ -359,12 +353,10 @@ class wwdcVideosController {
         for match in matches {
             for n in 0..<match.numberOfRanges {
                 let range = match.range(at:n)
-                let r = fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..<
-                    fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)
                 switch n {
                 case 1:
                     //print(htmlSessionList.substring(with: r))
-                    sessionsListArray.append(fromHTML.substring(with: r))
+                    sessionsListArray.append(String(fromHTML[fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..< fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)]))
                 default: break
                 }
             }
