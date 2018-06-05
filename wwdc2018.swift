@@ -467,8 +467,8 @@ if(shouldDownloadVideoResource) {
 
 func sortFunc(value1: String, value2: String) -> Bool {
     
-    let filteredVal1 = value1.substring(to: value1.index(value1.startIndex, offsetBy: 3))
-    let filteredVal2 = value2.substring(to: value2.index(value2.startIndex, offsetBy: 3))
+    let filteredVal1 = value1[...value1.index(value1.startIndex, offsetBy: 3)]
+    let filteredVal2 = value2[...value2.index(value2.startIndex, offsetBy: 3)]
     
     return filteredVal1 < filteredVal2;
 }
