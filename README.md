@@ -1,58 +1,58 @@
-WWDC 2017 Video sessions bulk download (wwdc2017.swift)
+WWDC 2018 Video sessions bulk download (wwdc2018.swift)
 ================
 
-Note: the previous **wwdcVideoPDFGet-curlVersion.sh** has been deprecated (see [previous readme](https://github.com/ohoachuck/wwdc-downloader/blob/master/DEPRECATED-README.md))
 
-**wwdc2017.swift** script is a Swift script that should **work out of the box** without any needs of extra software or development package.
+**wwdc2018.swift** script is a Swift script that should **work out of the box** without any needs of extra software or development package.
 ** **
 
-Its main purpose is to let you bulk download all WWDC session **videos** and **pdf resources** in one shot.
-Current script version only supports **WWDC 2017**. You can use previous **wwdc2016.swif** for 2016 video sessions.
+Its main purpose is to let you bulk download all WWDC session **videos**, **pdf resources** and **sample codes** in one shot.
 
-So far the script is basic and does not come with as many options as the previous deprecated script (wwdcVideoPDFGet-curlVersion.sh).
+Latest version is **wwdc2018.swift**, but you might want to use previous years versions.
 
-Ok, this script is not the best in class solution to get WWDC videos and other resources. It was mainly created for 2 purposes: (1) play and explore with Swift scripting - for the Marketing guy I am - and (2) have a mean to bulk download in an exernal drive the all videos in one shot while benefiting from WWDC conf center fast internet connection.
+Ok, this script is not the best in class solution for getting WWDC videos and other resources. There are multiple version of scripts that does the same out there. But the best in class reference is the nice designed mac application done by [Guilherme Rambo](https://github.com/insidegui) : [WWDC](https://github.com/insidegui/WWDC). You definitly want to check he's [website](https://wwdc.io).
 
-Using the options below, you can choose to retrieve HD or SD videos and whether to download the pdf resource as well.
+The current scripts was mainly created to get in one shot all videos at the end of DubDubDC right before you run back home (in an exernal hardrive for instance). It's a good move to take benefice of WWDC conference center fast cable connection.
+
+Using the options below, you can choose to retrieve HD or SD videos and request to download pdf and sample codes as well.
 
 Note: script will download videos/pdfs in the current directory.
 
 ### Usage
-`./wwdc2017.swift`
+`./wwdc2018.swift`
 
-downloads by default WWDC 2017 HD videos sessions.
+downloads by default WWDC 2018 HD videos sessions.
 
 ### Options
-You can try `wwdc2017.swift --help` for more options.
+You can try `wwdc2018.swift --help` for more options.
 
-Usage: 	wwdc2017.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sample] [--sample-only] [--sessions <s1 s2 ...>] [--list-only] [--help]
+Usage: 	wwdc2018.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sample] [--sample-only] [--sessions <s1 s2 ...>] [--list-only] [--help]
 
 Examples:
 
-		- Download all SD videos for wwdc 2017:
-			./wwdc2017.swift --sd
+		- Download all SD videos for wwdc 2018:
+			./wwdc2018.swift --sd
 			
-		- Download all SD videos & the slides PDF for wwdc 2017:
-			./wwdc2017.swift --sd --pdf
+		- Download all SD videos & the slides PDF for wwdc 2018:
+			./wwdc2018.swift --sd --pdf
 
-		- Download all SD videos, slides PDF & the sample code for wwdc 2017:
-			./wwdc2017.swift --sd --pdf --sample
+		- Download all SD videos, slides PDF & the sample code for wwdc 2018:
+			./wwdc2018.swift --sd --pdf --sample
 		
-		- Download only all PDF for wwdc 2017:
-			./wwdc2017.swift --pdf-only
+		- Download only all PDF for wwdc 2018:
+			./wwdc2018.swift --pdf-only
 		
-		- Download only all sample code for wwdc 2017:
-			./wwdc2017.swift --sample-only
+		- Download only all sample code for wwdc 2018:
+			./wwdc2018.swift --sample-only
 
-		- Download only SD videos + PDFs for sessions 503 and 504 for wwdc 2017:
-			./wwdc2017.swift --sd --pdf --sessions 503 504
+		- Download only SD videos + PDFs for sessions 503 and 504 for wwdc 2018:
+			./wwdc2018.swift --sd --pdf --sessions 503 504
 
-		- List titles of known sessions for wwdc 2017:
-			./wwdc2017.swift --list-only
+		- List titles of known sessions for wwdc 2018:
+			./wwdc2018.swift --list-only
 
 ### Requirements
 Works on macOS.
 
 
 ### Related content
-You might want to discover the great **WWDC Mac app** from Guilherme Rambo:  https://github.com/insidegui/WWDC
+Note: the previous **wwdcVideoPDFGet-curlVersion.sh** has been deprecated (see [previous readme](https://github.com/ohoachuck/wwdc-downloader/blob/master/DEPRECATED-README.md))
