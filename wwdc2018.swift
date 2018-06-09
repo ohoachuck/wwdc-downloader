@@ -429,6 +429,11 @@ for argument in arguments {
         shouldDownloadSampleCodeResource = true
         gettingSessions = false
 
+    case "--sample-only":
+          shouldDownloadSampleCodeResource = true
+          shouldDownloadVideoResource = false
+          gettingSessions = false
+
     case "--sessions", "-s":
         gettingSessions = true
         break
