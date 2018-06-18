@@ -11,7 +11,7 @@ Latest version is **wwdc2018.swift**, but you might want to use previous years v
 
 Ok, this script is not the best in class solution for getting WWDC videos and other resources. There are multiple version of scripts that does the same out there. But the best in class reference is the nice designed mac application done by [Guilherme Rambo](https://github.com/insidegui) : [WWDC](https://github.com/insidegui/WWDC). You definitly want to check he's [website](https://wwdc.io).
 
-The current scripts was mainly created to get in one shot all videos at the end of DubDubDC right before you run back home (in an exernal hardrive for instance). It's a good move to take benefice of WWDC conference center fast cable connection.
+The current scripts was mainly created to get in one shot all videos at the end of DubDubDC right before you run back home (in an exernal hardrive for instance). It's a good move to take benefit of WWDC conference center fast cable connection.
 
 Using the options below, you can choose to retrieve HD or SD videos and request to download pdf and sample codes as well.
 
