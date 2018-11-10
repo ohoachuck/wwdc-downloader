@@ -4,7 +4,7 @@
 	Author: Olivier HO-A-CHUCK
 	Date: June 17th 2017
 	About this script:
- WWDC 2018 is ending and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
+ WWDC 2019 is ending and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
  I Still need to get my video doggy bag to fly back home. And Moscone alsways provide with great bandwidth.
  So as I had never really started to code in Swift I decided to start here (I know it's late - but I'm no more a developer) and copy/pasted some internet peace
  of codes to get a Swift Script that bulk download all sessions.
@@ -12,15 +12,15 @@
  Please feel free to make this script better if you feel like so. There is plenty to do.
 	
 	License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
-	Usage: wwdc2018.swift
-	Default behavior: without any options the script will download all available hd videos. And will re-take non fully downloaded ones.
+	Usage: wwdcDownloader.swift
+	Default behavior: without any options the script will download all available hd1080 videos. And will re-take non fully downloaded ones.
 	Please use --help option to get currently available options
  
 	TODO:
  - basically all previous script option (previuous years, checks, cleaner code, etc.)
  
  
- Note: SF Tested with Apple Swift version 4.1.2 (swiftlang-902.0.54 clang-902.0.39.2)
+ Note: SF Tested with Apple Swift version 4.2.1 (swiftlang-1000.11.42 clang-1000.11.45.1)
  */
 
 import Cocoa
@@ -382,8 +382,8 @@ class wwdcVideosController {
         let session = URLSession(configuration: URLSessionConfiguration.default, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-         My API (2) (GET https://developer.apple.com/videos/play/wwdc2018/201/)
-         https://developer.apple.com/videos/play/wwdc2018/102/
+         My API (2) (GET https://developer.apple.com/videos/play/wwdc2019/201/)
+         https://developer.apple.com/videos/play/wwdc2019/102/
          */
         var result = ""
         guard let URL = URL(string: fromURL) else {return result}
@@ -412,8 +412,8 @@ class wwdcVideosController {
         return result
     }
 
-    class func getSessionsList(fromHTML: String) -> Array<String> {
-        let pat = "\"\\/videos\\/play\\/wwdc2018\\/([0-9]*)\\/\""
+    class func getSessionsList(fromHTML: String, type: String) -> Array<String> {
+        let pat = "\"\\/videos\\/play\\/\(type)\\/([0-9]*)\\/\""
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var sessionsListArray = [String]()
@@ -683,20 +683,24 @@ func commandPath(command: String) -> String? {
 }
 
 func showHelpAndExit() {
-    print("wwdc2018 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-    print("usage: wwdc2018.swift [--hd1080] [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--sample] [--list-only] [--help]\n")
+    print("wwdcDownloader - a simple swifty video sessions bulk download.\nJust Get'em all!")
+    print("usage: wwdcDownloader.swift [--wwdc-year <year>] [--tech-talks] [--hd1080] [--hd720] [--sd] [--pdf] [--pdf-only] [--sessions <number>] [--sample] [--list-only] [--help]\n")
     exit(0)
 }
 
 /* Managing options */
-var wwdcIndexUrlString = "https://developer.apple.com/videos/wwdc2018/"
-var wwdcSessionUrlString = "https://developer.apple.com/videos/play/wwdc2018/"
-var format = VideoQuality.HD720
+let wwdcIndexUrlBaseString = "https://developer.apple.com/videos/"
+let wwdcSessionUrlBaseString = "https://developer.apple.com/videos/play/"
+var videoType = "wwdc2019"
+var format = VideoQuality.HD1080
 var videoDownloadMode = VideoDownloadMode.stream
 
 var shouldDownloadPDFResource = false
 var shouldDownloadVideoResource = true
 var shouldDownloadSampleCodeResource = false
+
+var shouldDownloadTechTalksVideoResource = false
+var shouldDownloadWWDCVideoResource = false
 
 var gettingSessions = false
 var sessionsSet:Set<String> = Set()
@@ -704,7 +708,9 @@ var sessionsSet:Set<String> = Set()
 var arguments = CommandLine.arguments
 arguments.remove(at: 0)
 
-for argument in arguments {
+var iterator = arguments.makeIterator()
+
+while let argument = iterator.next() {
     switch argument {
 
     case "-h", "--help":
@@ -713,50 +719,105 @@ for argument in arguments {
 
     case "--hd1080":
         format = .HD1080
-        gettingSessions = false
+        break
 
     case "--hd720":
         format = .HD720
-        gettingSessions = false
         videoDownloadMode = .file
+        break
 
     case "--sd":
         format = .SD
-        gettingSessions = false
         videoDownloadMode = .file
+        break
 
     case "--pdf":
         shouldDownloadPDFResource = true
-        gettingSessions = false
+        break
 
     case "--pdf-only":
         shouldDownloadPDFResource = true
         shouldDownloadVideoResource = false
-        gettingSessions = false
+        break
 
     case "--sample":
         shouldDownloadSampleCodeResource = true
-        gettingSessions = false
+        break
 
     case "--sample-only":
         shouldDownloadSampleCodeResource = true
         shouldDownloadVideoResource = false
-        gettingSessions = false
+        break
 
     case "--sessions", "-s":
         gettingSessions = true
+
+        if let session = iterator.next() {
+            if Int(session) != nil {
+                sessionsSet.insert(session)
+
+            } else {
+                print("\(session) is not a valid session nuber")
+                showHelpAndExit()
+            }
+
+        } else {
+            print("Missing session number")
+            showHelpAndExit()
+        }
+
         break
 
     case "--list-only", "-l":
         shouldDownloadVideoResource = false
-        break;
+        break
 
-    case _ where Int(argument) != nil:
-        if(!gettingSessions) {
-            fallthrough
+    case "--tech-talks":
+        if shouldDownloadWWDCVideoResource == true {
+            print("Could not download WWDC and Tech Talks videos at the same time")
+            showHelpAndExit()
+        }
+        
+        videoType = "tech-talks"
+        shouldDownloadTechTalksVideoResource = true
+        break
+
+    case "--wwdc-year":
+        if shouldDownloadTechTalksVideoResource == true {
+            print("Could not download WWDC and Tech Talks videos at the same time")
+            showHelpAndExit()
         }
 
-        sessionsSet.insert(argument)
+        if let yearString = iterator.next() {
+            if let year = Int(yearString) {
+                let today = Date()
+                let currentYear = Calendar.current.component(.year, from: today)
+                let currentMonth = Calendar.current.component(.month, from: today)
+
+                if year > currentYear || (year == currentYear && currentMonth < 6) {
+                    print("WWDC \(yearString) videos are not yet available")
+                    showHelpAndExit()
+
+                } else if year < 2012 {
+                    print("WWDC videos earlier than 2012 were not made available for downloads")
+                    showHelpAndExit()
+
+                    
+                } else {
+                    videoType = "wwdc\(yearString)"
+                    shouldDownloadWWDCVideoResource = true
+                }
+
+            } else {
+                print("\(yearString) is not a valid year")
+                showHelpAndExit()
+            }
+
+        } else {
+            print("Missing year")
+            showHelpAndExit()
+        }
+
         break
 
     default:
@@ -764,6 +825,9 @@ for argument in arguments {
         showHelpAndExit()
     }
 }
+
+var wwdcIndexUrlString = wwdcIndexUrlBaseString + videoType + "/"
+var wwdcSessionUrlString = wwdcSessionUrlBaseString + videoType + "/"
 
 if(shouldDownloadVideoResource) {
     switch format {
@@ -790,7 +854,7 @@ func makeFilename(fromTitle title: String, session: String, format: String, ext:
 /* Retreiving list of all video session */
 let htmlSessionListString = wwdcVideosController.getStringContent(fromURL: wwdcIndexUrlString)
 print("Let me ask Apple about currently available sessions. This can take some times (15 to 20 sec.) ...")
-var sessionsListArray = wwdcVideosController.getSessionsList(fromHTML: htmlSessionListString)
+var sessionsListArray = wwdcVideosController.getSessionsList(fromHTML: htmlSessionListString, type: videoType)
 //get unique values
 sessionsListArray=Array(Set(sessionsListArray))
 
