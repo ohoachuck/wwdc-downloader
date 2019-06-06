@@ -4,7 +4,7 @@ WWDC Video sessions bulk download (wwdcDownloader.swift)
 
 **wwdcDownloader.swift** script is a Swift script that should **work out of the box** without any needs of extra software or development package.
 
-/!\ WARNING: script seems to crash with Swift version 2363 (xcode-select --version) /!\
+/!\ WARNING: Some have a crash with un-identified yet reasons (this is working on some machines with Xcode Version 10.2.1 (10E1001) installed /!\
 
 ** **
 
