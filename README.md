@@ -3,6 +3,9 @@ WWDC Video sessions bulk download (wwdcDownloader.swift)
 
 
 **wwdcDownloader.swift** script is a Swift script that should **work out of the box** without any needs of extra software or development package.
+
+/!\ WARNING: script seems to crash with Swift version 2363 (xcode-select --version) /!\
+
 ** **
 
 Its main purpose is to let you bulk download all WWDC session **videos**, **pdf resources** and **sample codes** in one shot.
@@ -23,17 +26,29 @@ Downloading 1080p videos requires video processing. The script will attempt to u
 ### Usage
 `./wwdcDownloader.swift`
 
-Downloads by default WWDC 2019 HD videos sessions.
+Downloads by default WWDC 2019 HD 1080p videos sessions (need ffmpeg).
+
+Unless you plan to watch the videos on your TV you might just want to do get HD versions (720p):
+
+`./wwdcDownloader.swift --hd720 --pdf --sample`
+
+for taking HD videos, PDFs and sample codes when available.
 
 ### Options
 You can try `wwdcDownloader.swift --help` for more options.
 
-Usage: 	wwdcDownloader.swift [--wwdc-year &lt;year&gt;] [--tech-talks] [--hd1080] [--hd] [--sd] [--pdf] [--pdf-only] [--sample] [--sample-only] [--sessions &lt;s1 s2 ...&gt;] [--list-only] [--help]
+Usage: 	wwdcDownloader.swift [--wwdc-year &lt;year&gt;] [--tech-talks] [--hd1080] [--hd720] [--sd] [--pdf] [--pdf-only] [--sample] [--sample-only] [--sessions &lt;s1 s2 ...&gt;] [--list-only] [--help]
 
 Examples:
 
-		- Download all 1080p videos for wwdc 2019:
+		- Download all 1080p videos for wwdc 2019 (default):
 			./wwdcDownloader.swift --hd1080
+			
+		- Download all HD (720p) videos, slides PDF & the sample codes for wwdc 2019:
+			./wwdcDownloader.swift --hd720 --pdf --sample
+
+		- Download all 720p videos for wwdc 2019:
+			./wwdcDownloader.swift --hd720
 			
 		- Download all SD videos for wwdc 2019:
 			./wwdcDownloader.swift --sd
@@ -63,6 +78,5 @@ Examples:
 * Works on macOS.
 * ffmpeg (for 1080 HD videos).
 
-
 ### Related content
-Note: the previous **wwdcVideoPDFGet-curlVersion.sh** has been deprecated (see [previous readme](https://github.com/ohoachuck/wwdc-downloader/blob/master/DEPRECATED-README.md))
+[WWDC](https://github.com/insidegui/WWDC) native app done by [Guilherme Rambo](https://github.com/insidegui). You definitely want to check he's [website](https://wwdc.io).
