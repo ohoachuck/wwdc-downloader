@@ -38,6 +38,16 @@ enum VideoDownloadMode {
     case stream
 }
 
+struct DownloadSlice {
+    let source: URL
+    let destination: URL
+
+    // init(source: URL, destination: URL) {
+    //     self.source = source
+    //     self.destination = destination
+    // }
+}
+    
 //http://stackoverflow.com/a/30743763
 
 class Reachability {
@@ -139,17 +149,17 @@ class DownloadSessionManager : NSObject, URLSessionDownloadDelegate {
         print("")
     }
 
-    func downloadStream(fromUrls urls: [URL], toPath path: URL) {
+    func downloadStream(slices: [DownloadSlice]) {
         self.mode = .stream
         downloadedCount = 0
-        totalFileCount = urls.count
+        totalFileCount = slices.count
         cumulativeBytesWritten = 0
 
         taskStartedAt = Date()
 
         show(progress: 0, barWidth: 70, speed: String(0), speedUnits: "KB/s")
-        urls.forEach { url in
-            let destination = path.appendingPathComponent(url.lastPathComponent).path
+        slices.forEach { slice in
+            let destination = slice.destination.appendingPathComponent(slice.source.lastPathComponent).path
             guard !FileManager.default.fileExists(atPath: destination) else {
                 downloadedCount += 1
 
@@ -157,10 +167,10 @@ class DownloadSessionManager : NSObject, URLSessionDownloadDelegate {
             }
 
             resetSession()
-            self.fileUrl = path
-            self.url = url
+            self.fileUrl = slice.destination
+            self.url = slice.source
             self.resumeData = nil
-            let task = session.downloadTask(with: url)
+            let task = session.downloadTask(with: slice.source)
             task.resume()
             semaphore.wait()
         }
@@ -274,7 +284,7 @@ class wwdcVideosController {
         return videoUrl
     }
 
-    class func getPlaylistURLs(fromPlaylist playlist: String, format: String) -> String {
+    class func getPlaylistPath(fromPlaylist playlist: String, format: String) -> String {
         let pat = "\\s*#EXT-X-STREAM-INF:.*RESOLUTION=\\d*x" + format + ",.*\\s*(.*)\\s*"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matches(in: playlist, options: [], range: NSRange(location: 0, length: playlist.count))
@@ -286,6 +296,21 @@ class wwdcVideosController {
         }
 
         return path
+    }
+
+    class func getAudioPlaylistPath(fromPlaylist playlist: String) -> String? {
+        let pat = "\\s*#EXT-X-MEDIA:TYPE=AUDIO,.*,URI=\"(.*)\""
+        let regex = try! NSRegularExpression(pattern: pat, options: [])
+        let matches = regex.matches(in: playlist, options: [], range: NSRange(location: 0, length: playlist.count))
+
+        if !matches.isEmpty {
+            let range = matches[0].range(at:1)
+            let path = String(playlist[playlist.index(playlist.startIndex, offsetBy: range.location) ..< playlist.index(playlist.startIndex, offsetBy: range.location + range.length)])
+
+            return path
+        }
+
+        return nil
     }
 
     class func getSliceURLs(fromPlaylist playlist: String, baseURL: URL) -> [URL] {
@@ -444,8 +469,10 @@ class wwdcVideosController {
 
     class func downloadStream(playlistUrl: URL, toFile filename: String, forFormat format: String = "1080", forSession session: String = "???") {
 
+        let fileManager = FileManager.default
+
         let fileUrl = URL(fileURLWithPath: filename)
-        guard !FileManager.default.fileExists(atPath: "./" + filename) else {
+        guard !fileManager.fileExists(atPath: "./" + filename) else {
             print("\(filename): already exists, nothing to do!")
             return
         }
@@ -457,13 +484,17 @@ class wwdcVideosController {
             return
         }
 
-        let path = getPlaylistURLs(fromPlaylist: playlist, format: format)
+        let playlistPath = getPlaylistPath(fromPlaylist: playlist, format: format)
 
         let slicesURL: URL?
-        if path.hasPrefix("https://") {
-            slicesURL = URL(string: path)
+        let sliceRelativePath: String
+        if playlistPath.hasPrefix("https://") {
+            slicesURL = URL(string: playlistPath)
+            sliceRelativePath = String(playlistPath.dropFirst(8))
+            
         } else {
-            slicesURL = playlistUrl.deletingLastPathComponent().appendingPathComponent(path)
+            slicesURL = playlistUrl.deletingLastPathComponent().appendingPathComponent(playlistPath)
+            sliceRelativePath = playlistPath
         }
 
         guard let slicePlaylistURL = slicesURL, let slicePlaylist = try? String(contentsOf: slicePlaylistURL) else {
@@ -474,131 +505,160 @@ class wwdcVideosController {
         let baseURL = slicePlaylistURL.deletingLastPathComponent()
         let sliceURLs = getSliceURLs(fromPlaylist: slicePlaylist, baseURL: baseURL)
 
-        let tempDir = fileUrl.appendingPathExtension("part")
-        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true, attributes: nil)
+        let tempUrl = fileUrl.appendingPathExtension("part")
 
-        DownloadSessionManager.shared.downloadStream(fromUrls: sliceURLs, toPath: tempDir)
+        guard let newPlaylist = cleanupPlaylist(playlist: playlist, format: format, at: tempUrl),
+              let videoUrl = getVideoUrl(playlist: newPlaylist, baseUrl:  tempUrl) else {
+            print("Something went wrong getting video path")
+
+            return
+        }
+
+        try? fileManager.createDirectory(at: videoUrl, withIntermediateDirectories: true, attributes: nil)
+        // TODO: Check if directory already exist and handle error
+
+        let playlistFileUrl = tempUrl.appendingPathComponent("playlist").appendingPathExtension("m3u8")
+        let slicePlaylistFileUrl = tempUrl.appendingPathComponent(sliceRelativePath)
+        try? fileManager.removeItem(at: playlistFileUrl)
+        try? fileManager.removeItem(at: slicePlaylistFileUrl)
+        do {
+            try newPlaylist.write(to: playlistFileUrl, atomically: false, encoding: .utf8)
+            try slicePlaylist.write(to: slicePlaylistFileUrl, atomically: false, encoding: .utf8)
+
+        } catch {
+            print("Could not write playlist file!")
+            try? fileManager.removeItem(at: tempUrl)
+
+            return
+        }
+
+        var downloadSlices = sliceURLs.map { DownloadSlice(source: $0, destination: videoUrl) }
+
+        if let audioPlaylistPath = getAudioPlaylistPath(fromPlaylist: newPlaylist),
+           let audioUrl = getAudioUrl(playlist: newPlaylist, baseUrl: tempUrl) {
+
+            let audioSlicesUrl = playlistUrl.deletingLastPathComponent().appendingPathComponent(audioPlaylistPath)
+            let audioBaseUrl = audioSlicesUrl.deletingLastPathComponent()
+            guard let audioSlicePlaylist = try? String(contentsOf: audioSlicesUrl) else {
+                print("\(filename): Could not retrieve audio stream playlist!")
+                return
+            }
+
+            let audioSliceURLs = getSliceURLs(fromPlaylist: audioSlicePlaylist, baseURL: audioBaseUrl)
+
+            let sliceAudioPlaylistFileUrl = tempUrl.appendingPathComponent(audioPlaylistPath)
+
+            try? fileManager.createDirectory(at: audioUrl, withIntermediateDirectories: true, attributes: nil)
+            try? fileManager.removeItem(at: sliceAudioPlaylistFileUrl)
+            do {
+                try audioSlicePlaylist.write(to: sliceAudioPlaylistFileUrl, atomically: false, encoding: .utf8)
+
+            } catch {
+                print("Could not write playlist file!")
+
+                return
+            }
+
+            downloadSlices += audioSliceURLs.map { DownloadSlice(source: $0, destination: audioUrl) }
+        }
+
+        DownloadSessionManager.shared.downloadStream(slices: downloadSlices)
 
         if let command = commandPath(command: "ffmpeg") {
             print("[Session \(session)] Converting (ffmpeg) \(filename):")
 
-            let ffmpegFilelist = sliceURLs.map { tempDir.appendingPathComponent($0.lastPathComponent).path }
-            ffmpeg(command: command, filelist: ffmpegFilelist, tsBaseUrl: tempDir, outFile: filename)
-
-        } else if let command = commandPath(command: "avconvert") {
-            print("[Session \(session)] Converting (avconvert) \(filename):")
-
-            let avconvertPlaylist = sliceURLs.map { tempDir.appendingPathComponent($0.lastPathComponent).path }
-            avconvert(command: command, playlist: avconvertPlaylist, tsBaseUrl: tempDir, outFile: filename)
+            let ffmpegFilelist = sliceURLs.map { videoUrl.appendingPathComponent($0.lastPathComponent).path }
+            ffmpeg(command: command, filelist: ffmpegFilelist, tsBaseUrl: playlistUrl, playlistFileUrl: playlistFileUrl, tempDirBaseUrl: tempUrl, outFile: filename)
 
         } else {
             print("No converter!")
         }
     }
-}
 
-func mergeFile(files: [String], toFile destinationFile: URL) throws {
-    if FileManager.default.fileExists(atPath: destinationFile.path) {
-        try? FileManager.default.removeItem(at: destinationFile)
-    }
+    class func getVideoUrl(playlist: String, baseUrl: URL) -> URL? {
+        let regex = try! NSRegularExpression(pattern: "^[^#].*/", options: [.anchorsMatchLines])
+        let matches = regex.matches(in: playlist, options: [], range: NSRange(location: 0, length: playlist.count))
+        var videoPath = ""
+        if !matches.isEmpty {
+            let range = matches[0].range(at: 0)
+            videoPath = String(playlist[playlist.index(playlist.startIndex, offsetBy: range.location) ..<
+                                         playlist.index(playlist.startIndex, offsetBy: range.location+range.length)])
 
-    try files.sorted().forEach { url in
-        do {
-            let data = try Data(contentsOf: URL(fileURLWithPath: url))
-
-            if let fileHandle = try? FileHandle(forWritingTo: destinationFile) {
-                defer {
-                    fileHandle.closeFile()
-                }
-
-                fileHandle.seekToEndOfFile()
-                fileHandle.write(data)
-
-            } else {
-                try data.write(to: destinationFile)
-            }
-
-        } catch let error {
-            try? FileManager.default.removeItem(at: destinationFile)
-
-            throw error
+            return baseUrl.appendingPathComponent(videoPath)
         }
-    }
-}
 
-func avconvert(command: String, playlist: [String], tsBaseUrl: URL, outFile: String) {
-    let combineTsUrl = tsBaseUrl.appendingPathComponent("combined").appendingPathExtension("ts")
-    defer {
-        try? FileManager.default.removeItem(at: combineTsUrl)
+        return nil
     }
 
-    do {
-        try mergeFile(files: playlist, toFile: combineTsUrl)
+    class func getAudioUrl(playlist: String, baseUrl: URL) -> URL? {
+        let audioPathRegex = try! NSRegularExpression(pattern: "^#EXT-X-MEDIA:TYPE=AUDIO,.*,URI=\"(.*)/.*\"", options: [.anchorsMatchLines])
+        let audioPathMatches = audioPathRegex.matches(in: playlist, options: [], range: NSRange(location: 0, length: playlist.count))
+        var audioPath = ""
+        if !audioPathMatches.isEmpty {
+            let range = audioPathMatches[0].range(at: 1)
+            audioPath = String(playlist[playlist.index(playlist.startIndex, offsetBy: range.location) ..<
+                                        playlist.index(playlist.startIndex, offsetBy: range.location+range.length)])
 
-    } catch let error {
-        print("\nOoops! Something went wrong: \(error.localizedDescription)")
-
-        return
-    }
-
-    let task = Process()
-    task.launchPath = command
-    task.arguments = ["-prog", "-p", "PresetAppleM4V1080pHD", "-s", combineTsUrl.path, "-o", outFile]
-    let standardError = Pipe()
-    task.standardOutput = FileHandle.nullDevice
-    task.standardError = standardError
-    task.standardInput = FileHandle.nullDevice
-    task.launch()
-
-    var data = standardError.fileHandleForReading.availableData
-
-    show(progress: 0, barWidth: 70, speed: "", speedUnits: "")
-    while data.count != 0 {
-
-        let output = String(data: data, encoding: .utf8)!
-
-        let progressPattern = "avconvert progress=([\\d.]*)%.\\s"
-        let progressRegex = try! NSRegularExpression(pattern: progressPattern, options: [])
-        let matchesProgress = progressRegex.matches(in: output, options: [], range: NSRange(location: 0, length: output.count))
-
-        var progress = 0.0
-
-        if !matchesProgress.isEmpty {
-            let progressRange = matchesProgress[0].range(at: 1)
-            progress = Double(String(output[output.index(output.startIndex, offsetBy: progressRange.location) ..< output.index(output.startIndex, offsetBy: progressRange.location + progressRange.length)]))!
-
-            show(progress: progress, barWidth: 70, speed: "", speedUnits: "")
+            return baseUrl.appendingPathComponent(audioPath)
         }
-        data = standardError.fileHandleForReading.availableData
-    }
-    show(progress: 100.0, barWidth: 70, speed: "", speedUnits: "")
 
-    if !task.isRunning && task.terminationStatus == 0 {
-        try? FileManager.default.removeItem(at: tsBaseUrl)
+        return nil
     }
+    
+    class func cleanupPlaylist(playlist: String, format: String, at tempUrl: URL) -> String? {
+        var newPlaylist = ""
 
-    print("")
+        let headerRegex = try! NSRegularExpression(pattern: "^#.*\n.*\n.*\n\n", options: [.anchorsMatchLines])
+        let headerMatches = headerRegex.matches(in: playlist, options: [], range: NSRange(location: 0, length: playlist.count))
+        if headerMatches.isEmpty {
+            return nil
+        }
+
+        let headerRange = headerMatches[0].range(at: 0)
+        newPlaylist = String(playlist[playlist.index(playlist.startIndex, offsetBy: headerRange.location) ..<
+                                      playlist.index(playlist.startIndex, offsetBy: headerRange.location+headerRange.length)])
+
+        let programRegex = try! NSRegularExpression(pattern: "\n#EXT-X-STREAM-INF:.*RESOLUTION=\\d*x" + format + ",.*\n.*\n#EXT-X-I-FRAME-STREAM-INF.*\n\n", options: [])
+        let programMatches = programRegex.matches(in: playlist, options: .withTransparentBounds, range: NSRange(location: 0, length: playlist.count))
+        if programMatches.isEmpty {
+            return nil
+        }
+
+        let programRange = programMatches[0].range(at: 0)
+        var program = String(playlist[playlist.index(playlist.startIndex, offsetBy: programRange.location) ..<
+                                      playlist.index(playlist.startIndex, offsetBy: programRange.location+programRange.length)])
+
+        let httpRegex = try! NSRegularExpression(pattern: "https://", options: [])
+        let httpMatches = httpRegex.matches(in: program, options: [], range: NSRange(location: 0, length: program.count))
+        if !httpMatches.isEmpty {
+            program = httpRegex.stringByReplacingMatches(in: program, options: .withTransparentBounds, range: NSMakeRange(0, program.count), withTemplate: "")
+        }
+
+        newPlaylist += program
+
+        let audioRegex = try! NSRegularExpression(pattern: "\n#EXT-X-MEDIA:TYPE=AUDIO,.*\n", options: [])
+        let audioMatches = audioRegex.matches(in: playlist, options: .withTransparentBounds, range: NSRange(location: 0, length: playlist.count))
+        if !audioMatches.isEmpty {
+            let audioRange = audioMatches[0].range(at: 0)
+            newPlaylist += String(playlist[playlist.index(playlist.startIndex, offsetBy: audioRange.location) ..<
+                                           playlist.index(playlist.startIndex, offsetBy: audioRange.location+audioRange.length)])
+        }
+
+        return newPlaylist
+    }
 }
 
-func ffmpeg(command: String, filelist: [String], tsBaseUrl: URL, outFile filename: String) {
+
+func ffmpeg(command: String, filelist: [String], tsBaseUrl: URL, playlistFileUrl: URL, tempDirBaseUrl: URL, outFile filename: String) {
     let fileManager = FileManager.default
     let tsSize = filelist.reduce(Int64(0)) { initial, file in
         let sum = try! fileManager.attributesOfItem(atPath: file)[FileAttributeKey.size] as! Int64
         return initial + sum
     }
 
-    let ffmpegFilelist = filelist.reduce("") { initial, file in "\(initial)file '\(file)'\n" }
-    let ffmpegPlaylistURL = tsBaseUrl.appendingPathComponent("ffmpegFilelist.txt")
-    do {
-        try ffmpegFilelist.write(to: ffmpegPlaylistURL , atomically: true, encoding: .utf8)
-
-    } catch {
-        print("Ooops! Something went wrong: \(error)")
-    }
-
     let task = Process()
     task.launchPath = command
-    task.arguments = ["-progress", "-", "-f", "concat", "-safe", "0", "-i", ffmpegPlaylistURL.path, "-c", "copy", filename]
+    task.arguments = ["-progress", "-", "-i", playlistFileUrl.path, "-c", "copy", filename]
     let standardOutput = Pipe()
     task.standardOutput = standardOutput
     task.standardError = FileHandle.nullDevice
@@ -656,7 +716,7 @@ func ffmpeg(command: String, filelist: [String], tsBaseUrl: URL, outFile filenam
     }
 
     if !task.isRunning && task.terminationStatus == 0 {
-        try? FileManager.default.removeItem(at: tsBaseUrl)
+        try? FileManager.default.removeItem(at: tempDirBaseUrl)
     }
 
     print("")
@@ -832,7 +892,13 @@ var wwdcSessionUrlString = wwdcSessionUrlBaseString + videoType + "/"
 if(shouldDownloadVideoResource) {
     switch format {
     case .HD1080:
-        print("Downloading 1080p videos in current directory")
+        if commandPath(command: "ffmpeg") == nil {
+            print("Could not find ffmpeg. wwdcDownloader will download video stream but will not be able to convert to mp4 video files.")
+            print("Convertion can be done after the stream files are downloaded and ffmpeg installed.")
+
+        } else {
+            print("Downloading 1080p videos in current directory")
+        }
 
     case .HD720:
         print("Downloading 720p videos in current directory")
