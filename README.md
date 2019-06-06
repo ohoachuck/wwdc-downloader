@@ -17,7 +17,7 @@ Using the options below, you can choose to retrieve 1080p, 720p or SD videos and
 
 Note: script will download videos/pdfs in the current directory.
 
-#### important notice: 1080p videos
+#### Important notice: 1080p videos
 Downloading 1080p videos requires video processing. The script will attempt to use `ffmpeg` if available but will fallback to using macOS included `avconvert`. `avconvert` included with macOS don't seem to support copy mode and would force the video to be re-encoded. It will take significantly longer to process. You are encouraged to [install ffmpeg](http://brewformulas.org/Ffmpeg) (brew install ffmpeg) if you are donwloading the 1080p videos. 
 
 ### Usage
