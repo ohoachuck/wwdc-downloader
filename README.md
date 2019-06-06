@@ -56,8 +56,8 @@ Examples:
 		- List titles of known sessions for wwdc 2019:
 			./wwdcDownloader.swift --list-only
 
-		- Download all 1080p videos for wwdc 2018:
-			./wwdcDownloader.swift --wwdc-year 2018
+		- Download all 1080p videos for wwdc 2019:
+			./wwdcDownloader.swift --wwdc-year 2019
 
 ### Requirements
 Works on macOS.
