@@ -12,7 +12,7 @@ Option 1 (more secure):
 * run wwdcDownloader with this old swift runtine: `/tmp/testpkg-full/CLTools_Executables.pkg/Payload/Library/Developer/CommandLineTools/usr/bin/swift <your-path-to-script/wwdcDownloader.swift> --hd720 --pdf --sample` (or whatever are your command options.).
 
 Option 2 (quickest):
-* use the lib provided with GitHub
+* use the lib provided with GitHub (I'll create a separate repo as I just realised it's 900 Mb ;( ).)
 
 
 **wwdcDownloader.swift** script is a Swift script that should **work out of the box** without any needs of extra software or development package (at least ususaly :) ).
