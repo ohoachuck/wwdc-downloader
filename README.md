@@ -13,7 +13,7 @@ WWDC Video sessions bulk download (wwdcDownloader.swift)
 * run: `pkgutil --expand-full /Volumes/Command\ Line\ Developer\ Tools/Command\ Line\ Tools\ \(macOS\ High\ Sierra\ version\ 10.13\).pkg /tmp/testpkg-full`
 
 This will install the previous Swift Library on /tmp/testpkg-full
-* run wwdcDownloader with this old swift runtine: `/tmp/testpkg-full/CLTools_Executables.pkg/Payload/Library/Developer/CommandLineTools/usr/bin/swift <your-path-to-script/wwdcDownloader.swift> --hd720 --pdf --sample` (or whatever are your command options.).
+* run wwdcDownloader with this old swift runtime: `/tmp/testpkg-full/CLTools_Executables.pkg/Payload/Library/Developer/CommandLineTools/usr/bin/swift <your-path-to-script/wwdcDownloader.swift> --hd720 --pdf --sample` (or whatever are your command options.).
 
 **Option 2 (quickest):**
 * No option 2 ;) that would be to provide the Swift package in GitHub, I realised it doesn't make much sens.
