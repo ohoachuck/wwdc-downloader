@@ -1,0 +1,611 @@
+'\" t
+.\"     Title: git-clone
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-CLONE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-clone \- Clone a repository into a new directory
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit clone\fR [\-\-template=<template_directory>]
+          [\-l] [\-s] [\-\-no\-hardlinks] [\-q] [\-n] [\-\-bare] [\-\-mirror]
+          [\-o <name>] [\-b <name>] [\-u <upload\-pack>] [\-\-reference <repository>]
+          [\-\-dissociate] [\-\-separate\-git\-dir <git dir>]
+          [\-\-depth <depth>] [\-\-[no\-]single\-branch] [\-\-no\-tags]
+          [\-\-recurse\-submodules[=<pathspec>]] [\-\-[no\-]shallow\-submodules]
+          [\-\-jobs <n>] [\-\-] <repository> [<directory>]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Clones a repository into a newly created directory, creates remote\-tracking branches for each branch in the cloned repository (visible using \fBgit branch \-r\fR), and creates and checks out an initial branch that is forked from the cloned repository\(cqs currently active branch\&.
+.sp
+After the clone, a plain \fBgit fetch\fR without arguments will update all the remote\-tracking branches, and a \fBgit pull\fR without arguments will in addition merge the remote master branch into the current master branch, if any (this is untrue when "\-\-single\-branch" is given; see below)\&.
+.sp
+This default configuration is achieved by creating references to the remote branch heads under \fBrefs/remotes/origin\fR and by initializing \fBremote\&.origin\&.url\fR and \fBremote\&.origin\&.fetch\fR configuration variables\&.
+.SH "OPTIONS"
+.PP
+\-\-local, \-l
+.RS 4
+When the repository to clone from is on a local machine, this flag bypasses the normal "Git aware" transport mechanism and clones the repository by making a copy of HEAD and everything under objects and refs directories\&. The files under
+\fB\&.git/objects/\fR
+directory are hardlinked to save space when possible\&.
+.sp
+If the repository is specified as a local path (e\&.g\&.,
+\fB/path/to/repo\fR), this is the default, and \-\-local is essentially a no\-op\&. If the repository is specified as a URL, then this flag is ignored (and we never use the local optimizations)\&. Specifying
+\fB\-\-no\-local\fR
+will override the default when
+\fB/path/to/repo\fR
+is given, using the regular Git transport instead\&.
+.RE
+.PP
+\-\-no\-hardlinks
+.RS 4
+Force the cloning process from a repository on a local filesystem to copy the files under the
+\fB\&.git/objects\fR
+directory instead of using hardlinks\&. This may be desirable if you are trying to make a back\-up of your repository\&.
+.RE
+.PP
+\-\-shared, \-s
+.RS 4
+When the repository to clone is on the local machine, instead of using hard links, automatically setup
+\fB\&.git/objects/info/alternates\fR
+to share the objects with the source repository\&. The resulting repository starts out without any object of its own\&.
+.sp
+\fBNOTE\fR: this is a possibly dangerous operation; do
+\fBnot\fR
+use it unless you understand what it does\&. If you clone your repository using this option and then delete branches (or use any other Git command that makes any existing commit unreferenced) in the source repository, some objects may become unreferenced (or dangling)\&. These objects may be removed by normal Git operations (such as
+\fBgit commit\fR) which automatically call
+\fBgit gc \-\-auto\fR\&. (See
+\fBgit-gc\fR(1)\&.) If these objects are removed and were referenced by the cloned repository, then the cloned repository will become corrupt\&.
+.sp
+Note that running
+\fBgit repack\fR
+without the
+\fB\-l\fR
+option in a repository cloned with
+\fB\-s\fR
+will copy objects from the source repository into a pack in the cloned repository, removing the disk space savings of
+\fBclone \-s\fR\&. It is safe, however, to run
+\fBgit gc\fR, which uses the
+\fB\-l\fR
+option by default\&.
+.sp
+If you want to break the dependency of a repository cloned with
+\fB\-s\fR
+on its source repository, you can simply run
+\fBgit repack \-a\fR
+to copy all objects from the source repository into a pack in the cloned repository\&.
+.RE
+.PP
+\-\-reference[\-if\-able] <repository>
+.RS 4
+If the reference repository is on the local machine, automatically setup
+\fB\&.git/objects/info/alternates\fR
+to obtain objects from the reference repository\&. Using an already existing repository as an alternate will require fewer objects to be copied from the repository being cloned, reducing network and local storage costs\&. When using the
+\fB\-\-reference\-if\-able\fR, a non existing directory is skipped with a warning instead of aborting the clone\&.
+.sp
+\fBNOTE\fR: see the NOTE for the
+\fB\-\-shared\fR
+option, and also the
+\fB\-\-dissociate\fR
+option\&.
+.RE
+.PP
+\-\-dissociate
+.RS 4
+Borrow the objects from reference repositories specified with the
+\fB\-\-reference\fR
+options only to reduce network transfer, and stop borrowing from them after a clone is made by making necessary local copies of borrowed objects\&. This option can also be used when cloning locally from a repository that already borrows objects from another repository\(emthe new repository will borrow objects from the same repository, and this option can be used to stop the borrowing\&.
+.RE
+.PP
+\-\-quiet, \-q
+.RS 4
+Operate quietly\&. Progress is not reported to the standard error stream\&.
+.RE
+.PP
+\-\-verbose, \-v
+.RS 4
+Run verbosely\&. Does not affect the reporting of progress status to the standard error stream\&.
+.RE
+.PP
+\-\-progress
+.RS 4
+Progress status is reported on the standard error stream by default when it is attached to a terminal, unless \-q is specified\&. This flag forces progress status even if the standard error stream is not directed to a terminal\&.
+.RE
+.PP
+\-\-no\-checkout, \-n
+.RS 4
+No checkout of HEAD is performed after the clone is complete\&.
+.RE
+.PP
+\-\-bare
+.RS 4
+Make a
+\fIbare\fR
+Git repository\&. That is, instead of creating
+\fB<directory>\fR
+and placing the administrative files in
+\fB<directory>/\&.git\fR, make the
+\fB<directory>\fR
+itself the
+\fB$GIT_DIR\fR\&. This obviously implies the
+\fB\-n\fR
+because there is nowhere to check out the working tree\&. Also the branch heads at the remote are copied directly to corresponding local branch heads, without mapping them to
+\fBrefs/remotes/origin/\fR\&. When this option is used, neither remote\-tracking branches nor the related configuration variables are created\&.
+.RE
+.PP
+\-\-mirror
+.RS 4
+Set up a mirror of the source repository\&. This implies
+\fB\-\-bare\fR\&. Compared to
+\fB\-\-bare\fR,
+\fB\-\-mirror\fR
+not only maps local branches of the source to local branches of the target, it maps all refs (including remote\-tracking branches, notes etc\&.) and sets up a refspec configuration such that all these refs are overwritten by a
+\fBgit remote update\fR
+in the target repository\&.
+.RE
+.PP
+\-\-origin <name>, \-o <name>
+.RS 4
+Instead of using the remote name
+\fBorigin\fR
+to keep track of the upstream repository, use
+\fB<name>\fR\&.
+.RE
+.PP
+\-\-branch <name>, \-b <name>
+.RS 4
+Instead of pointing the newly created HEAD to the branch pointed to by the cloned repository\(cqs HEAD, point to
+\fB<name>\fR
+branch instead\&. In a non\-bare repository, this is the branch that will be checked out\&.
+\fB\-\-branch\fR
+can also take tags and detaches the HEAD at that commit in the resulting repository\&.
+.RE
+.PP
+\-\-upload\-pack <upload\-pack>, \-u <upload\-pack>
+.RS 4
+When given, and the repository to clone from is accessed via ssh, this specifies a non\-default path for the command run on the other end\&.
+.RE
+.PP
+\-\-template=<template_directory>
+.RS 4
+Specify the directory from which templates will be used; (See the "TEMPLATE DIRECTORY" section of
+\fBgit-init\fR(1)\&.)
+.RE
+.PP
+\-\-config <key>=<value>, \-c <key>=<value>
+.RS 4
+Set a configuration variable in the newly\-created repository; this takes effect immediately after the repository is initialized, but before the remote history is fetched or any files checked out\&. The key is in the same format as expected by
+\fBgit-config\fR(1)
+(e\&.g\&.,
+\fBcore\&.eol=true\fR)\&. If multiple values are given for the same key, each value will be written to the config file\&. This makes it safe, for example, to add additional fetch refspecs to the origin remote\&.
+.RE
+.PP
+\-\-depth <depth>
+.RS 4
+Create a
+\fIshallow\fR
+clone with a history truncated to the specified number of commits\&. Implies
+\fB\-\-single\-branch\fR
+unless
+\fB\-\-no\-single\-branch\fR
+is given to fetch the histories near the tips of all branches\&. If you want to clone submodules shallowly, also pass
+\fB\-\-shallow\-submodules\fR\&.
+.RE
+.PP
+\-\-shallow\-since=<date>
+.RS 4
+Create a shallow clone with a history after the specified time\&.
+.RE
+.PP
+\-\-shallow\-exclude=<revision>
+.RS 4
+Create a shallow clone with a history, excluding commits reachable from a specified remote branch or tag\&. This option can be specified multiple times\&.
+.RE
+.PP
+\-\-[no\-]single\-branch
+.RS 4
+Clone only the history leading to the tip of a single branch, either specified by the
+\fB\-\-branch\fR
+option or the primary branch remote\(cqs
+\fBHEAD\fR
+points at\&. Further fetches into the resulting repository will only update the remote\-tracking branch for the branch this option was used for the initial cloning\&. If the HEAD at the remote did not point at any branch when
+\fB\-\-single\-branch\fR
+clone was made, no remote\-tracking branch is created\&.
+.RE
+.PP
+\-\-no\-tags
+.RS 4
+Don\(cqt clone any tags, and set
+\fBremote\&.<remote>\&.tagOpt=\-\-no\-tags\fR
+in the config, ensuring that future
+\fBgit pull\fR
+and
+\fBgit fetch\fR
+operations won\(cqt follow any tags\&. Subsequent explicit tag fetches will still work, (see
+\fBgit-fetch\fR(1))\&.
+.sp
+Can be used in conjunction with
+\fB\-\-single\-branch\fR
+to clone and maintain a branch with no references other than a single cloned branch\&. This is useful e\&.g\&. to maintain minimal clones of the default branch of some repository for search indexing\&.
+.RE
+.PP
+\-\-recurse\-submodules[=<pathspec]
+.RS 4
+After the clone is created, initialize and clone submodules within based on the provided pathspec\&. If no pathspec is provided, all submodules are initialized and cloned\&. This option can be given multiple times for pathspecs consisting of multiple entries\&. The resulting clone has
+\fBsubmodule\&.active\fR
+set to the provided pathspec, or "\&." (meaning all submodules) if no pathspec is provided\&.
+.sp
+Submodules are initialized and cloned using their default settings\&. This is equivalent to running
+\fBgit submodule update \-\-init \-\-recursive <pathspec>\fR
+immediately after the clone is finished\&. This option is ignored if the cloned repository does not have a worktree/checkout (i\&.e\&. if any of
+\fB\-\-no\-checkout\fR/\fB\-n\fR,
+\fB\-\-bare\fR, or
+\fB\-\-mirror\fR
+is given)
+.RE
+.PP
+\-\-[no\-]shallow\-submodules
+.RS 4
+All submodules which are cloned will be shallow with a depth of 1\&.
+.RE
+.PP
+\-\-separate\-git\-dir=<git dir>
+.RS 4
+Instead of placing the cloned repository where it is supposed to be, place the cloned repository at the specified directory, then make a filesystem\-agnostic Git symbolic link to there\&. The result is Git repository can be separated from working tree\&.
+.RE
+.PP
+\-j <n>, \-\-jobs <n>
+.RS 4
+The number of submodules fetched at the same time\&. Defaults to the
+\fBsubmodule\&.fetchJobs\fR
+option\&.
+.RE
+.PP
+<repository>
+.RS 4
+The (possibly remote) repository to clone from\&. See the
+URLS
+section below for more information on specifying repositories\&.
+.RE
+.PP
+<directory>
+.RS 4
+The name of a new directory to clone into\&. The "humanish" part of the source repository is used if no directory is explicitly given (\fBrepo\fR
+for
+\fB/path/to/repo\&.git\fR
+and
+\fBfoo\fR
+for
+\fBhost\&.xz:foo/\&.git\fR)\&. Cloning into an existing directory is only allowed if the directory is empty\&.
+.RE
+.SH "GIT URLS"
+.sp
+In general, URLs contain information about the transport protocol, the address of the remote server, and the path to the repository\&. Depending on the transport protocol, some of this information may be absent\&.
+.sp
+Git supports ssh, git, http, and https protocols (in addition, ftp, and ftps can be used for fetching, but this is inefficient and deprecated; do not use it)\&.
+.sp
+The native transport (i\&.e\&. git:// URL) does no authentication and should be used with caution on unsecured networks\&.
+.sp
+The following syntaxes may be used with them:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ssh://[user@]host\&.xz[:port]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+git://host\&.xz[:port]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+http[s]://host\&.xz[:port]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ftp[s]://host\&.xz[:port]/path/to/repo\&.git/
+.RE
+.sp
+An alternative scp\-like syntax may also be used with the ssh protocol:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+[user@]host\&.xz:path/to/repo\&.git/
+.RE
+.sp
+This syntax is only recognized if there are no slashes before the first colon\&. This helps differentiate a local path that contains a colon\&. For example the local path \fBfoo:bar\fR could be specified as an absolute path or \fB\&./foo:bar\fR to avoid being misinterpreted as an ssh url\&.
+.sp
+The ssh and git protocols additionally support ~username expansion:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ssh://[user@]host\&.xz[:port]/~[user]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+git://host\&.xz[:port]/~[user]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+[user@]host\&.xz:/~[user]/path/to/repo\&.git/
+.RE
+.sp
+For local repositories, also supported by Git natively, the following syntaxes may be used:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file:///path/to/repo\&.git/
+.RE
+.sp
+These two syntaxes are mostly equivalent, except the former implies \-\-local option\&.
+.sp
+When Git doesn\(cqt know how to handle a certain transport protocol, it attempts to use the \fIremote\-<transport>\fR remote helper, if one exists\&. To explicitly request a remote helper, the following syntax may be used:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+<transport>::<address>
+.RE
+.sp
+where <address> may be a path, a server and path, or an arbitrary URL\-like string recognized by the specific remote helper being invoked\&. See \fBgitremote-helpers\fR(1) for details\&.
+.sp
+If there are a large number of similarly\-named remote repositories and you want to use a different format for them (such that the URLs you use will be rewritten into URLs that work), you can create a configuration section of the form:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [url "<actual url base>"]
+                insteadOf = <other url base>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+For example, with this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [url "git://git\&.host\&.xz/"]
+                insteadOf = host\&.xz:/path/to/
+                insteadOf = work:
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+a URL like "work:repo\&.git" or like "host\&.xz:/path/to/repo\&.git" will be rewritten in any context that takes a URL to be "git://git\&.host\&.xz/repo\&.git"\&.
+.sp
+If you want to rewrite URLs for push only, you can create a configuration section of the form:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [url "<actual url base>"]
+                pushInsteadOf = <other url base>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+For example, with this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [url "ssh://example\&.org/"]
+                pushInsteadOf = git://example\&.org/
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+a URL like "git://example\&.org/path/to/repo\&.git" will be rewritten to "ssh://example\&.org/path/to/repo\&.git" for pushes, but pulls will still use the original URL\&.
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Clone from upstream:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git clone git://git\&.kernel\&.org/pub/scm/\&.\&.\&./linux\&.git my\-linux
+$ cd my\-linux
+$ make
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Make a local clone that borrows from the current directory, without checking things out:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git clone \-l \-s \-n \&. \&.\&./copy
+$ cd \&.\&./copy
+$ git show\-branch
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Clone from upstream while borrowing from an existing local directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git clone \-\-reference /git/linux\&.git \e
+        git://git\&.kernel\&.org/pub/scm/\&.\&.\&./linux\&.git \e
+        my\-linux
+$ cd my\-linux
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Create a bare repository to publish your changes to the public:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git clone \-\-bare \-l /home/proj/\&.git /pub/scm/proj\&.git
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

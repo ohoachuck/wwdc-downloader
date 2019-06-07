@@ -1,0 +1,390 @@
+'\" t
+.\"     Title: gitrepository-layout
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GITREPOSITORY\-LAYOU" "5" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+gitrepository-layout \- Git Repository Layout
+.SH "SYNOPSIS"
+.sp
+$GIT_DIR/*
+.SH "DESCRIPTION"
+.sp
+A Git repository comes in two different flavours:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a
+\fB\&.git\fR
+directory at the root of the working tree;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a
+\fB<project>\&.git\fR
+directory that is a
+\fIbare\fR
+repository (i\&.e\&. without its own working tree), that is typically used for exchanging histories with others by pushing into it and fetching from it\&.
+.RE
+.sp
+\fBNote\fR: Also you can have a plain text file \fB\&.git\fR at the root of your working tree, containing \fBgitdir: <path>\fR to point at the real directory that has the repository\&. This mechanism is often used for a working tree of a submodule checkout, to allow you in the containing superproject to \fBgit checkout\fR a branch that does not have the submodule\&. The \fBcheckout\fR has to remove the entire submodule working tree, without losing the submodule repository\&.
+.sp
+These things may exist in a Git repository\&.
+.PP
+objects
+.RS 4
+Object store associated with this repository\&. Usually an object store is self sufficient (i\&.e\&. all the objects that are referred to by an object found in it are also found in it), but there are a few ways to violate it\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+You could have an incomplete but locally usable repository by creating a shallow clone\&. See
+\fBgit-clone\fR(1)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+You could be using the
+\fBobjects/info/alternates\fR
+or
+\fB$GIT_ALTERNATE_OBJECT_DIRECTORIES\fR
+mechanisms to
+\fIborrow\fR
+objects from other object stores\&. A repository with this kind of incomplete object store is not suitable to be published for use with dumb transports but otherwise is OK as long as
+\fBobjects/info/alternates\fR
+points at the object stores it borrows from\&.
+.sp
+This directory is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/objects" will be used instead\&.
+.RE
+.RE
+.PP
+objects/[0\-9a\-f][0\-9a\-f]
+.RS 4
+A newly created object is stored in its own file\&. The objects are splayed over 256 subdirectories using the first two characters of the sha1 object name to keep the number of directory entries in
+\fBobjects\fR
+itself to a manageable number\&. Objects found here are often called
+\fIunpacked\fR
+(or
+\fIloose\fR) objects\&.
+.RE
+.PP
+objects/pack
+.RS 4
+Packs (files that store many object in compressed form, along with index files to allow them to be randomly accessed) are found in this directory\&.
+.RE
+.PP
+objects/info
+.RS 4
+Additional information about the object store is recorded in this directory\&.
+.RE
+.PP
+objects/info/packs
+.RS 4
+This file is to help dumb transports discover what packs are available in this object store\&. Whenever a pack is added or removed,
+\fBgit update\-server\-info\fR
+should be run to keep this file up to date if the repository is published for dumb transports\&.
+\fIgit repack\fR
+does this by default\&.
+.RE
+.PP
+objects/info/alternates
+.RS 4
+This file records paths to alternate object stores that this object store borrows objects from, one pathname per line\&. Note that not only native Git tools use it locally, but the HTTP fetcher also tries to use it remotely; this will usually work if you have relative paths (relative to the object database, not to the repository!) in your alternates file, but it will not work if you use absolute paths unless the absolute path in filesystem and web URL is the same\&. See also
+\fIobjects/info/http\-alternates\fR\&.
+.RE
+.PP
+objects/info/http\-alternates
+.RS 4
+This file records URLs to alternate object stores that this object store borrows objects from, to be used when the repository is fetched over HTTP\&.
+.RE
+.PP
+refs
+.RS 4
+References are stored in subdirectories of this directory\&. The
+\fIgit prune\fR
+command knows to preserve objects reachable from refs found in this directory and its subdirectories\&. This directory is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/refs" will be used instead\&.
+.RE
+.PP
+refs/heads/\fBname\fR
+.RS 4
+records tip\-of\-the\-tree commit objects of branch
+\fBname\fR
+.RE
+.PP
+refs/tags/\fBname\fR
+.RS 4
+records any object name (not necessarily a commit object, or a tag object that points at a commit object)\&.
+.RE
+.PP
+refs/remotes/\fBname\fR
+.RS 4
+records tip\-of\-the\-tree commit objects of branches copied from a remote repository\&.
+.RE
+.PP
+refs/replace/\fB<obj\-sha1>\fR
+.RS 4
+records the SHA\-1 of the object that replaces
+\fB<obj\-sha1>\fR\&. This is similar to info/grafts and is internally used and maintained by
+\fBgit-replace\fR(1)\&. Such refs can be exchanged between repositories while grafts are not\&.
+.RE
+.PP
+packed\-refs
+.RS 4
+records the same information as refs/heads/, refs/tags/, and friends record in a more efficient way\&. See
+\fBgit-pack-refs\fR(1)\&. This file is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/packed\-refs" will be used instead\&.
+.RE
+.PP
+HEAD
+.RS 4
+A symref (see glossary) to the
+\fBrefs/heads/\fR
+namespace describing the currently active branch\&. It does not mean much if the repository is not associated with any working tree (i\&.e\&. a
+\fIbare\fR
+repository), but a valid Git repository
+\fBmust\fR
+have the HEAD file; some porcelains may use it to guess the designated "default" branch of the repository (usually
+\fImaster\fR)\&. It is legal if the named branch
+\fIname\fR
+does not (yet) exist\&. In some legacy setups, it is a symbolic link instead of a symref that points at the current branch\&.
+.sp
+HEAD can also record a specific commit directly, instead of being a symref to point at the current branch\&. Such a state is often called
+\fIdetached HEAD\&.\fR
+See
+\fBgit-checkout\fR(1)
+for details\&.
+.RE
+.PP
+config
+.RS 4
+Repository specific configuration file\&. This file is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/config" will be used instead\&.
+.RE
+.PP
+branches
+.RS 4
+A slightly deprecated way to store shorthands to be used to specify a URL to
+\fIgit fetch\fR,
+\fIgit pull\fR
+and
+\fIgit push\fR\&. A file can be stored as
+\fBbranches/<name>\fR
+and then
+\fIname\fR
+can be given to these commands in place of
+\fIrepository\fR
+argument\&. See the REMOTES section in
+\fBgit-fetch\fR(1)
+for details\&. This mechanism is legacy and not likely to be found in modern repositories\&. This directory is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/branches" will be used instead\&.
+.RE
+.PP
+hooks
+.RS 4
+Hooks are customization scripts used by various Git commands\&. A handful of sample hooks are installed when
+\fIgit init\fR
+is run, but all of them are disabled by default\&. To enable, the
+\fB\&.sample\fR
+suffix has to be removed from the filename by renaming\&. Read
+\fBgithooks\fR(5)
+for more details about each hook\&. This directory is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/hooks" will be used instead\&.
+.RE
+.PP
+index
+.RS 4
+The current index file for the repository\&. It is usually not found in a bare repository\&.
+.RE
+.PP
+sharedindex\&.<SHA\-1>
+.RS 4
+The shared index part, to be referenced by $GIT_DIR/index and other temporary index files\&. Only valid in split index mode\&.
+.RE
+.PP
+info
+.RS 4
+Additional information about the repository is recorded in this directory\&. This directory is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/info" will be used instead\&.
+.RE
+.PP
+info/refs
+.RS 4
+This file helps dumb transports discover what refs are available in this repository\&. If the repository is published for dumb transports, this file should be regenerated by
+\fIgit update\-server\-info\fR
+every time a tag or branch is created or modified\&. This is normally done from the
+\fBhooks/update\fR
+hook, which is run by the
+\fIgit\-receive\-pack\fR
+command when you
+\fIgit push\fR
+into the repository\&.
+.RE
+.PP
+info/grafts
+.RS 4
+This file records fake commit ancestry information, to pretend the set of parents a commit has is different from how the commit was actually created\&. One record per line describes a commit and its fake parents by listing their 40\-byte hexadecimal object names separated by a space and terminated by a newline\&.
+.sp
+Note that the grafts mechanism is outdated and can lead to problems transferring objects between repositories; see
+\fBgit-replace\fR(1)
+for a more flexible and robust system to do the same thing\&.
+.RE
+.PP
+info/exclude
+.RS 4
+This file, by convention among Porcelains, stores the exclude pattern list\&.
+\fB\&.gitignore\fR
+is the per\-directory ignore file\&.
+\fIgit status\fR,
+\fIgit add\fR,
+\fIgit rm\fR
+and
+\fIgit clean\fR
+look at it but the core Git commands do not look at it\&. See also:
+\fBgitignore\fR(5)\&.
+.RE
+.PP
+info/attributes
+.RS 4
+Defines which attributes to assign to a path, similar to per\-directory
+\fB\&.gitattributes\fR
+files\&. See also:
+\fBgitattributes\fR(5)\&.
+.RE
+.PP
+info/sparse\-checkout
+.RS 4
+This file stores sparse checkout patterns\&. See also:
+\fBgit-read-tree\fR(1)\&.
+.RE
+.PP
+remotes
+.RS 4
+Stores shorthands for URL and default refnames for use when interacting with remote repositories via
+\fIgit fetch\fR,
+\fIgit pull\fR
+and
+\fIgit push\fR
+commands\&. See the REMOTES section in
+\fBgit-fetch\fR(1)
+for details\&. This mechanism is legacy and not likely to be found in modern repositories\&. This directory is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/remotes" will be used instead\&.
+.RE
+.PP
+logs
+.RS 4
+Records of changes made to refs are stored in this directory\&. See
+\fBgit-update-ref\fR(1)
+for more information\&. This directory is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/logs" will be used instead\&.
+.RE
+.PP
+logs/refs/heads/\fBname\fR
+.RS 4
+Records all changes made to the branch tip named
+\fBname\fR\&.
+.RE
+.PP
+logs/refs/tags/\fBname\fR
+.RS 4
+Records all changes made to the tag named
+\fBname\fR\&.
+.RE
+.PP
+shallow
+.RS 4
+This is similar to
+\fBinfo/grafts\fR
+but is internally used and maintained by shallow clone mechanism\&. See
+\fB\-\-depth\fR
+option to
+\fBgit-clone\fR(1)
+and
+\fBgit-fetch\fR(1)\&. This file is ignored if $GIT_COMMON_DIR is set and "$GIT_COMMON_DIR/shallow" will be used instead\&.
+.RE
+.PP
+commondir
+.RS 4
+If this file exists, $GIT_COMMON_DIR (see
+\fBgit\fR(1)) will be set to the path specified in this file if it is not explicitly set\&. If the specified path is relative, it is relative to $GIT_DIR\&. The repository with commondir is incomplete without the repository pointed by "commondir"\&.
+.RE
+.PP
+modules
+.RS 4
+Contains the git\-repositories of the submodules\&.
+.RE
+.PP
+worktrees
+.RS 4
+Contains administrative data for linked working trees\&. Each subdirectory contains the working tree\-related part of a linked working tree\&. This directory is ignored if $GIT_COMMON_DIR is set, in which case "$GIT_COMMON_DIR/worktrees" will be used instead\&.
+.RE
+.PP
+worktrees/<id>/gitdir
+.RS 4
+A text file containing the absolute path back to the \&.git file that points to here\&. This is used to check if the linked repository has been manually removed and there is no need to keep this directory any more\&. The mtime of this file should be updated every time the linked repository is accessed\&.
+.RE
+.PP
+worktrees/<id>/locked
+.RS 4
+If this file exists, the linked working tree may be on a portable device and not available\&. The presence of this file prevents
+\fBworktrees/<id>\fR
+from being pruned either automatically or manually by
+\fBgit worktree prune\fR\&. The file may contain a string explaining why the repository is locked\&.
+.RE
+.PP
+worktrees/<id>/link
+.RS 4
+If this file exists, it is a hard link to the linked \&.git file\&. It is used to detect if the linked repository is manually removed\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgit-init\fR(1), \fBgit-clone\fR(1), \fBgit-fetch\fR(1), \fBgit-pack-refs\fR(1), \fBgit-gc\fR(1), \fBgit-checkout\fR(1), \fBgitglossary\fR(7), \m[blue]\fBThe Git User\(cqs Manual\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite
+.SH "NOTES"
+.IP " 1." 4
+The Git User\(cqs Manual
+.RS 4
+\%git-htmldocs/user-manual.html
+.RE

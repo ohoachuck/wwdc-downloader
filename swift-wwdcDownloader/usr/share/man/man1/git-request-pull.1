@@ -1,0 +1,124 @@
+'\" t
+.\"     Title: git-request-pull
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-REQUEST\-PULL" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-request-pull \- Generates a summary of pending changes
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit request\-pull\fR [\-p] <start> <url> [<end>]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Generate a request asking your upstream project to pull changes into their tree\&. The request, printed to the standard output, begins with the branch description, summarizes the changes and indicates from where they can be pulled\&.
+.sp
+The upstream project is expected to have the commit named by \fB<start>\fR and the output asks it to integrate the changes you made since that commit, up to the commit named by \fB<end>\fR, by visiting the repository named by \fB<url>\fR\&.
+.SH "OPTIONS"
+.PP
+\-p
+.RS 4
+Include patch text in the output\&.
+.RE
+.PP
+<start>
+.RS 4
+Commit to start at\&. This names a commit that is already in the upstream history\&.
+.RE
+.PP
+<url>
+.RS 4
+The repository URL to be pulled from\&.
+.RE
+.PP
+<end>
+.RS 4
+Commit to end at (defaults to HEAD)\&. This names the commit at the tip of the history you are asking to be pulled\&.
+.sp
+When the repository named by
+\fB<url>\fR
+has the commit at a tip of a ref that is different from the ref you have locally, you can use the
+\fB<local>:<remote>\fR
+syntax, to have its local name, a colon
+\fB:\fR, and its remote name\&.
+.RE
+.SH "EXAMPLE"
+.sp
+Imagine that you built your work on your \fBmaster\fR branch on top of the \fBv1\&.0\fR release, and want it to be integrated to the project\&. First you push that change to your public repository for others to see:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git push https://git\&.ko\&.xz/project master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Then, you run this command:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git request\-pull v1\&.0 https://git\&.ko\&.xz/project master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+which will produce a request to the upstream, summarizing the changes between the \fBv1\&.0\fR release and your \fBmaster\fR, to pull it from your public repository\&.
+.sp
+If you pushed your change to a branch whose name is different from the one you have locally, e\&.g\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git push https://git\&.ko\&.xz/project master:for\-linus
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+then you can ask that to be pulled with
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git request\-pull v1\&.0 https://git\&.ko\&.xz/project master:for\-linus
+.fi
+.if n \{\
+.RE
+.\}
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

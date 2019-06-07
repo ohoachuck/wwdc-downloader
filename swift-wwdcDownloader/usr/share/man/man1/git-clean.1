@@ -1,0 +1,153 @@
+'\" t
+.\"     Title: git-clean
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-CLEAN" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-clean \- Remove untracked files from the working tree
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit clean\fR [\-d] [\-f] [\-i] [\-n] [\-q] [\-e <pattern>] [\-x | \-X] [\-\-] <path>\&...
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Cleans the working tree by recursively removing files that are not under version control, starting from the current directory\&.
+.sp
+Normally, only files unknown to Git are removed, but if the \fB\-x\fR option is specified, ignored files are also removed\&. This can, for example, be useful to remove all build products\&.
+.sp
+If any optional \fB<path>\&.\&.\&.\fR arguments are given, only those paths are affected\&.
+.SH "OPTIONS"
+.PP
+\-d
+.RS 4
+Remove untracked directories in addition to untracked files\&. If an untracked directory is managed by a different Git repository, it is not removed by default\&. Use \-f option twice if you really want to remove such a directory\&.
+.RE
+.PP
+\-f, \-\-force
+.RS 4
+If the Git configuration variable clean\&.requireForce is not set to false,
+\fIgit clean\fR
+will refuse to delete files or directories unless given \-f, \-n or \-i\&. Git will refuse to delete directories with \&.git sub directory or file unless a second \-f is given\&.
+.RE
+.PP
+\-i, \-\-interactive
+.RS 4
+Show what would be done and clean files interactively\&. See \(lqInteractive mode\(rq for details\&.
+.RE
+.PP
+\-n, \-\-dry\-run
+.RS 4
+Don\(cqt actually remove anything, just show what would be done\&.
+.RE
+.PP
+\-q, \-\-quiet
+.RS 4
+Be quiet, only report errors, but not the files that are successfully removed\&.
+.RE
+.PP
+\-e <pattern>, \-\-exclude=<pattern>
+.RS 4
+In addition to those found in \&.gitignore (per directory) and $GIT_DIR/info/exclude, also consider these patterns to be in the set of the ignore rules in effect\&.
+.RE
+.PP
+\-x
+.RS 4
+Don\(cqt use the standard ignore rules read from \&.gitignore (per directory) and $GIT_DIR/info/exclude, but do still use the ignore rules given with
+\fB\-e\fR
+options\&. This allows removing all untracked files, including build products\&. This can be used (possibly in conjunction with
+\fIgit reset\fR) to create a pristine working directory to test a clean build\&.
+.RE
+.PP
+\-X
+.RS 4
+Remove only files ignored by Git\&. This may be useful to rebuild everything from scratch, but keep manually created files\&.
+.RE
+.SH "INTERACTIVE MODE"
+.sp
+When the command enters the interactive mode, it shows the files and directories to be cleaned, and goes into its interactive command loop\&.
+.sp
+The command loop shows the list of subcommands available, and gives a prompt "What now> "\&. In general, when the prompt ends with a single \fI>\fR, you can pick only one of the choices given and type return, like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    *** Commands ***
+        1: clean                2: filter by pattern    3: select by numbers
+        4: ask each             5: quit                 6: help
+    What now> 1
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+You also could say \fBc\fR or \fBclean\fR above as long as the choice is unique\&.
+.sp
+The main command loop has 6 subcommands\&.
+.PP
+clean
+.RS 4
+Start cleaning files and directories, and then quit\&.
+.RE
+.PP
+filter by pattern
+.RS 4
+This shows the files and directories to be deleted and issues an "Input ignore patterns>>" prompt\&. You can input space\-separated patterns to exclude files and directories from deletion\&. E\&.g\&. "*\&.c *\&.h" will excludes files end with "\&.c" and "\&.h" from deletion\&. When you are satisfied with the filtered result, press ENTER (empty) back to the main menu\&.
+.RE
+.PP
+select by numbers
+.RS 4
+This shows the files and directories to be deleted and issues an "Select items to delete>>" prompt\&. When the prompt ends with double
+\fI>>\fR
+like this, you can make more than one selection, concatenated with whitespace or comma\&. Also you can say ranges\&. E\&.g\&. "2\-5 7,9" to choose 2,3,4,5,7,9 from the list\&. If the second number in a range is omitted, all remaining items are selected\&. E\&.g\&. "7\-" to choose 7,8,9 from the list\&. You can say
+\fI*\fR
+to choose everything\&. Also when you are satisfied with the filtered result, press ENTER (empty) back to the main menu\&.
+.RE
+.PP
+ask each
+.RS 4
+This will start to clean, and you must confirm one by one in order to delete items\&. Please note that this action is not as efficient as the above two actions\&.
+.RE
+.PP
+quit
+.RS 4
+This lets you quit without do cleaning\&.
+.RE
+.PP
+help
+.RS 4
+Show brief usage of interactive git\-clean\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgitignore\fR(5)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

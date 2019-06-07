@@ -1,0 +1,408 @@
+'\" t
+.\"     Title: git-cat-file
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-CAT\-FILE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-cat-file \- Provide content or type and size information for repository objects
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit cat\-file\fR (\-t [\-\-allow\-unknown\-type]| \-s [\-\-allow\-unknown\-type]| \-e | \-p | <type> | \-\-textconv | \-\-filters ) [\-\-path=<path>] <object>
+\fIgit cat\-file\fR (\-\-batch | \-\-batch\-check) [ \-\-textconv | \-\-filters ] [\-\-follow\-symlinks]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+In its first form, the command provides the content or the type of an object in the repository\&. The type is required unless \fB\-t\fR or \fB\-p\fR is used to find the object type, or \fB\-s\fR is used to find the object size, or \fB\-\-textconv\fR or \fB\-\-filters\fR is used (which imply type "blob")\&.
+.sp
+In the second form, a list of objects (separated by linefeeds) is provided on stdin, and the SHA\-1, type, and size of each object is printed on stdout\&. The output format can be overridden using the optional \fB<format>\fR argument\&. If either \fB\-\-textconv\fR or \fB\-\-filters\fR was specified, the input is expected to list the object names followed by the path name, separated by a single white space, so that the appropriate drivers can be determined\&.
+.SH "OPTIONS"
+.PP
+<object>
+.RS 4
+The name of the object to show\&. For a more complete list of ways to spell object names, see the "SPECIFYING REVISIONS" section in
+\fBgitrevisions\fR(7)\&.
+.RE
+.PP
+\-t
+.RS 4
+Instead of the content, show the object type identified by <object>\&.
+.RE
+.PP
+\-s
+.RS 4
+Instead of the content, show the object size identified by <object>\&.
+.RE
+.PP
+\-e
+.RS 4
+Exit with zero status if <object> exists and is a valid object\&. If <object> is of an invalid format exit with non\-zero and emits an error on stderr\&.
+.RE
+.PP
+\-p
+.RS 4
+Pretty\-print the contents of <object> based on its type\&.
+.RE
+.PP
+<type>
+.RS 4
+Typically this matches the real type of <object> but asking for a type that can trivially be dereferenced from the given <object> is also permitted\&. An example is to ask for a "tree" with <object> being a commit object that contains it, or to ask for a "blob" with <object> being a tag object that points at it\&.
+.RE
+.PP
+\-\-textconv
+.RS 4
+Show the content as transformed by a textconv filter\&. In this case, <object> has to be of the form <tree\-ish>:<path>, or :<path> in order to apply the filter to the content recorded in the index at <path>\&.
+.RE
+.PP
+\-\-filters
+.RS 4
+Show the content as converted by the filters configured in the current working tree for the given <path> (i\&.e\&. smudge filters, end\-of\-line conversion, etc)\&. In this case, <object> has to be of the form <tree\-ish>:<path>, or :<path>\&.
+.RE
+.PP
+\-\-path=<path>
+.RS 4
+For use with \-\-textconv or \-\-filters, to allow specifying an object name and a path separately, e\&.g\&. when it is difficult to figure out the revision from which the blob came\&.
+.RE
+.PP
+\-\-batch, \-\-batch=<format>
+.RS 4
+Print object information and contents for each object provided on stdin\&. May not be combined with any other options or arguments except
+\fB\-\-textconv\fR
+or
+\fB\-\-filters\fR, in which case the input lines also need to specify the path, separated by white space\&. See the section
+\fBBATCH OUTPUT\fR
+below for details\&.
+.RE
+.PP
+\-\-batch\-check, \-\-batch\-check=<format>
+.RS 4
+Print object information for each object provided on stdin\&. May not be combined with any other options or arguments except
+\fB\-\-textconv\fR
+or
+\fB\-\-filters\fR, in which case the input lines also need to specify the path, separated by white space\&. See the section
+\fBBATCH OUTPUT\fR
+below for details\&.
+.RE
+.PP
+\-\-batch\-all\-objects
+.RS 4
+Instead of reading a list of objects on stdin, perform the requested batch operation on all objects in the repository and any alternate object stores (not just reachable objects)\&. Requires
+\fB\-\-batch\fR
+or
+\fB\-\-batch\-check\fR
+be specified\&. Note that the objects are visited in order sorted by their hashes\&.
+.RE
+.PP
+\-\-buffer
+.RS 4
+Normally batch output is flushed after each object is output, so that a process can interactively read and write from
+\fBcat\-file\fR\&. With this option, the output uses normal stdio buffering; this is much more efficient when invoking
+\fB\-\-batch\-check\fR
+on a large number of objects\&.
+.RE
+.PP
+\-\-allow\-unknown\-type
+.RS 4
+Allow \-s or \-t to query broken/corrupt objects of unknown type\&.
+.RE
+.PP
+\-\-follow\-symlinks
+.RS 4
+With \-\-batch or \-\-batch\-check, follow symlinks inside the repository when requesting objects with extended SHA\-1 expressions of the form tree\-ish:path\-in\-tree\&. Instead of providing output about the link itself, provide output about the linked\-to object\&. If a symlink points outside the tree\-ish (e\&.g\&. a link to /foo or a root\-level link to \&.\&./foo), the portion of the link which is outside the tree will be printed\&.
+.sp
+This option does not (currently) work correctly when an object in the index is specified (e\&.g\&.
+\fB:link\fR
+instead of
+\fBHEAD:link\fR) rather than one in the tree\&.
+.sp
+This option cannot (currently) be used unless
+\fB\-\-batch\fR
+or
+\fB\-\-batch\-check\fR
+is used\&.
+.sp
+For example, consider a git repository containing:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+f: a file containing "hello\en"
+link: a symlink to f
+dir/link: a symlink to \&.\&./f
+plink: a symlink to \&.\&./f
+alink: a symlink to /etc/passwd
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+For a regular file
+\fBf\fR,
+\fBecho HEAD:f | git cat\-file \-\-batch\fR
+would print
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+ce013625030ba8dba906f756967f9e9ca394464a blob 6
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+And
+\fBecho HEAD:link | git cat\-file \-\-batch \-\-follow\-symlinks\fR
+would print the same thing, as would
+\fBHEAD:dir/link\fR, as they both point at
+\fBHEAD:f\fR\&.
+.sp
+Without
+\fB\-\-follow\-symlinks\fR, these would print data about the symlink itself\&. In the case of
+\fBHEAD:link\fR, you would see
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+4d1ae35ba2c8ec712fa2a379db44ad639ca277bd blob 1
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Both
+\fBplink\fR
+and
+\fBalink\fR
+point outside the tree, so they would respectively print:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+symlink 4
+\&.\&./f
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+symlink 11
+/etc/passwd
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "OUTPUT"
+.sp
+If \fB\-t\fR is specified, one of the <type>\&.
+.sp
+If \fB\-s\fR is specified, the size of the <object> in bytes\&.
+.sp
+If \fB\-e\fR is specified, no output, unless the <object> is malformed\&.
+.sp
+If \fB\-p\fR is specified, the contents of <object> are pretty\-printed\&.
+.sp
+If <type> is specified, the raw (though uncompressed) contents of the <object> will be returned\&.
+.SH "BATCH OUTPUT"
+.sp
+If \fB\-\-batch\fR or \fB\-\-batch\-check\fR is given, \fBcat\-file\fR will read objects from stdin, one per line, and print information about them\&. By default, the whole line is considered as an object, as if it were fed to \fBgit-rev-parse\fR(1)\&.
+.sp
+You can specify the information shown for each object by using a custom \fB<format>\fR\&. The \fB<format>\fR is copied literally to stdout for each object, with placeholders of the form \fB%(atom)\fR expanded, followed by a newline\&. The available atoms are:
+.PP
+\fBobjectname\fR
+.RS 4
+The 40\-hex object name of the object\&.
+.RE
+.PP
+\fBobjecttype\fR
+.RS 4
+The type of the object (the same as
+\fBcat\-file \-t\fR
+reports)\&.
+.RE
+.PP
+\fBobjectsize\fR
+.RS 4
+The size, in bytes, of the object (the same as
+\fBcat\-file \-s\fR
+reports)\&.
+.RE
+.PP
+\fBobjectsize:disk\fR
+.RS 4
+The size, in bytes, that the object takes up on disk\&. See the note about on\-disk sizes in the
+\fBCAVEATS\fR
+section below\&.
+.RE
+.PP
+\fBdeltabase\fR
+.RS 4
+If the object is stored as a delta on\-disk, this expands to the 40\-hex sha1 of the delta base object\&. Otherwise, expands to the null sha1 (40 zeroes)\&. See
+\fBCAVEATS\fR
+below\&.
+.RE
+.PP
+\fBrest\fR
+.RS 4
+If this atom is used in the output string, input lines are split at the first whitespace boundary\&. All characters before that whitespace are considered to be the object name; characters after that first run of whitespace (i\&.e\&., the "rest" of the line) are output in place of the
+\fB%(rest)\fR
+atom\&.
+.RE
+.sp
+If no format is specified, the default format is \fB%(objectname) %(objecttype) %(objectsize)\fR\&.
+.sp
+If \fB\-\-batch\fR is specified, the object information is followed by the object contents (consisting of \fB%(objectsize)\fR bytes), followed by a newline\&.
+.sp
+For example, \fB\-\-batch\fR without a custom format would produce:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<sha1> SP <type> SP <size> LF
+<contents> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Whereas \fB\-\-batch\-check=\(aq%(objectname) %(objecttype)\(aq\fR would produce:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<sha1> SP <type> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If a name is specified on stdin that cannot be resolved to an object in the repository, then \fBcat\-file\fR will ignore any custom format and print:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<object> SP missing LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If \-\-follow\-symlinks is used, and a symlink in the repository points outside the repository, then \fBcat\-file\fR will ignore any custom format and print:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+symlink SP <size> LF
+<symlink> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The symlink will either be absolute (beginning with a /), or relative to the tree root\&. For instance, if dir/link points to \&.\&./\&.\&./foo, then <symlink> will be \&.\&./foo\&. <size> is the size of the symlink in bytes\&.
+.sp
+If \-\-follow\-symlinks is used, the following error messages will be displayed:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<object> SP missing LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+is printed when the initial symlink requested does not exist\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+dangling SP <size> LF
+<object> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+is printed when the initial symlink exists, but something that it (transitive\-of) points to does not\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+loop SP <size> LF
+<object> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+is printed for symlink loops (or any symlinks that require more than 40 link resolutions to resolve)\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+notdir SP <size> LF
+<object> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+is printed when, during symlink resolution, a file is used as a directory name\&.
+.SH "CAVEATS"
+.sp
+Note that the sizes of objects on disk are reported accurately, but care should be taken in drawing conclusions about which refs or objects are responsible for disk usage\&. The size of a packed non\-delta object may be much larger than the size of objects which delta against it, but the choice of which object is the base and which is the delta is arbitrary and is subject to change during a repack\&.
+.sp
+Note also that multiple copies of an object may be present in the object database; in this case, it is undefined which copy\(cqs size or delta base will be reported\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

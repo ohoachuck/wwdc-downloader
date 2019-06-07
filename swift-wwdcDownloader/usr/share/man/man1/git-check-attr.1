@@ -1,0 +1,250 @@
+'\" t
+.\"     Title: git-check-attr
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-CHECK\-ATTR" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-check-attr \- Display gitattributes information
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit check\-attr\fR [\-a | \-\-all | attr\&...] [\-\-] pathname\&...
+\fIgit check\-attr\fR \-\-stdin [\-z] [\-a | \-\-all | attr\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+For every pathname, this command will list if each attribute is \fIunspecified\fR, \fIset\fR, or \fIunset\fR as a gitattribute on that pathname\&.
+.SH "OPTIONS"
+.PP
+\-a, \-\-all
+.RS 4
+List all attributes that are associated with the specified paths\&. If this option is used, then
+\fIunspecified\fR
+attributes will not be included in the output\&.
+.RE
+.PP
+\-\-cached
+.RS 4
+Consider
+\fB\&.gitattributes\fR
+in the index only, ignoring the working tree\&.
+.RE
+.PP
+\-\-stdin
+.RS 4
+Read pathnames from the standard input, one per line, instead of from the command\-line\&.
+.RE
+.PP
+\-z
+.RS 4
+The output format is modified to be machine\-parseable\&. If
+\fB\-\-stdin\fR
+is also given, input paths are separated with a NUL character instead of a linefeed character\&.
+.RE
+.PP
+\-\-
+.RS 4
+Interpret all preceding arguments as attributes and all following arguments as path names\&.
+.RE
+.sp
+If none of \fB\-\-stdin\fR, \fB\-\-all\fR, or \fB\-\-\fR is used, the first argument will be treated as an attribute and the rest of the arguments as pathnames\&.
+.SH "OUTPUT"
+.sp
+The output is of the form: <path> COLON SP <attribute> COLON SP <info> LF
+.sp
+unless \fB\-z\fR is in effect, in which case NUL is used as delimiter: <path> NUL <attribute> NUL <info> NUL
+.sp
+<path> is the path of a file being queried, <attribute> is an attribute being queried and <info> can be either:
+.PP
+\fIunspecified\fR
+.RS 4
+when the attribute is not defined for the path\&.
+.RE
+.PP
+\fIunset\fR
+.RS 4
+when the attribute is defined as false\&.
+.RE
+.PP
+\fIset\fR
+.RS 4
+when the attribute is defined as true\&.
+.RE
+.PP
+<value>
+.RS 4
+when a value has been assigned to the attribute\&.
+.RE
+.sp
+Buffering happens as documented under the \fBGIT_FLUSH\fR option in \fBgit\fR(1)\&. The caller is responsible for avoiding deadlocks caused by overfilling an input buffer or reading from an empty output buffer\&.
+.SH "EXAMPLES"
+.sp
+In the examples, the following \fI\&.gitattributes\fR file is used:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+*\&.java diff=java \-crlf myAttr
+NoMyAttr\&.java !myAttr
+README caveat=unspecified
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Listing a single attribute:
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git check\-attr diff org/example/MyClass\&.java
+org/example/MyClass\&.java: diff: java
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Listing multiple attributes for a file:
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git check\-attr crlf diff myAttr \-\- org/example/MyClass\&.java
+org/example/MyClass\&.java: crlf: unset
+org/example/MyClass\&.java: diff: java
+org/example/MyClass\&.java: myAttr: set
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Listing all attributes for a file:
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git check\-attr \-\-all \-\- org/example/MyClass\&.java
+org/example/MyClass\&.java: diff: java
+org/example/MyClass\&.java: myAttr: set
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Listing an attribute for multiple files:
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git check\-attr myAttr \-\- org/example/MyClass\&.java org/example/NoMyAttr\&.java
+org/example/MyClass\&.java: myAttr: set
+org/example/NoMyAttr\&.java: myAttr: unspecified
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Not all values are equally unambiguous:
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git check\-attr caveat README
+README: caveat: unspecified
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "SEE ALSO"
+.sp
+\fBgitattributes\fR(5)\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

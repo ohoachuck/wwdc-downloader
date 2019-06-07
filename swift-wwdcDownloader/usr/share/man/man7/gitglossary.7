@@ -1,0 +1,1077 @@
+'\" t
+.\"     Title: gitglossary
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GITGLOSSARY" "7" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+gitglossary \- A Git Glossary
+.SH "SYNOPSIS"
+.sp
+*
+.SH "DESCRIPTION"
+.PP
+alternate object database
+.RS 4
+Via the alternates mechanism, a
+repository
+can inherit part of its
+object database
+from another object database, which is called an "alternate"\&.
+.RE
+.PP
+bare repository
+.RS 4
+A bare repository is normally an appropriately named
+directory
+with a
+\fB\&.git\fR
+suffix that does not have a locally checked\-out copy of any of the files under revision control\&. That is, all of the Git administrative and control files that would normally be present in the hidden
+\fB\&.git\fR
+sub\-directory are directly present in the
+\fBrepository\&.git\fR
+directory instead, and no other files are present and checked out\&. Usually publishers of public repositories make bare repositories available\&.
+.RE
+.PP
+blob object
+.RS 4
+Untyped
+object, e\&.g\&. the contents of a file\&.
+.RE
+.PP
+branch
+.RS 4
+A "branch" is an active line of development\&. The most recent
+commit
+on a branch is referred to as the tip of that branch\&. The tip of the branch is referenced by a branch
+head, which moves forward as additional development is done on the branch\&. A single Git
+repository
+can track an arbitrary number of branches, but your
+working tree
+is associated with just one of them (the "current" or "checked out" branch), and
+HEAD
+points to that branch\&.
+.RE
+.PP
+cache
+.RS 4
+Obsolete for:
+index\&.
+.RE
+.PP
+chain
+.RS 4
+A list of objects, where each
+object
+in the list contains a reference to its successor (for example, the successor of a
+commit
+could be one of its
+parents)\&.
+.RE
+.PP
+changeset
+.RS 4
+BitKeeper/cvsps speak for "commit"\&. Since Git does not store changes, but states, it really does not make sense to use the term "changesets" with Git\&.
+.RE
+.PP
+checkout
+.RS 4
+The action of updating all or part of the
+working tree
+with a
+tree object
+or
+blob
+from the
+object database, and updating the
+index
+and
+HEAD
+if the whole working tree has been pointed at a new
+branch\&.
+.RE
+.PP
+cherry\-picking
+.RS 4
+In
+SCM
+jargon, "cherry pick" means to choose a subset of changes out of a series of changes (typically commits) and record them as a new series of changes on top of a different codebase\&. In Git, this is performed by the "git cherry\-pick" command to extract the change introduced by an existing
+commit
+and to record it based on the tip of the current
+branch
+as a new commit\&.
+.RE
+.PP
+clean
+.RS 4
+A
+working tree
+is clean, if it corresponds to the
+revision
+referenced by the current
+head\&. Also see "dirty"\&.
+.RE
+.PP
+commit
+.RS 4
+As a noun: A single point in the Git history; the entire history of a project is represented as a set of interrelated commits\&. The word "commit" is often used by Git in the same places other revision control systems use the words "revision" or "version"\&. Also used as a short hand for
+commit object\&.
+.sp
+As a verb: The action of storing a new snapshot of the project\(cqs state in the Git history, by creating a new commit representing the current state of the
+index
+and advancing
+HEAD
+to point at the new commit\&.
+.RE
+.PP
+commit object
+.RS 4
+An
+object
+which contains the information about a particular
+revision, such as
+parents, committer, author, date and the
+tree object
+which corresponds to the top
+directory
+of the stored revision\&.
+.RE
+.PP
+commit\-ish (also committish)
+.RS 4
+A
+commit object
+or an
+object
+that can be recursively dereferenced to a commit object\&. The following are all commit\-ishes: a commit object, a
+tag object
+that points to a commit object, a tag object that points to a tag object that points to a commit object, etc\&.
+.RE
+.PP
+core Git
+.RS 4
+Fundamental data structures and utilities of Git\&. Exposes only limited source code management tools\&.
+.RE
+.PP
+DAG
+.RS 4
+Directed acyclic graph\&. The
+commit objects
+form a directed acyclic graph, because they have parents (directed), and the graph of commit objects is acyclic (there is no
+chain
+which begins and ends with the same
+object)\&.
+.RE
+.PP
+dangling object
+.RS 4
+An
+unreachable object
+which is not
+reachable
+even from other unreachable objects; a dangling object has no references to it from any reference or
+object
+in the
+repository\&.
+.RE
+.PP
+detached HEAD
+.RS 4
+Normally the
+HEAD
+stores the name of a
+branch, and commands that operate on the history HEAD represents operate on the history leading to the tip of the branch the HEAD points at\&. However, Git also allows you to
+check out
+an arbitrary
+commit
+that isn\(cqt necessarily the tip of any particular branch\&. The HEAD in such a state is called "detached"\&.
+.sp
+Note that commands that operate on the history of the current branch (e\&.g\&.
+\fBgit commit\fR
+to build a new history on top of it) still work while the HEAD is detached\&. They update the HEAD to point at the tip of the updated history without affecting any branch\&. Commands that update or inquire information
+\fIabout\fR
+the current branch (e\&.g\&.
+\fBgit branch \-\-set\-upstream\-to\fR
+that sets what remote\-tracking branch the current branch integrates with) obviously do not work, as there is no (real) current branch to ask about in this state\&.
+.RE
+.PP
+directory
+.RS 4
+The list you get with "ls" :\-)
+.RE
+.PP
+dirty
+.RS 4
+A
+working tree
+is said to be "dirty" if it contains modifications which have not been
+committed
+to the current
+branch\&.
+.RE
+.PP
+evil merge
+.RS 4
+An evil merge is a
+merge
+that introduces changes that do not appear in any
+parent\&.
+.RE
+.PP
+fast\-forward
+.RS 4
+A fast\-forward is a special type of
+merge
+where you have a
+revision
+and you are "merging" another
+branch\(aqs changes that happen to be a descendant of what you have\&. In such a case, you do not make a new
+merge
+commit
+but instead just update to his revision\&. This will happen frequently on a
+remote\-tracking branch
+of a remote
+repository\&.
+.RE
+.PP
+fetch
+.RS 4
+Fetching a
+branch
+means to get the branch\(cqs
+head ref
+from a remote
+repository, to find out which objects are missing from the local
+object database, and to get them, too\&. See also
+\fBgit-fetch\fR(1)\&.
+.RE
+.PP
+file system
+.RS 4
+Linus Torvalds originally designed Git to be a user space file system, i\&.e\&. the infrastructure to hold files and directories\&. That ensured the efficiency and speed of Git\&.
+.RE
+.PP
+Git archive
+.RS 4
+Synonym for
+repository
+(for arch people)\&.
+.RE
+.PP
+gitfile
+.RS 4
+A plain file
+\fB\&.git\fR
+at the root of a working tree that points at the directory that is the real repository\&.
+.RE
+.PP
+grafts
+.RS 4
+Grafts enables two otherwise different lines of development to be joined together by recording fake ancestry information for commits\&. This way you can make Git pretend the set of
+parents
+a
+commit
+has is different from what was recorded when the commit was created\&. Configured via the
+\fB\&.git/info/grafts\fR
+file\&.
+.sp
+Note that the grafts mechanism is outdated and can lead to problems transferring objects between repositories; see
+\fBgit-replace\fR(1)
+for a more flexible and robust system to do the same thing\&.
+.RE
+.PP
+hash
+.RS 4
+In Git\(cqs context, synonym for
+object name\&.
+.RE
+.PP
+head
+.RS 4
+A
+named reference
+to the
+commit
+at the tip of a
+branch\&. Heads are stored in a file in
+\fB$GIT_DIR/refs/heads/\fR
+directory, except when using packed refs\&. (See
+\fBgit-pack-refs\fR(1)\&.)
+.RE
+.PP
+HEAD
+.RS 4
+The current
+branch\&. In more detail: Your
+working tree
+is normally derived from the state of the tree referred to by HEAD\&. HEAD is a reference to one of the
+heads
+in your repository, except when using a
+detached HEAD, in which case it directly references an arbitrary commit\&.
+.RE
+.PP
+head ref
+.RS 4
+A synonym for
+head\&.
+.RE
+.PP
+hook
+.RS 4
+During the normal execution of several Git commands, call\-outs are made to optional scripts that allow a developer to add functionality or checking\&. Typically, the hooks allow for a command to be pre\-verified and potentially aborted, and allow for a post\-notification after the operation is done\&. The hook scripts are found in the
+\fB$GIT_DIR/hooks/\fR
+directory, and are enabled by simply removing the
+\fB\&.sample\fR
+suffix from the filename\&. In earlier versions of Git you had to make them executable\&.
+.RE
+.PP
+index
+.RS 4
+A collection of files with stat information, whose contents are stored as objects\&. The index is a stored version of your
+working tree\&. Truth be told, it can also contain a second, and even a third version of a working tree, which are used when
+merging\&.
+.RE
+.PP
+index entry
+.RS 4
+The information regarding a particular file, stored in the
+index\&. An index entry can be unmerged, if a
+merge
+was started, but not yet finished (i\&.e\&. if the index contains multiple versions of that file)\&.
+.RE
+.PP
+master
+.RS 4
+The default development
+branch\&. Whenever you create a Git
+repository, a branch named "master" is created, and becomes the active branch\&. In most cases, this contains the local development, though that is purely by convention and is not required\&.
+.RE
+.PP
+merge
+.RS 4
+As a verb: To bring the contents of another
+branch
+(possibly from an external
+repository) into the current branch\&. In the case where the merged\-in branch is from a different repository, this is done by first
+fetching
+the remote branch and then merging the result into the current branch\&. This combination of fetch and merge operations is called a
+pull\&. Merging is performed by an automatic process that identifies changes made since the branches diverged, and then applies all those changes together\&. In cases where changes conflict, manual intervention may be required to complete the merge\&.
+.sp
+As a noun: unless it is a
+fast\-forward, a successful merge results in the creation of a new
+commit
+representing the result of the merge, and having as
+parents
+the tips of the merged
+branches\&. This commit is referred to as a "merge commit", or sometimes just a "merge"\&.
+.RE
+.PP
+object
+.RS 4
+The unit of storage in Git\&. It is uniquely identified by the
+SHA\-1
+of its contents\&. Consequently, an object can not be changed\&.
+.RE
+.PP
+object database
+.RS 4
+Stores a set of "objects", and an individual
+object
+is identified by its
+object name\&. The objects usually live in
+\fB$GIT_DIR/objects/\fR\&.
+.RE
+.PP
+object identifier
+.RS 4
+Synonym for
+object name\&.
+.RE
+.PP
+object name
+.RS 4
+The unique identifier of an
+object\&. The object name is usually represented by a 40 character hexadecimal string\&. Also colloquially called
+SHA\-1\&.
+.RE
+.PP
+object type
+.RS 4
+One of the identifiers "commit", "tree", "tag" or "blob" describing the type of an
+object\&.
+.RE
+.PP
+octopus
+.RS 4
+To
+merge
+more than two
+branches\&.
+.RE
+.PP
+origin
+.RS 4
+The default upstream
+repository\&. Most projects have at least one upstream project which they track\&. By default
+\fIorigin\fR
+is used for that purpose\&. New upstream updates will be fetched into
+remote\-tracking branches
+named origin/name\-of\-upstream\-branch, which you can see using
+\fBgit branch \-r\fR\&.
+.RE
+.PP
+pack
+.RS 4
+A set of objects which have been compressed into one file (to save space or to transmit them efficiently)\&.
+.RE
+.PP
+pack index
+.RS 4
+The list of identifiers, and other information, of the objects in a
+pack, to assist in efficiently accessing the contents of a pack\&.
+.RE
+.PP
+pathspec
+.RS 4
+Pattern used to limit paths in Git commands\&.
+.sp
+Pathspecs are used on the command line of "git ls\-files", "git ls\-tree", "git add", "git grep", "git diff", "git checkout", and many other commands to limit the scope of operations to some subset of the tree or worktree\&. See the documentation of each command for whether paths are relative to the current directory or toplevel\&. The pathspec syntax is as follows:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+any path matches itself
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the pathspec up to the last slash represents a directory prefix\&. The scope of that pathspec is limited to that subtree\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the rest of the pathspec is a pattern for the remainder of the pathname\&. Paths relative to the directory prefix will be matched against that pattern using fnmatch(3); in particular,
+\fI*\fR
+and
+\fI?\fR
+\fIcan\fR
+match directory separators\&.
+.RE
+.sp
+For example, Documentation/*\&.jpg will match all \&.jpg files in the Documentation subtree, including Documentation/chapter_1/figure_1\&.jpg\&.
+.sp
+A pathspec that begins with a colon
+\fB:\fR
+has special meaning\&. In the short form, the leading colon
+\fB:\fR
+is followed by zero or more "magic signature" letters (which optionally is terminated by another colon
+\fB:\fR), and the remainder is the pattern to match against the path\&. The "magic signature" consists of ASCII symbols that are neither alphanumeric, glob, regex special characters nor colon\&. The optional colon that terminates the "magic signature" can be omitted if the pattern begins with a character that does not belong to "magic signature" symbol set and is not a colon\&.
+.sp
+In the long form, the leading colon
+\fB:\fR
+is followed by a open parenthesis
+\fB(\fR, a comma\-separated list of zero or more "magic words", and a close parentheses
+\fB)\fR, and the remainder is the pattern to match against the path\&.
+.sp
+A pathspec with only a colon means "there is no pathspec"\&. This form should not be combined with other pathspec\&.
+.PP
+top
+.RS 4
+The magic word
+\fBtop\fR
+(magic signature:
+\fB/\fR) makes the pattern match from the root of the working tree, even when you are running the command from inside a subdirectory\&.
+.RE
+.PP
+literal
+.RS 4
+Wildcards in the pattern such as
+\fB*\fR
+or
+\fB?\fR
+are treated as literal characters\&.
+.RE
+.PP
+icase
+.RS 4
+Case insensitive match\&.
+.RE
+.PP
+glob
+.RS 4
+Git treats the pattern as a shell glob suitable for consumption by fnmatch(3) with the FNM_PATHNAME flag: wildcards in the pattern will not match a / in the pathname\&. For example, "Documentation/*\&.html" matches "Documentation/git\&.html" but not "Documentation/ppc/ppc\&.html" or "tools/perf/Documentation/perf\&.html"\&.
+.sp
+Two consecutive asterisks ("\fB**\fR") in patterns matched against full pathname may have special meaning:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A leading "\fB**\fR" followed by a slash means match in all directories\&. For example, "\fB**/foo\fR" matches file or directory "\fBfoo\fR" anywhere, the same as pattern "\fBfoo\fR"\&. "\fB**/foo/bar\fR" matches file or directory "\fBbar\fR" anywhere that is directly under directory "\fBfoo\fR"\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A trailing "\fB/**\fR" matches everything inside\&. For example, "\fBabc/**\fR" matches all files inside directory "abc", relative to the location of the
+\fB\&.gitignore\fR
+file, with infinite depth\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A slash followed by two consecutive asterisks then a slash matches zero or more directories\&. For example, "\fBa/**/b\fR" matches "\fBa/b\fR", "\fBa/x/b\fR", "\fBa/x/y/b\fR" and so on\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Other consecutive asterisks are considered invalid\&.
+.sp
+Glob magic is incompatible with literal magic\&.
+.RE
+.RE
+.PP
+attr
+.RS 4
+After
+\fBattr:\fR
+comes a space separated list of "attribute requirements", all of which must be met in order for the path to be considered a match; this is in addition to the usual non\-magic pathspec pattern matching\&. See
+\fBgitattributes\fR(5)\&.
+.sp
+Each of the attribute requirements for the path takes one of these forms:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"\fBATTR\fR" requires that the attribute
+\fBATTR\fR
+be set\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"\fB\-ATTR\fR" requires that the attribute
+\fBATTR\fR
+be unset\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"\fBATTR=VALUE\fR" requires that the attribute
+\fBATTR\fR
+be set to the string
+\fBVALUE\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"\fB!ATTR\fR" requires that the attribute
+\fBATTR\fR
+be unspecified\&.
+.RE
+.RE
+.PP
+exclude
+.RS 4
+After a path matches any non\-exclude pathspec, it will be run through all exclude pathspecs (magic signature:
+\fB!\fR
+or its synonym
+\fB^\fR)\&. If it matches, the path is ignored\&. When there is no non\-exclude pathspec, the exclusion is applied to the result set as if invoked without any pathspec\&.
+.RE
+.RE
+.PP
+parent
+.RS 4
+A
+commit object
+contains a (possibly empty) list of the logical predecessor(s) in the line of development, i\&.e\&. its parents\&.
+.RE
+.PP
+pickaxe
+.RS 4
+The term
+pickaxe
+refers to an option to the diffcore routines that help select changes that add or delete a given text string\&. With the
+\fB\-\-pickaxe\-all\fR
+option, it can be used to view the full
+changeset
+that introduced or removed, say, a particular line of text\&. See
+\fBgit-diff\fR(1)\&.
+.RE
+.PP
+plumbing
+.RS 4
+Cute name for
+core Git\&.
+.RE
+.PP
+porcelain
+.RS 4
+Cute name for programs and program suites depending on
+core Git, presenting a high level access to core Git\&. Porcelains expose more of a
+SCM
+interface than the
+plumbing\&.
+.RE
+.PP
+per\-worktree ref
+.RS 4
+Refs that are per\-worktree, rather than global\&. This is presently only
+HEAD
+and any refs that start with
+\fBrefs/bisect/\fR, but might later include other unusual refs\&.
+.RE
+.PP
+pseudoref
+.RS 4
+Pseudorefs are a class of files under
+\fB$GIT_DIR\fR
+which behave like refs for the purposes of rev\-parse, but which are treated specially by git\&. Pseudorefs both have names that are all\-caps, and always start with a line consisting of a
+SHA\-1
+followed by whitespace\&. So, HEAD is not a pseudoref, because it is sometimes a symbolic ref\&. They might optionally contain some additional data\&.
+\fBMERGE_HEAD\fR
+and
+\fBCHERRY_PICK_HEAD\fR
+are examples\&. Unlike
+per\-worktree refs, these files cannot be symbolic refs, and never have reflogs\&. They also cannot be updated through the normal ref update machinery\&. Instead, they are updated by directly writing to the files\&. However, they can be read as if they were refs, so
+\fBgit rev\-parse MERGE_HEAD\fR
+will work\&.
+.RE
+.PP
+pull
+.RS 4
+Pulling a
+branch
+means to
+fetch
+it and
+merge
+it\&. See also
+\fBgit-pull\fR(1)\&.
+.RE
+.PP
+push
+.RS 4
+Pushing a
+branch
+means to get the branch\(cqs
+head ref
+from a remote
+repository, find out if it is a direct ancestor to the branch\(cqs local head ref, and in that case, putting all objects, which are
+reachable
+from the local head ref, and which are missing from the remote repository, into the remote
+object database, and updating the remote head ref\&. If the remote
+head
+is not an ancestor to the local head, the push fails\&.
+.RE
+.PP
+reachable
+.RS 4
+All of the ancestors of a given
+commit
+are said to be "reachable" from that commit\&. More generally, one
+object
+is reachable from another if we can reach the one from the other by a
+chain
+that follows
+tags
+to whatever they tag,
+commits
+to their parents or trees, and
+trees
+to the trees or
+blobs
+that they contain\&.
+.RE
+.PP
+rebase
+.RS 4
+To reapply a series of changes from a
+branch
+to a different base, and reset the
+head
+of that branch to the result\&.
+.RE
+.PP
+ref
+.RS 4
+A name that begins with
+\fBrefs/\fR
+(e\&.g\&.
+\fBrefs/heads/master\fR) that points to an
+object name
+or another ref (the latter is called a
+symbolic ref)\&. For convenience, a ref can sometimes be abbreviated when used as an argument to a Git command; see
+\fBgitrevisions\fR(7)
+for details\&. Refs are stored in the
+repository\&.
+.sp
+The ref namespace is hierarchical\&. Different subhierarchies are used for different purposes (e\&.g\&. the
+\fBrefs/heads/\fR
+hierarchy is used to represent local branches)\&.
+.sp
+There are a few special\-purpose refs that do not begin with
+\fBrefs/\fR\&. The most notable example is
+\fBHEAD\fR\&.
+.RE
+.PP
+reflog
+.RS 4
+A reflog shows the local "history" of a ref\&. In other words, it can tell you what the 3rd last revision in
+\fIthis\fR
+repository was, and what was the current state in
+\fIthis\fR
+repository, yesterday 9:14pm\&. See
+\fBgit-reflog\fR(1)
+for details\&.
+.RE
+.PP
+refspec
+.RS 4
+A "refspec" is used by
+fetch
+and
+push
+to describe the mapping between remote
+ref
+and local ref\&.
+.RE
+.PP
+remote repository
+.RS 4
+A
+repository
+which is used to track the same project but resides somewhere else\&. To communicate with remotes, see
+fetch
+or
+push\&.
+.RE
+.PP
+remote\-tracking branch
+.RS 4
+A
+ref
+that is used to follow changes from another
+repository\&. It typically looks like
+\fIrefs/remotes/foo/bar\fR
+(indicating that it tracks a branch named
+\fIbar\fR
+in a remote named
+\fIfoo\fR), and matches the right\-hand\-side of a configured fetch
+refspec\&. A remote\-tracking branch should not contain direct modifications or have local commits made to it\&.
+.RE
+.PP
+repository
+.RS 4
+A collection of
+refs
+together with an
+object database
+containing all objects which are
+reachable
+from the refs, possibly accompanied by meta data from one or more
+porcelains\&. A repository can share an object database with other repositories via
+alternates mechanism\&.
+.RE
+.PP
+resolve
+.RS 4
+The action of fixing up manually what a failed automatic
+merge
+left behind\&.
+.RE
+.PP
+revision
+.RS 4
+Synonym for
+commit
+(the noun)\&.
+.RE
+.PP
+rewind
+.RS 4
+To throw away part of the development, i\&.e\&. to assign the
+head
+to an earlier
+revision\&.
+.RE
+.PP
+SCM
+.RS 4
+Source code management (tool)\&.
+.RE
+.PP
+SHA\-1
+.RS 4
+"Secure Hash Algorithm 1"; a cryptographic hash function\&. In the context of Git used as a synonym for
+object name\&.
+.RE
+.PP
+shallow clone
+.RS 4
+Mostly a synonym to
+shallow repository
+but the phrase makes it more explicit that it was created by running
+\fBgit clone \-\-depth=\&.\&.\&.\fR
+command\&.
+.RE
+.PP
+shallow repository
+.RS 4
+A shallow
+repository
+has an incomplete history some of whose
+commits
+have
+parents
+cauterized away (in other words, Git is told to pretend that these commits do not have the parents, even though they are recorded in the
+commit object)\&. This is sometimes useful when you are interested only in the recent history of a project even though the real history recorded in the upstream is much larger\&. A shallow repository is created by giving the
+\fB\-\-depth\fR
+option to
+\fBgit-clone\fR(1), and its history can be later deepened with
+\fBgit-fetch\fR(1)\&.
+.RE
+.PP
+stash entry
+.RS 4
+An
+object
+used to temporarily store the contents of a
+dirty
+working directory and the index for future reuse\&.
+.RE
+.PP
+submodule
+.RS 4
+A
+repository
+that holds the history of a separate project inside another repository (the latter of which is called
+superproject)\&.
+.RE
+.PP
+superproject
+.RS 4
+A
+repository
+that references repositories of other projects in its working tree as
+submodules\&. The superproject knows about the names of (but does not hold copies of) commit objects of the contained submodules\&.
+.RE
+.PP
+symref
+.RS 4
+Symbolic reference: instead of containing the
+SHA\-1
+id itself, it is of the format
+\fIref: refs/some/thing\fR
+and when referenced, it recursively dereferences to this reference\&.
+\fIHEAD\fR
+is a prime example of a symref\&. Symbolic references are manipulated with the
+\fBgit-symbolic-ref\fR(1)
+command\&.
+.RE
+.PP
+tag
+.RS 4
+A
+ref
+under
+\fBrefs/tags/\fR
+namespace that points to an object of an arbitrary type (typically a tag points to either a
+tag
+or a
+commit object)\&. In contrast to a
+head, a tag is not updated by the
+\fBcommit\fR
+command\&. A Git tag has nothing to do with a Lisp tag (which would be called an
+object type
+in Git\(cqs context)\&. A tag is most typically used to mark a particular point in the commit ancestry
+chain\&.
+.RE
+.PP
+tag object
+.RS 4
+An
+object
+containing a
+ref
+pointing to another object, which can contain a message just like a
+commit object\&. It can also contain a (PGP) signature, in which case it is called a "signed tag object"\&.
+.RE
+.PP
+topic branch
+.RS 4
+A regular Git
+branch
+that is used by a developer to identify a conceptual line of development\&. Since branches are very easy and inexpensive, it is often desirable to have several small branches that each contain very well defined concepts or small incremental yet related changes\&.
+.RE
+.PP
+tree
+.RS 4
+Either a
+working tree, or a
+tree object
+together with the dependent
+blob
+and tree objects (i\&.e\&. a stored representation of a working tree)\&.
+.RE
+.PP
+tree object
+.RS 4
+An
+object
+containing a list of file names and modes along with refs to the associated blob and/or tree objects\&. A
+tree
+is equivalent to a
+directory\&.
+.RE
+.PP
+tree\-ish (also treeish)
+.RS 4
+A
+tree object
+or an
+object
+that can be recursively dereferenced to a tree object\&. Dereferencing a
+commit object
+yields the tree object corresponding to the
+revision\(aqs top
+directory\&. The following are all tree\-ishes: a
+commit\-ish, a tree object, a
+tag object
+that points to a tree object, a tag object that points to a tag object that points to a tree object, etc\&.
+.RE
+.PP
+unmerged index
+.RS 4
+An
+index
+which contains unmerged
+index entries\&.
+.RE
+.PP
+unreachable object
+.RS 4
+An
+object
+which is not
+reachable
+from a
+branch,
+tag, or any other reference\&.
+.RE
+.PP
+upstream branch
+.RS 4
+The default
+branch
+that is merged into the branch in question (or the branch in question is rebased onto)\&. It is configured via branch\&.<name>\&.remote and branch\&.<name>\&.merge\&. If the upstream branch of
+\fIA\fR
+is
+\fIorigin/B\fR
+sometimes we say "\fIA\fR
+is tracking
+\fIorigin/B\fR"\&.
+.RE
+.PP
+working tree
+.RS 4
+The tree of actual checked out files\&. The working tree normally contains the contents of the
+HEAD
+commit\(cqs tree, plus any local changes that you have made but not yet committed\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgittutorial\fR(7), \fBgittutorial-2\fR(7), \fBgitcvs-migration\fR(7), \fBgiteveryday\fR(7), \m[blue]\fBThe Git User\(cqs Manual\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite
+.SH "NOTES"
+.IP " 1." 4
+The Git User\(cqs Manual
+.RS 4
+\%git-htmldocs/user-manual.html
+.RE

@@ -1,0 +1,64 @@
+'\" t
+.\"     Title: git-whatchanged
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-WHATCHANGED" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-whatchanged \- Show logs with difference each commit introduces
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit whatchanged\fR <option>\&...
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Shows commit logs and diff output each commit introduces\&.
+.sp
+New users are encouraged to use \fBgit-log\fR(1) instead\&. The \fBwhatchanged\fR command is essentially the same as \fBgit-log\fR(1) but defaults to show the raw format diff output and to skip merges\&.
+.sp
+The command is kept primarily for historical reasons; fingers of many people who learned Git long before \fBgit log\fR was invented by reading Linux kernel mailing list are trained to type it\&.
+.SH "EXAMPLES"
+.PP
+\fBgit whatchanged \-p v2\&.6\&.12\&.\&. include/scsi drivers/scsi\fR
+.RS 4
+Show as patches the commits since version
+\fIv2\&.6\&.12\fR
+that changed any file in the include/scsi or drivers/scsi subdirectories
+.RE
+.PP
+\fBgit whatchanged \-\-since="2 weeks ago" \-\- gitk\fR
+.RS 4
+Show the changes during the last two weeks to the file
+\fIgitk\fR\&. The "\-\-" is necessary to avoid confusion with the
+\fBbranch\fR
+named
+\fIgitk\fR
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

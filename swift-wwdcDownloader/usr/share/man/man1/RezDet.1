@@ -1,0 +1,150 @@
+.\" Copyright (c) 2005-2006 Apple Computer, Inc. All Rights Reserved.
+.TH REZDET 1 "December 25, 2005" "Mac OS X"
+.na
+.nh
+.SH NAME
+RezDet
+\- Resource Detective (DEPRECATED)
+.SH SYNOPSIS
+.B RezDet resourceFile1 [resourceFile2]... [-b[ig]] [-useDF] [-noResolve]
+[-d[ump] | -l[ist] | -q[uiet] | -r[awdump] | -s[how] | -t[erse]]
+
+.SH DESCRIPTION
+Tools supporting Carbon development, including
+.B RezDet,
+were deprecated with Xcode 6.
+.PP The
+.B RezDet
+tool investigates the resource fork of the specified files for damage or inconsistencies. Files are read and checked one at a time, and messages are generated for each error, indicating the cause of the damage.
+In determining the source of the errors,
+.B RezDet
+checks that the files meet the following conditions:
+.TP
+- The resource fork contains the minimum number of bytes (enough to read a resource header).
+.TP
+- The header, resource data list, and resource map do not overlap or contain spaces between them. There should not be any bytes between the end-of-file marker and the end of the resource map.
+.TP
+- Each record in the resource data list is used once and only once and the last data item ends exactly where the data list ends.
+.TP
+- Each item in the resource type list contains at least one reference; each sequence of referenced items starts where the reference list for the previous resource type item ends; and each item in the reference list is pointed to by one and only one resource type list item.
+.TP
+- The resource type list does not contain any duplicates.
+.TP
+- Each name in the name list has one and only one reference, and the last name does not point outside the name list.
+.TP
+- All names have a nonzero length.
+.TP
+- The name list does not contain any duplicates. Note that duplicate names cause an advisory warning rather than a true error and that RezDet does not generate this warning unless you also specify the -d, -r, or -s options.
+.TP
+- Each reference list item points to a valid data item and either has a name list offset of -1 or points to a valid name list offset.
+.TP
+- Bits 7 (reserved) and 1 (changed) are not set in the resource attributes.
+.TP
+Note:
+.B RezDet
+does not use the Resource Manager and should not crash no matter how corrupt the resource fork of a file is.
+
+.SH INPUT
+.B One or more files (resourceFile). The
+.B RezDet
+tool does not read standard input.
+
+.SH OUTPUT
+.B Standard output.
+.B RezDet
+writes error messages to diagnostic output. If you specify -d, -l, -r, -s, or -t, the information produced by that option is written to standard output.
+Note: For the options in which additional information is retrieved, fields are displayed as hexadecimal or decimal numbers for numeric values, or as a hex dump with associated printable Macintosh characters.
+
+.SH STATUS
+.B RezDet
+can return the following status codes:
+.PP
+.PD 0
+.TP 3
+.B 0
+no errors
+.TP 3
+.B 1
+syntax error (invalid options or no files specified)
+.TP 3
+.B 2
+resource format error
+.TP 3
+.B 3
+fatal error--an I/O or program error
+.PD
+.PP
+.SH PARAMETERS
+.TP
+\fIresourceFile1\fR [ \fIresourceFile2\fR ] ...
+Specifies one or more resource files to be checked.
+.IP
+
+.SH OPTIONS
+.TP
+\fB-b[ig]\fR
+Reads the data for each resource into memory one resource at a time, instead of all at once.
+This is useful for checking huge resource files, such as the System file.
+.IP
+Note: Try using this option if
+.B RezDet
+tells you that it ran out of memory or that memory is badly fragmented.
+.TP
+\fB-useDF\fR
+Reads and writes resource information from the files' data forks, instead of their resource forks.
+.TP
+\fB-noResolve\fR
+Prevents the resolution of leaf aliases in the input resource file path. This allows the resources in a Finder alias file to be checked.
+.TP
+\fB-d[ump]\fR
+Generates the same information as the -s[how] option as well as detailed information about the resource header, type list, name list, resource map, and data list.
+.TP
+\fB-l[ist]\fR
+Lists resource types, IDs, names, attributes, and resource sizes. Output appears in the following format: 'type' (ID, name, attributes) [size]
+.TP
+\fB-q[uiet]\fR
+Returns a status code instead of generating error messages.
+.TP
+\fB-r[awdump]\fR
+Generates the same information as the -d[ump] option but also dumps the contents of data blocks.
+.IP
+Note: This option can generate huge amounts of output.
+.TP
+-s[how]\fR
+Writes information about individual resource types. For each type,
+.B RezDet
+provides the following information: the number of items of this type, the reference list offset, and detailed information on each ID (including the resource name, if any, resource attributes, data offset, and data length).
+.TP
+-t[erse]\fR
+Suppresses all messages that do not explicitly describe errors. Examples of such messages include the name of the current file and the statement that the file is OK in the event that no errors were found. Similar to the -q option, but allows error messages to display.
+
+.SH EXAMPLES
+The following command line checks the System file.
+
+.B RezDet
+"{SystemFolder}System" -big
+
+If the file is damaged,
+.B RezDet
+returns an error message such as this one:
+
+File "HD:System Folder:System"; ### RezDet -- Data inconsistency, 36 bytes left over.
+
+The following command line removes the Test.c file if its resource fork is damaged.
+
+.B RezDet
+Test.c -q || Delete Test.c
+
+.SH LIMITATIONS
+The
+.B RezDet
+tool does not validate the file attributes field in the resource map header and ignores the Finder-specific fields in the header and resource map header.
+
+Duplicate resource name warnings are generated when you specify -d, -r, or -s, even if the names belong to resources of different types.
+
+.SH COPYRIGHT
+.B RezDet
+is Copyright (c) 1986-2002, 2002, 2005 by Apple Computer, Inc.
+
+.SH AUTHORS
+Johan Strandberg, Tom Taylor, Mitch Adler, Cheryl Ewy, and Greg Branche.

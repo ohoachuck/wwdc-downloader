@@ -1,0 +1,2774 @@
+'\" t
+.\"     Title: git-rev-list
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-REV\-LIST" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-rev-list \- Lists commit objects in reverse chronological order
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit rev\-list\fR [ \-\-max\-count=<number> ]
+             [ \-\-skip=<number> ]
+             [ \-\-max\-age=<timestamp> ]
+             [ \-\-min\-age=<timestamp> ]
+             [ \-\-sparse ]
+             [ \-\-merges ]
+             [ \-\-no\-merges ]
+             [ \-\-min\-parents=<number> ]
+             [ \-\-no\-min\-parents ]
+             [ \-\-max\-parents=<number> ]
+             [ \-\-no\-max\-parents ]
+             [ \-\-first\-parent ]
+             [ \-\-remove\-empty ]
+             [ \-\-full\-history ]
+             [ \-\-not ]
+             [ \-\-all ]
+             [ \-\-branches[=<pattern>] ]
+             [ \-\-tags[=<pattern>] ]
+             [ \-\-remotes[=<pattern>] ]
+             [ \-\-glob=<glob\-pattern> ]
+             [ \-\-ignore\-missing ]
+             [ \-\-stdin ]
+             [ \-\-quiet ]
+             [ \-\-topo\-order ]
+             [ \-\-parents ]
+             [ \-\-timestamp ]
+             [ \-\-left\-right ]
+             [ \-\-left\-only ]
+             [ \-\-right\-only ]
+             [ \-\-cherry\-mark ]
+             [ \-\-cherry\-pick ]
+             [ \-\-encoding=<encoding> ]
+             [ \-\-(author|committer|grep)=<pattern> ]
+             [ \-\-regexp\-ignore\-case | \-i ]
+             [ \-\-extended\-regexp | \-E ]
+             [ \-\-fixed\-strings | \-F ]
+             [ \-\-date=<format>]
+             [ [ \-\-objects | \-\-objects\-edge | \-\-objects\-edge\-aggressive ]
+               [ \-\-unpacked ]
+               [ \-\-filter=<filter\-spec> [ \-\-filter\-print\-omitted ] ] ]
+             [ \-\-missing=<missing\-action> ]
+             [ \-\-pretty | \-\-header ]
+             [ \-\-bisect ]
+             [ \-\-bisect\-vars ]
+             [ \-\-bisect\-all ]
+             [ \-\-merge ]
+             [ \-\-reverse ]
+             [ \-\-walk\-reflogs ]
+             [ \-\-no\-walk ] [ \-\-do\-walk ]
+             [ \-\-count ]
+             [ \-\-use\-bitmap\-index ]
+             <commit>\&... [ \-\- <paths>\&... ]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+List commits that are reachable by following the \fBparent\fR links from the given commit(s), but exclude commits that are reachable from the one(s) given with a \fI^\fR in front of them\&. The output is given in reverse chronological order by default\&.
+.sp
+You can think of this as a set operation\&. Commits given on the command line form a set of commits that are reachable from any of them, and then commits reachable from any of the ones given with \fI^\fR in front are subtracted from that set\&. The remaining commits are what comes out in the command\(cqs output\&. Various other options and paths parameters can be used to further limit the result\&.
+.sp
+Thus, the following command:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        $ git rev\-list foo bar ^baz
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+means "list all the commits which are reachable from \fIfoo\fR or \fIbar\fR, but not from \fIbaz\fR"\&.
+.sp
+A special notation "\fI<commit1>\fR\&.\&.\fI<commit2>\fR" can be used as a short\-hand for "^\(aq<commit1>\(aq \fI<commit2>\fR"\&. For example, either of the following may be used interchangeably:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        $ git rev\-list origin\&.\&.HEAD
+        $ git rev\-list HEAD ^origin
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Another special notation is "\fI<commit1>\fR\&...\fI<commit2>\fR" which is useful for merges\&. The resulting set of commits is the symmetric difference between the two operands\&. The following two commands are equivalent:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        $ git rev\-list A B \-\-not $(git merge\-base \-\-all A B)
+        $ git rev\-list A\&.\&.\&.B
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+\fIrev\-list\fR is a very essential Git command, since it provides the ability to build and traverse commit ancestry graphs\&. For this reason, it has a lot of different options that enables it to be used by commands as different as \fIgit bisect\fR and \fIgit repack\fR\&.
+.SH "OPTIONS"
+.SS "Commit Limiting"
+.sp
+Besides specifying a range of commits that should be listed using the special notations explained in the description, additional commit limiting may be applied\&.
+.sp
+Using more options generally further limits the output (e\&.g\&. \fB\-\-since=<date1>\fR limits to commits newer than \fB<date1>\fR, and using it with \fB\-\-grep=<pattern>\fR further limits to commits whose log message has a line that matches \fB<pattern>\fR), unless otherwise noted\&.
+.sp
+Note that these are applied before commit ordering and formatting options, such as \fB\-\-reverse\fR\&.
+.PP
+\-<number>, \-n <number>, \-\-max\-count=<number>
+.RS 4
+Limit the number of commits to output\&.
+.RE
+.PP
+\-\-skip=<number>
+.RS 4
+Skip
+\fInumber\fR
+commits before starting to show the commit output\&.
+.RE
+.PP
+\-\-since=<date>, \-\-after=<date>
+.RS 4
+Show commits more recent than a specific date\&.
+.RE
+.PP
+\-\-until=<date>, \-\-before=<date>
+.RS 4
+Show commits older than a specific date\&.
+.RE
+.PP
+\-\-max\-age=<timestamp>, \-\-min\-age=<timestamp>
+.RS 4
+Limit the commits output to specified time range\&.
+.RE
+.PP
+\-\-author=<pattern>, \-\-committer=<pattern>
+.RS 4
+Limit the commits output to ones with author/committer header lines that match the specified pattern (regular expression)\&. With more than one
+\fB\-\-author=<pattern>\fR, commits whose author matches any of the given patterns are chosen (similarly for multiple
+\fB\-\-committer=<pattern>\fR)\&.
+.RE
+.PP
+\-\-grep\-reflog=<pattern>
+.RS 4
+Limit the commits output to ones with reflog entries that match the specified pattern (regular expression)\&. With more than one
+\fB\-\-grep\-reflog\fR, commits whose reflog message matches any of the given patterns are chosen\&. It is an error to use this option unless
+\fB\-\-walk\-reflogs\fR
+is in use\&.
+.RE
+.PP
+\-\-grep=<pattern>
+.RS 4
+Limit the commits output to ones with log message that matches the specified pattern (regular expression)\&. With more than one
+\fB\-\-grep=<pattern>\fR, commits whose message matches any of the given patterns are chosen (but see
+\fB\-\-all\-match\fR)\&.
+.RE
+.PP
+\-\-all\-match
+.RS 4
+Limit the commits output to ones that match all given
+\fB\-\-grep\fR, instead of ones that match at least one\&.
+.RE
+.PP
+\-\-invert\-grep
+.RS 4
+Limit the commits output to ones with log message that do not match the pattern specified with
+\fB\-\-grep=<pattern>\fR\&.
+.RE
+.PP
+\-i, \-\-regexp\-ignore\-case
+.RS 4
+Match the regular expression limiting patterns without regard to letter case\&.
+.RE
+.PP
+\-\-basic\-regexp
+.RS 4
+Consider the limiting patterns to be basic regular expressions; this is the default\&.
+.RE
+.PP
+\-E, \-\-extended\-regexp
+.RS 4
+Consider the limiting patterns to be extended regular expressions instead of the default basic regular expressions\&.
+.RE
+.PP
+\-F, \-\-fixed\-strings
+.RS 4
+Consider the limiting patterns to be fixed strings (don\(cqt interpret pattern as a regular expression)\&.
+.RE
+.PP
+\-P, \-\-perl\-regexp
+.RS 4
+Consider the limiting patterns to be Perl\-compatible regular expressions\&.
+.sp
+Support for these types of regular expressions is an optional compile\-time dependency\&. If Git wasn\(cqt compiled with support for them providing this option will cause it to die\&.
+.RE
+.PP
+\-\-remove\-empty
+.RS 4
+Stop when a given path disappears from the tree\&.
+.RE
+.PP
+\-\-merges
+.RS 4
+Print only merge commits\&. This is exactly the same as
+\fB\-\-min\-parents=2\fR\&.
+.RE
+.PP
+\-\-no\-merges
+.RS 4
+Do not print commits with more than one parent\&. This is exactly the same as
+\fB\-\-max\-parents=1\fR\&.
+.RE
+.PP
+\-\-min\-parents=<number>, \-\-max\-parents=<number>, \-\-no\-min\-parents, \-\-no\-max\-parents
+.RS 4
+Show only commits which have at least (or at most) that many parent commits\&. In particular,
+\fB\-\-max\-parents=1\fR
+is the same as
+\fB\-\-no\-merges\fR,
+\fB\-\-min\-parents=2\fR
+is the same as
+\fB\-\-merges\fR\&.
+\fB\-\-max\-parents=0\fR
+gives all root commits and
+\fB\-\-min\-parents=3\fR
+all octopus merges\&.
+.sp
+\fB\-\-no\-min\-parents\fR
+and
+\fB\-\-no\-max\-parents\fR
+reset these limits (to no limit) again\&. Equivalent forms are
+\fB\-\-min\-parents=0\fR
+(any commit has 0 or more parents) and
+\fB\-\-max\-parents=\-1\fR
+(negative numbers denote no upper limit)\&.
+.RE
+.PP
+\-\-first\-parent
+.RS 4
+Follow only the first parent commit upon seeing a merge commit\&. This option can give a better overview when viewing the evolution of a particular topic branch, because merges into a topic branch tend to be only about adjusting to updated upstream from time to time, and this option allows you to ignore the individual commits brought in to your history by such a merge\&. Cannot be combined with \-\-bisect\&.
+.RE
+.PP
+\-\-not
+.RS 4
+Reverses the meaning of the
+\fI^\fR
+prefix (or lack thereof) for all following revision specifiers, up to the next
+\fB\-\-not\fR\&.
+.RE
+.PP
+\-\-all
+.RS 4
+Pretend as if all the refs in
+\fBrefs/\fR, along with
+\fBHEAD\fR, are listed on the command line as
+\fI<commit>\fR\&.
+.RE
+.PP
+\-\-branches[=<pattern>]
+.RS 4
+Pretend as if all the refs in
+\fBrefs/heads\fR
+are listed on the command line as
+\fI<commit>\fR\&. If
+\fI<pattern>\fR
+is given, limit branches to ones matching given shell glob\&. If pattern lacks
+\fI?\fR,
+\fI*\fR, or
+\fI[\fR,
+\fI/*\fR
+at the end is implied\&.
+.RE
+.PP
+\-\-tags[=<pattern>]
+.RS 4
+Pretend as if all the refs in
+\fBrefs/tags\fR
+are listed on the command line as
+\fI<commit>\fR\&. If
+\fI<pattern>\fR
+is given, limit tags to ones matching given shell glob\&. If pattern lacks
+\fI?\fR,
+\fI*\fR, or
+\fI[\fR,
+\fI/*\fR
+at the end is implied\&.
+.RE
+.PP
+\-\-remotes[=<pattern>]
+.RS 4
+Pretend as if all the refs in
+\fBrefs/remotes\fR
+are listed on the command line as
+\fI<commit>\fR\&. If
+\fI<pattern>\fR
+is given, limit remote\-tracking branches to ones matching given shell glob\&. If pattern lacks
+\fI?\fR,
+\fI*\fR, or
+\fI[\fR,
+\fI/*\fR
+at the end is implied\&.
+.RE
+.PP
+\-\-glob=<glob\-pattern>
+.RS 4
+Pretend as if all the refs matching shell glob
+\fI<glob\-pattern>\fR
+are listed on the command line as
+\fI<commit>\fR\&. Leading
+\fIrefs/\fR, is automatically prepended if missing\&. If pattern lacks
+\fI?\fR,
+\fI*\fR, or
+\fI[\fR,
+\fI/*\fR
+at the end is implied\&.
+.RE
+.PP
+\-\-exclude=<glob\-pattern>
+.RS 4
+Do not include refs matching
+\fI<glob\-pattern>\fR
+that the next
+\fB\-\-all\fR,
+\fB\-\-branches\fR,
+\fB\-\-tags\fR,
+\fB\-\-remotes\fR, or
+\fB\-\-glob\fR
+would otherwise consider\&. Repetitions of this option accumulate exclusion patterns up to the next
+\fB\-\-all\fR,
+\fB\-\-branches\fR,
+\fB\-\-tags\fR,
+\fB\-\-remotes\fR, or
+\fB\-\-glob\fR
+option (other options or arguments do not clear accumulated patterns)\&.
+.sp
+The patterns given should not begin with
+\fBrefs/heads\fR,
+\fBrefs/tags\fR, or
+\fBrefs/remotes\fR
+when applied to
+\fB\-\-branches\fR,
+\fB\-\-tags\fR, or
+\fB\-\-remotes\fR, respectively, and they must begin with
+\fBrefs/\fR
+when applied to
+\fB\-\-glob\fR
+or
+\fB\-\-all\fR\&. If a trailing
+\fI/*\fR
+is intended, it must be given explicitly\&.
+.RE
+.PP
+\-\-reflog
+.RS 4
+Pretend as if all objects mentioned by reflogs are listed on the command line as
+\fB<commit>\fR\&.
+.RE
+.PP
+\-\-single\-worktree
+.RS 4
+By default, all working trees will be examined by the following options when there are more than one (see
+\fBgit-worktree\fR(1)):
+\fB\-\-all\fR,
+\fB\-\-reflog\fR
+and
+\fB\-\-indexed\-objects\fR\&. This option forces them to examine the current working tree only\&.
+.RE
+.PP
+\-\-ignore\-missing
+.RS 4
+Upon seeing an invalid object name in the input, pretend as if the bad input was not given\&.
+.RE
+.PP
+\-\-stdin
+.RS 4
+In addition to the
+\fI<commit>\fR
+listed on the command line, read them from the standard input\&. If a
+\fB\-\-\fR
+separator is seen, stop reading commits and start reading paths to limit the result\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Don\(cqt print anything to standard output\&. This form is primarily meant to allow the caller to test the exit status to see if a range of objects is fully connected (or not)\&. It is faster than redirecting stdout to
+\fB/dev/null\fR
+as the output does not have to be formatted\&.
+.RE
+.PP
+\-\-cherry\-mark
+.RS 4
+Like
+\fB\-\-cherry\-pick\fR
+(see below) but mark equivalent commits with
+\fB=\fR
+rather than omitting them, and inequivalent ones with
+\fB+\fR\&.
+.RE
+.PP
+\-\-cherry\-pick
+.RS 4
+Omit any commit that introduces the same change as another commit on the \(lqother side\(rq when the set of commits are limited with symmetric difference\&.
+.sp
+For example, if you have two branches,
+\fBA\fR
+and
+\fBB\fR, a usual way to list all commits on only one side of them is with
+\fB\-\-left\-right\fR
+(see the example below in the description of the
+\fB\-\-left\-right\fR
+option)\&. However, it shows the commits that were cherry\-picked from the other branch (for example, \(lq3rd on b\(rq may be cherry\-picked from branch A)\&. With this option, such pairs of commits are excluded from the output\&.
+.RE
+.PP
+\-\-left\-only, \-\-right\-only
+.RS 4
+List only commits on the respective side of a symmetric difference, i\&.e\&. only those which would be marked
+\fB<\fR
+resp\&.
+\fB>\fR
+by
+\fB\-\-left\-right\fR\&.
+.sp
+For example,
+\fB\-\-cherry\-pick \-\-right\-only A\&.\&.\&.B\fR
+omits those commits from
+\fBB\fR
+which are in
+\fBA\fR
+or are patch\-equivalent to a commit in
+\fBA\fR\&. In other words, this lists the
+\fB+\fR
+commits from
+\fBgit cherry A B\fR\&. More precisely,
+\fB\-\-cherry\-pick \-\-right\-only \-\-no\-merges\fR
+gives the exact list\&.
+.RE
+.PP
+\-\-cherry
+.RS 4
+A synonym for
+\fB\-\-right\-only \-\-cherry\-mark \-\-no\-merges\fR; useful to limit the output to the commits on our side and mark those that have been applied to the other side of a forked history with
+\fBgit log \-\-cherry upstream\&.\&.\&.mybranch\fR, similar to
+\fBgit cherry upstream mybranch\fR\&.
+.RE
+.PP
+\-g, \-\-walk\-reflogs
+.RS 4
+Instead of walking the commit ancestry chain, walk reflog entries from the most recent one to older ones\&. When this option is used you cannot specify commits to exclude (that is,
+\fI^commit\fR,
+\fIcommit1\&.\&.commit2\fR, and
+\fIcommit1\&.\&.\&.commit2\fR
+notations cannot be used)\&.
+.sp
+With
+\fB\-\-pretty\fR
+format other than
+\fBoneline\fR
+(for obvious reasons), this causes the output to have two extra lines of information taken from the reflog\&. The reflog designator in the output may be shown as
+\fBref@{Nth}\fR
+(where
+\fBNth\fR
+is the reverse\-chronological index in the reflog) or as
+\fBref@{timestamp}\fR
+(with the timestamp for that entry), depending on a few rules:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+If the starting point is specified as
+\fBref@{Nth}\fR, show the index format\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+If the starting point was specified as
+\fBref@{now}\fR, show the timestamp format\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+If neither was used, but
+\fB\-\-date\fR
+was given on the command line, show the timestamp in the format requested by
+\fB\-\-date\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  4." 4.2
+.\}
+Otherwise, show the index format\&.
+.RE
+.sp
+Under
+\fB\-\-pretty=oneline\fR, the commit message is prefixed with this information on the same line\&. This option cannot be combined with
+\fB\-\-reverse\fR\&. See also
+\fBgit-reflog\fR(1)\&.
+.RE
+.PP
+\-\-merge
+.RS 4
+After a failed merge, show refs that touch files having a conflict and don\(cqt exist on all heads to merge\&.
+.RE
+.PP
+\-\-boundary
+.RS 4
+Output excluded boundary commits\&. Boundary commits are prefixed with
+\fB\-\fR\&.
+.RE
+.PP
+\-\-use\-bitmap\-index
+.RS 4
+Try to speed up the traversal using the pack bitmap index (if one is available)\&. Note that when traversing with
+\fB\-\-objects\fR, trees and blobs will not have their associated path printed\&.
+.RE
+.PP
+\-\-progress=<header>
+.RS 4
+Show progress reports on stderr as objects are considered\&. The
+\fB<header>\fR
+text will be printed with each progress update\&.
+.RE
+.SS "History Simplification"
+.sp
+Sometimes you are only interested in parts of the history, for example the commits modifying a particular <path>\&. But there are two parts of \fIHistory Simplification\fR, one part is selecting the commits and the other is how to do it, as there are various strategies to simplify the history\&.
+.sp
+The following options select the commits to be shown:
+.PP
+<paths>
+.RS 4
+Commits modifying the given <paths> are selected\&.
+.RE
+.PP
+\-\-simplify\-by\-decoration
+.RS 4
+Commits that are referred by some branch or tag are selected\&.
+.RE
+.sp
+Note that extra commits can be shown to give a meaningful history\&.
+.sp
+The following options affect the way the simplification is performed:
+.PP
+Default mode
+.RS 4
+Simplifies the history to the simplest history explaining the final state of the tree\&. Simplest because it prunes some side branches if the end result is the same (i\&.e\&. merging branches with the same content)
+.RE
+.PP
+\-\-full\-history
+.RS 4
+Same as the default mode, but does not prune some history\&.
+.RE
+.PP
+\-\-dense
+.RS 4
+Only the selected commits are shown, plus some to have a meaningful history\&.
+.RE
+.PP
+\-\-sparse
+.RS 4
+All commits in the simplified history are shown\&.
+.RE
+.PP
+\-\-simplify\-merges
+.RS 4
+Additional option to
+\fB\-\-full\-history\fR
+to remove some needless merges from the resulting history, as there are no selected commits contributing to this merge\&.
+.RE
+.PP
+\-\-ancestry\-path
+.RS 4
+When given a range of commits to display (e\&.g\&.
+\fIcommit1\&.\&.commit2\fR
+or
+\fIcommit2 ^commit1\fR), only display commits that exist directly on the ancestry chain between the
+\fIcommit1\fR
+and
+\fIcommit2\fR, i\&.e\&. commits that are both descendants of
+\fIcommit1\fR, and ancestors of
+\fIcommit2\fR\&.
+.RE
+.sp
+A more detailed explanation follows\&.
+.sp
+Suppose you specified \fBfoo\fR as the <paths>\&. We shall call commits that modify \fBfoo\fR !TREESAME, and the rest TREESAME\&. (In a diff filtered for \fBfoo\fR, they look different and equal, respectively\&.)
+.sp
+In the following, we will always refer to the same example history to illustrate the differences between simplification settings\&. We assume that you are filtering for a file \fBfoo\fR in this commit graph:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+          \&.\-A\-\-\-M\-\-\-N\-\-\-O\-\-\-P\-\-\-Q
+         /     /   /   /   /   /
+        I     B   C   D   E   Y
+         \e   /   /   /   /   /
+          `\-\-\-\-\-\-\-\-\-\-\-\-\-\(aq   X
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The horizontal line of history A\-\-\-Q is taken to be the first parent of each merge\&. The commits are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBI\fR
+is the initial commit, in which
+\fBfoo\fR
+exists with contents \(lqasdf\(rq, and a file
+\fBquux\fR
+exists with contents \(lqquux\(rq\&. Initial commits are compared to an empty tree, so
+\fBI\fR
+is !TREESAME\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+In
+\fBA\fR,
+\fBfoo\fR
+contains just \(lqfoo\(rq\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBB\fR
+contains the same change as
+\fBA\fR\&. Its merge
+\fBM\fR
+is trivial and hence TREESAME to all parents\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBC\fR
+does not change
+\fBfoo\fR, but its merge
+\fBN\fR
+changes it to \(lqfoobar\(rq, so it is not TREESAME to any parent\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBD\fR
+sets
+\fBfoo\fR
+to \(lqbaz\(rq\&. Its merge
+\fBO\fR
+combines the strings from
+\fBN\fR
+and
+\fBD\fR
+to \(lqfoobarbaz\(rq; i\&.e\&., it is not TREESAME to any parent\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBE\fR
+changes
+\fBquux\fR
+to \(lqxyzzy\(rq, and its merge
+\fBP\fR
+combines the strings to \(lqquux xyzzy\(rq\&.
+\fBP\fR
+is TREESAME to
+\fBO\fR, but not to
+\fBE\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBX\fR
+is an independent root commit that added a new file
+\fBside\fR, and
+\fBY\fR
+modified it\&.
+\fBY\fR
+is TREESAME to
+\fBX\fR\&. Its merge
+\fBQ\fR
+added
+\fBside\fR
+to
+\fBP\fR, and
+\fBQ\fR
+is TREESAME to
+\fBP\fR, but not to
+\fBY\fR\&.
+.RE
+.sp
+\fBrev\-list\fR walks backwards through history, including or excluding commits based on whether \fB\-\-full\-history\fR and/or parent rewriting (via \fB\-\-parents\fR or \fB\-\-children\fR) are used\&. The following settings are available\&.
+.PP
+Default mode
+.RS 4
+Commits are included if they are not TREESAME to any parent (though this can be changed, see
+\fB\-\-sparse\fR
+below)\&. If the commit was a merge, and it was TREESAME to one parent, follow only that parent\&. (Even if there are several TREESAME parents, follow only one of them\&.) Otherwise, follow all parents\&.
+.sp
+This results in:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+          \&.\-A\-\-\-N\-\-\-O
+         /     /   /
+        I\-\-\-\-\-\-\-\-\-D
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Note how the rule to only follow the TREESAME parent, if one is available, removed
+\fBB\fR
+from consideration entirely\&.
+\fBC\fR
+was considered via
+\fBN\fR, but is TREESAME\&. Root commits are compared to an empty tree, so
+\fBI\fR
+is !TREESAME\&.
+.sp
+Parent/child relations are only visible with
+\fB\-\-parents\fR, but that does not affect the commits selected in default mode, so we have shown the parent lines\&.
+.RE
+.PP
+\-\-full\-history without parent rewriting
+.RS 4
+This mode differs from the default in one point: always follow all parents of a merge, even if it is TREESAME to one of them\&. Even if more than one side of the merge has commits that are included, this does not imply that the merge itself is! In the example, we get
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        I  A  B  N  D  O  P  Q
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBM\fR
+was excluded because it is TREESAME to both parents\&.
+\fBE\fR,
+\fBC\fR
+and
+\fBB\fR
+were all walked, but only
+\fBB\fR
+was !TREESAME, so the others do not appear\&.
+.sp
+Note that without parent rewriting, it is not really possible to talk about the parent/child relationships between the commits, so we show them disconnected\&.
+.RE
+.PP
+\-\-full\-history with parent rewriting
+.RS 4
+Ordinary commits are only included if they are !TREESAME (though this can be changed, see
+\fB\-\-sparse\fR
+below)\&.
+.sp
+Merges are always included\&. However, their parent list is rewritten: Along each parent, prune away commits that are not included themselves\&. This results in
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+          \&.\-A\-\-\-M\-\-\-N\-\-\-O\-\-\-P\-\-\-Q
+         /     /   /   /   /
+        I     B   /   D   /
+         \e   /   /   /   /
+          `\-\-\-\-\-\-\-\-\-\-\-\-\-\(aq
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Compare to
+\fB\-\-full\-history\fR
+without rewriting above\&. Note that
+\fBE\fR
+was pruned away because it is TREESAME, but the parent list of P was rewritten to contain
+\fBE\fR\(aqs parent
+\fBI\fR\&. The same happened for
+\fBC\fR
+and
+\fBN\fR, and
+\fBX\fR,
+\fBY\fR
+and
+\fBQ\fR\&.
+.RE
+.sp
+In addition to the above settings, you can change whether TREESAME affects inclusion:
+.PP
+\-\-dense
+.RS 4
+Commits that are walked are included if they are not TREESAME to any parent\&.
+.RE
+.PP
+\-\-sparse
+.RS 4
+All commits that are walked are included\&.
+.sp
+Note that without
+\fB\-\-full\-history\fR, this still simplifies merges: if one of the parents is TREESAME, we follow only that one, so the other sides of the merge are never walked\&.
+.RE
+.PP
+\-\-simplify\-merges
+.RS 4
+First, build a history graph in the same way that
+\fB\-\-full\-history\fR
+with parent rewriting does (see above)\&.
+.sp
+Then simplify each commit
+\fBC\fR
+to its replacement
+\fBC\(aq\fR
+in the final history according to the following rules:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Set
+\fBC\(aq\fR
+to
+\fBC\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Replace each parent
+\fBP\fR
+of
+\fBC\(aq\fR
+with its simplification
+\fBP\(aq\fR\&. In the process, drop parents that are ancestors of other parents or that are root commits TREESAME to an empty tree, and remove duplicates, but take care to never drop all parents that we are TREESAME to\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If after this parent rewriting,
+\fBC\(aq\fR
+is a root or merge commit (has zero or >1 parents), a boundary commit, or !TREESAME, it remains\&. Otherwise, it is replaced with its only parent\&.
+.RE
+.sp
+The effect of this is best shown by way of comparing to
+\fB\-\-full\-history\fR
+with parent rewriting\&. The example turns into:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+          \&.\-A\-\-\-M\-\-\-N\-\-\-O
+         /     /       /
+        I     B       D
+         \e   /       /
+          `\-\-\-\-\-\-\-\-\-\(aq
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Note the major differences in
+\fBN\fR,
+\fBP\fR, and
+\fBQ\fR
+over
+\fB\-\-full\-history\fR:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBN\fR\(aqs parent list had
+\fBI\fR
+removed, because it is an ancestor of the other parent
+\fBM\fR\&. Still,
+\fBN\fR
+remained because it is !TREESAME\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBP\fR\(aqs parent list similarly had
+\fBI\fR
+removed\&.
+\fBP\fR
+was then removed completely, because it had one parent and is TREESAME\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBQ\fR\(aqs parent list had
+\fBY\fR
+simplified to
+\fBX\fR\&.
+\fBX\fR
+was then removed, because it was a TREESAME root\&.
+\fBQ\fR
+was then removed completely, because it had one parent and is TREESAME\&.
+.RE
+.RE
+.sp
+Finally, there is a fifth simplification mode available:
+.PP
+\-\-ancestry\-path
+.RS 4
+Limit the displayed commits to those directly on the ancestry chain between the \(lqfrom\(rq and \(lqto\(rq commits in the given commit range\&. I\&.e\&. only display commits that are ancestor of the \(lqto\(rq commit and descendants of the \(lqfrom\(rq commit\&.
+.sp
+As an example use case, consider the following commit history:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+            D\-\-\-E\-\-\-\-\-\-\-F
+           /     \e       \e
+          B\-\-\-C\-\-\-G\-\-\-H\-\-\-I\-\-\-J
+         /                     \e
+        A\-\-\-\-\-\-\-K\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-L\-\-M
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+A regular
+\fID\&.\&.M\fR
+computes the set of commits that are ancestors of
+\fBM\fR, but excludes the ones that are ancestors of
+\fBD\fR\&. This is useful to see what happened to the history leading to
+\fBM\fR
+since
+\fBD\fR, in the sense that \(lqwhat does
+\fBM\fR
+have that did not exist in
+\fBD\fR\(rq\&. The result in this example would be all the commits, except
+\fBA\fR
+and
+\fBB\fR
+(and
+\fBD\fR
+itself, of course)\&.
+.sp
+When we want to find out what commits in
+\fBM\fR
+are contaminated with the bug introduced by
+\fBD\fR
+and need fixing, however, we might want to view only the subset of
+\fID\&.\&.M\fR
+that are actually descendants of
+\fBD\fR, i\&.e\&. excluding
+\fBC\fR
+and
+\fBK\fR\&. This is exactly what the
+\fB\-\-ancestry\-path\fR
+option does\&. Applied to the
+\fID\&.\&.M\fR
+range, it results in:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+                E\-\-\-\-\-\-\-F
+                 \e       \e
+                  G\-\-\-H\-\-\-I\-\-\-J
+                               \e
+                                L\-\-M
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+The \fB\-\-simplify\-by\-decoration\fR option allows you to view only the big picture of the topology of the history, by omitting commits that are not referenced by tags\&. Commits are marked as !TREESAME (in other words, kept after history simplification rules described above) if (1) they are referenced by tags, or (2) they change the contents of the paths given on the command line\&. All other commits are marked as TREESAME (subject to be simplified away)\&.
+.SS "Bisection Helpers"
+.PP
+\-\-bisect
+.RS 4
+Limit output to the one commit object which is roughly halfway between included and excluded commits\&. Note that the bad bisection ref
+\fBrefs/bisect/bad\fR
+is added to the included commits (if it exists) and the good bisection refs
+\fBrefs/bisect/good\-*\fR
+are added to the excluded commits (if they exist)\&. Thus, supposing there are no refs in
+\fBrefs/bisect/\fR, if
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        $ git rev\-list \-\-bisect foo ^bar ^baz
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+outputs
+\fImidpoint\fR, the output of the two commands
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        $ git rev\-list foo ^midpoint
+        $ git rev\-list midpoint ^bar ^baz
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+would be of roughly the same length\&. Finding the change which introduces a regression is thus reduced to a binary search: repeatedly generate and test new \(aqmidpoint\(cqs until the commit chain is of length one\&. Cannot be combined with \-\-first\-parent\&.
+.RE
+.PP
+\-\-bisect\-vars
+.RS 4
+This calculates the same as
+\fB\-\-bisect\fR, except that refs in
+\fBrefs/bisect/\fR
+are not used, and except that this outputs text ready to be eval\(cqed by the shell\&. These lines will assign the name of the midpoint revision to the variable
+\fBbisect_rev\fR, and the expected number of commits to be tested after
+\fBbisect_rev\fR
+is tested to
+\fBbisect_nr\fR, the expected number of commits to be tested if
+\fBbisect_rev\fR
+turns out to be good to
+\fBbisect_good\fR, the expected number of commits to be tested if
+\fBbisect_rev\fR
+turns out to be bad to
+\fBbisect_bad\fR, and the number of commits we are bisecting right now to
+\fBbisect_all\fR\&.
+.RE
+.PP
+\-\-bisect\-all
+.RS 4
+This outputs all the commit objects between the included and excluded commits, ordered by their distance to the included and excluded commits\&. Refs in
+\fBrefs/bisect/\fR
+are not used\&. The farthest from them is displayed first\&. (This is the only one displayed by
+\fB\-\-bisect\fR\&.)
+.sp
+This is useful because it makes it easy to choose a good commit to test when you want to avoid to test some of them for some reason (they may not compile for example)\&.
+.sp
+This option can be used along with
+\fB\-\-bisect\-vars\fR, in this case, after all the sorted commit objects, there will be the same text as if
+\fB\-\-bisect\-vars\fR
+had been used alone\&.
+.RE
+.SS "Commit Ordering"
+.sp
+By default, the commits are shown in reverse chronological order\&.
+.PP
+\-\-date\-order
+.RS 4
+Show no parents before all of its children are shown, but otherwise show commits in the commit timestamp order\&.
+.RE
+.PP
+\-\-author\-date\-order
+.RS 4
+Show no parents before all of its children are shown, but otherwise show commits in the author timestamp order\&.
+.RE
+.PP
+\-\-topo\-order
+.RS 4
+Show no parents before all of its children are shown, and avoid showing commits on multiple lines of history intermixed\&.
+.sp
+For example, in a commit history like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    \-\-\-1\-\-\-\-2\-\-\-\-4\-\-\-\-7
+        \e              \e
+         3\-\-\-\-5\-\-\-\-6\-\-\-\-8\-\-\-
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+where the numbers denote the order of commit timestamps,
+\fBgit rev\-list\fR
+and friends with
+\fB\-\-date\-order\fR
+show the commits in the timestamp order: 8 7 6 5 4 3 2 1\&.
+.sp
+With
+\fB\-\-topo\-order\fR, they would show 8 6 5 3 7 4 2 1 (or 8 7 4 2 6 5 3 1); some older commits are shown before newer ones in order to avoid showing the commits from two parallel development track mixed together\&.
+.RE
+.PP
+\-\-reverse
+.RS 4
+Output the commits chosen to be shown (see Commit Limiting section above) in reverse order\&. Cannot be combined with
+\fB\-\-walk\-reflogs\fR\&.
+.RE
+.SS "Object Traversal"
+.sp
+These options are mostly targeted for packing of Git repositories\&.
+.PP
+\-\-objects
+.RS 4
+Print the object IDs of any object referenced by the listed commits\&.
+\fB\-\-objects foo ^bar\fR
+thus means \(lqsend me all object IDs which I need to download if I have the commit object
+\fIbar\fR
+but not
+\fIfoo\fR\(rq\&.
+.RE
+.PP
+\-\-in\-commit\-order
+.RS 4
+Print tree and blob ids in order of the commits\&. The tree and blob ids are printed after they are first referenced by a commit\&.
+.RE
+.PP
+\-\-objects\-edge
+.RS 4
+Similar to
+\fB\-\-objects\fR, but also print the IDs of excluded commits prefixed with a \(lq\-\(rq character\&. This is used by
+\fBgit-pack-objects\fR(1)
+to build a \(lqthin\(rq pack, which records objects in deltified form based on objects contained in these excluded commits to reduce network traffic\&.
+.RE
+.PP
+\-\-objects\-edge\-aggressive
+.RS 4
+Similar to
+\fB\-\-objects\-edge\fR, but it tries harder to find excluded commits at the cost of increased time\&. This is used instead of
+\fB\-\-objects\-edge\fR
+to build \(lqthin\(rq packs for shallow repositories\&.
+.RE
+.PP
+\-\-indexed\-objects
+.RS 4
+Pretend as if all trees and blobs used by the index are listed on the command line\&. Note that you probably want to use
+\fB\-\-objects\fR, too\&.
+.RE
+.PP
+\-\-unpacked
+.RS 4
+Only useful with
+\fB\-\-objects\fR; print the object IDs that are not in packs\&.
+.RE
+.PP
+\-\-filter=<filter\-spec>
+.RS 4
+Only useful with one of the
+\fB\-\-objects*\fR; omits objects (usually blobs) from the list of printed objects\&. The
+\fI<filter\-spec>\fR
+may be one of the following:
+.sp
+The form
+\fI\-\-filter=blob:none\fR
+omits all blobs\&.
+.sp
+The form
+\fI\-\-filter=blob:limit=<n>[kmg]\fR
+omits blobs larger than n bytes or units\&. n may be zero\&. The suffixes k, m, and g can be used to name units in KiB, MiB, or GiB\&. For example,
+\fIblob:limit=1k\fR
+is the same as
+\fIblob:limit=1024\fR\&.
+.sp
+The form
+\fI\-\-filter=sparse:oid=<blob\-ish>\fR
+uses a sparse\-checkout specification contained in the blob (or blob\-expression)
+\fI<blob\-ish>\fR
+to omit blobs that would not be not required for a sparse checkout on the requested refs\&.
+.sp
+The form
+\fI\-\-filter=sparse:path=<path>\fR
+similarly uses a sparse\-checkout specification contained in <path>\&.
+.RE
+.PP
+\-\-no\-filter
+.RS 4
+Turn off any previous
+\fB\-\-filter=\fR
+argument\&.
+.RE
+.PP
+\-\-filter\-print\-omitted
+.RS 4
+Only useful with
+\fB\-\-filter=\fR; prints a list of the objects omitted by the filter\&. Object IDs are prefixed with a \(lq~\(rq character\&.
+.RE
+.PP
+\-\-missing=<missing\-action>
+.RS 4
+A debug option to help with future "partial clone" development\&. This option specifies how missing objects are handled\&.
+.sp
+The form
+\fI\-\-missing=error\fR
+requests that rev\-list stop with an error if a missing object is encountered\&. This is the default action\&.
+.sp
+The form
+\fI\-\-missing=allow\-any\fR
+will allow object traversal to continue if a missing object is encountered\&. Missing objects will silently be omitted from the results\&.
+.sp
+The form
+\fI\-\-missing=allow\-promisor\fR
+is like
+\fIallow\-any\fR, but will only allow object traversal to continue for EXPECTED promisor missing objects\&. Unexpected missing objects will raise an error\&.
+.sp
+The form
+\fI\-\-missing=print\fR
+is like
+\fIallow\-any\fR, but will also print a list of the missing objects\&. Object IDs are prefixed with a \(lq?\(rq character\&.
+.RE
+.PP
+\-\-exclude\-promisor\-objects
+.RS 4
+(For internal use only\&.) Prefilter object traversal at promisor boundary\&. This is used with partial clone\&. This is stronger than
+\fB\-\-missing=allow\-promisor\fR
+because it limits the traversal, rather than just silencing errors about missing objects\&.
+.RE
+.PP
+\-\-no\-walk[=(sorted|unsorted)]
+.RS 4
+Only show the given commits, but do not traverse their ancestors\&. This has no effect if a range is specified\&. If the argument
+\fBunsorted\fR
+is given, the commits are shown in the order they were given on the command line\&. Otherwise (if
+\fBsorted\fR
+or no argument was given), the commits are shown in reverse chronological order by commit time\&. Cannot be combined with
+\fB\-\-graph\fR\&.
+.RE
+.PP
+\-\-do\-walk
+.RS 4
+Overrides a previous
+\fB\-\-no\-walk\fR\&.
+.RE
+.SS "Commit Formatting"
+.sp
+Using these options, \fBgit-rev-list\fR(1) will act similar to the more specialized family of commit log tools: \fBgit-log\fR(1), \fBgit-show\fR(1), and \fBgit-whatchanged\fR(1)
+.PP
+\-\-pretty[=<format>], \-\-format=<format>
+.RS 4
+Pretty\-print the contents of the commit logs in a given format, where
+\fI<format>\fR
+can be one of
+\fIoneline\fR,
+\fIshort\fR,
+\fImedium\fR,
+\fIfull\fR,
+\fIfuller\fR,
+\fIemail\fR,
+\fIraw\fR,
+\fIformat:<string>\fR
+and
+\fItformat:<string>\fR\&. When
+\fI<format>\fR
+is none of the above, and has
+\fI%placeholder\fR
+in it, it acts as if
+\fI\-\-pretty=tformat:<format>\fR
+were given\&.
+.sp
+See the "PRETTY FORMATS" section for some additional details for each format\&. When
+\fI=<format>\fR
+part is omitted, it defaults to
+\fImedium\fR\&.
+.sp
+Note: you can specify the default pretty format in the repository configuration (see
+\fBgit-config\fR(1))\&.
+.RE
+.PP
+\-\-abbrev\-commit
+.RS 4
+Instead of showing the full 40\-byte hexadecimal commit object name, show only a partial prefix\&. Non default number of digits can be specified with "\-\-abbrev=<n>" (which also modifies diff output, if it is displayed)\&.
+.sp
+This should make "\-\-pretty=oneline" a whole lot more readable for people using 80\-column terminals\&.
+.RE
+.PP
+\-\-no\-abbrev\-commit
+.RS 4
+Show the full 40\-byte hexadecimal commit object name\&. This negates
+\fB\-\-abbrev\-commit\fR
+and those options which imply it such as "\-\-oneline"\&. It also overrides the
+\fBlog\&.abbrevCommit\fR
+variable\&.
+.RE
+.PP
+\-\-oneline
+.RS 4
+This is a shorthand for "\-\-pretty=oneline \-\-abbrev\-commit" used together\&.
+.RE
+.PP
+\-\-encoding=<encoding>
+.RS 4
+The commit objects record the encoding used for the log message in their encoding header; this option can be used to tell the command to re\-code the commit log message in the encoding preferred by the user\&. For non plumbing commands this defaults to UTF\-8\&. Note that if an object claims to be encoded in
+\fBX\fR
+and we are outputting in
+\fBX\fR, we will output the object verbatim; this means that invalid sequences in the original commit may be copied to the output\&.
+.RE
+.PP
+\-\-expand\-tabs=<n>, \-\-expand\-tabs, \-\-no\-expand\-tabs
+.RS 4
+Perform a tab expansion (replace each tab with enough spaces to fill to the next display column that is multiple of
+\fI<n>\fR) in the log message before showing it in the output\&.
+\fB\-\-expand\-tabs\fR
+is a short\-hand for
+\fB\-\-expand\-tabs=8\fR, and
+\fB\-\-no\-expand\-tabs\fR
+is a short\-hand for
+\fB\-\-expand\-tabs=0\fR, which disables tab expansion\&.
+.sp
+By default, tabs are expanded in pretty formats that indent the log message by 4 spaces (i\&.e\&.
+\fImedium\fR, which is the default,
+\fIfull\fR, and
+\fIfuller\fR)\&.
+.RE
+.PP
+\-\-show\-signature
+.RS 4
+Check the validity of a signed commit object by passing the signature to
+\fBgpg \-\-verify\fR
+and show the output\&.
+.RE
+.PP
+\-\-relative\-date
+.RS 4
+Synonym for
+\fB\-\-date=relative\fR\&.
+.RE
+.PP
+\-\-date=<format>
+.RS 4
+Only takes effect for dates shown in human\-readable format, such as when using
+\fB\-\-pretty\fR\&.
+\fBlog\&.date\fR
+config variable sets a default value for the log command\(cqs
+\fB\-\-date\fR
+option\&. By default, dates are shown in the original time zone (either committer\(cqs or author\(cqs)\&. If
+\fB\-local\fR
+is appended to the format (e\&.g\&.,
+\fBiso\-local\fR), the user\(cqs local time zone is used instead\&.
+.sp
+\fB\-\-date=relative\fR
+shows dates relative to the current time, e\&.g\&. \(lq2 hours ago\(rq\&. The
+\fB\-local\fR
+option has no effect for
+\fB\-\-date=relative\fR\&.
+.sp
+\fB\-\-date=local\fR
+is an alias for
+\fB\-\-date=default\-local\fR\&.
+.sp
+\fB\-\-date=iso\fR
+(or
+\fB\-\-date=iso8601\fR) shows timestamps in a ISO 8601\-like format\&. The differences to the strict ISO 8601 format are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a space instead of the
+\fBT\fR
+date/time delimiter
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a space between time and time zone
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+no colon between hours and minutes of the time zone
+.RE
+.sp
+\fB\-\-date=iso\-strict\fR
+(or
+\fB\-\-date=iso8601\-strict\fR) shows timestamps in strict ISO 8601 format\&.
+.sp
+\fB\-\-date=rfc\fR
+(or
+\fB\-\-date=rfc2822\fR) shows timestamps in RFC 2822 format, often found in email messages\&.
+.sp
+\fB\-\-date=short\fR
+shows only the date, but not the time, in
+\fBYYYY\-MM\-DD\fR
+format\&.
+.sp
+\fB\-\-date=raw\fR
+shows the date as seconds since the epoch (1970\-01\-01 00:00:00 UTC), followed by a space, and then the timezone as an offset from UTC (a
+\fB+\fR
+or
+\fB\-\fR
+with four digits; the first two are hours, and the second two are minutes)\&. I\&.e\&., as if the timestamp were formatted with
+\fBstrftime("%s %z")\fR)\&. Note that the
+\fB\-local\fR
+option does not affect the seconds\-since\-epoch value (which is always measured in UTC), but does switch the accompanying timezone value\&.
+.sp
+\fB\-\-date=unix\fR
+shows the date as a Unix epoch timestamp (seconds since 1970)\&. As with
+\fB\-\-raw\fR, this is always in UTC and therefore
+\fB\-local\fR
+has no effect\&.
+.sp
+\fB\-\-date=format:\&.\&.\&.\fR
+feeds the format
+\fB\&.\&.\&.\fR
+to your system
+\fBstrftime\fR, except for %z and %Z, which are handled internally\&. Use
+\fB\-\-date=format:%c\fR
+to show the date in your system locale\(cqs preferred format\&. See the
+\fBstrftime\fR
+manual for a complete list of format placeholders\&. When using
+\fB\-local\fR, the correct syntax is
+\fB\-\-date=format\-local:\&.\&.\&.\fR\&.
+.sp
+\fB\-\-date=default\fR
+is the default format, and is similar to
+\fB\-\-date=rfc2822\fR, with a few exceptions:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+there is no comma after the day\-of\-week
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the time zone is omitted when the local time zone is used
+.RE
+.RE
+.PP
+\-\-header
+.RS 4
+Print the contents of the commit in raw\-format; each record is separated with a NUL character\&.
+.RE
+.PP
+\-\-parents
+.RS 4
+Print also the parents of the commit (in the form "commit parent\&...")\&. Also enables parent rewriting, see
+\fIHistory Simplification\fR
+above\&.
+.RE
+.PP
+\-\-children
+.RS 4
+Print also the children of the commit (in the form "commit child\&...")\&. Also enables parent rewriting, see
+\fIHistory Simplification\fR
+above\&.
+.RE
+.PP
+\-\-timestamp
+.RS 4
+Print the raw commit timestamp\&.
+.RE
+.PP
+\-\-left\-right
+.RS 4
+Mark which side of a symmetric difference a commit is reachable from\&. Commits from the left side are prefixed with
+\fB<\fR
+and those from the right with
+\fB>\fR\&. If combined with
+\fB\-\-boundary\fR, those commits are prefixed with
+\fB\-\fR\&.
+.sp
+For example, if you have this topology:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+             y\-\-\-b\-\-\-b  branch B
+            / \e /
+           /   \&.
+          /   / \e
+         o\-\-\-x\-\-\-a\-\-\-a  branch A
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+you would get an output like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        $ git rev\-list \-\-left\-right \-\-boundary \-\-pretty=oneline A\&.\&.\&.B
+
+        >bbbbbbb\&.\&.\&. 3rd on b
+        >bbbbbbb\&.\&.\&. 2nd on b
+        <aaaaaaa\&.\&.\&. 3rd on a
+        <aaaaaaa\&.\&.\&. 2nd on a
+        \-yyyyyyy\&.\&.\&. 1st on b
+        \-xxxxxxx\&.\&.\&. 1st on a
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+\-\-graph
+.RS 4
+Draw a text\-based graphical representation of the commit history on the left hand side of the output\&. This may cause extra lines to be printed in between commits, in order for the graph history to be drawn properly\&. Cannot be combined with
+\fB\-\-no\-walk\fR\&.
+.sp
+This enables parent rewriting, see
+\fIHistory Simplification\fR
+above\&.
+.sp
+This implies the
+\fB\-\-topo\-order\fR
+option by default, but the
+\fB\-\-date\-order\fR
+option may also be specified\&.
+.RE
+.PP
+\-\-show\-linear\-break[=<barrier>]
+.RS 4
+When \-\-graph is not used, all history branches are flattened which can make it hard to see that the two consecutive commits do not belong to a linear branch\&. This option puts a barrier in between them in that case\&. If
+\fB<barrier>\fR
+is specified, it is the string that will be shown instead of the default one\&.
+.RE
+.PP
+\-\-count
+.RS 4
+Print a number stating how many commits would have been listed, and suppress all other output\&. When used together with
+\fB\-\-left\-right\fR, instead print the counts for left and right commits, separated by a tab\&. When used together with
+\fB\-\-cherry\-mark\fR, omit patch equivalent commits from these counts and print the count for equivalent commits separated by a tab\&.
+.RE
+.SH "PRETTY FORMATS"
+.sp
+If the commit is a merge, and if the pretty\-format is not \fIoneline\fR, \fIemail\fR or \fIraw\fR, an additional line is inserted before the \fIAuthor:\fR line\&. This line begins with "Merge: " and the sha1s of ancestral commits are printed, separated by spaces\&. Note that the listed commits may not necessarily be the list of the \fBdirect\fR parent commits if you have limited your view of history: for example, if you are only interested in changes related to a certain directory or file\&.
+.sp
+There are several built\-in formats, and you can define additional formats by setting a pretty\&.<name> config option to either another format name, or a \fIformat:\fR string, as described below (see \fBgit-config\fR(1))\&. Here are the details of the built\-in formats:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIoneline\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<sha1> <title line>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This is designed to be as compact as possible\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIshort\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+commit <sha1>
+Author: <author>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<title line>
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fImedium\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+commit <sha1>
+Author: <author>
+Date:   <author date>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<title line>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<full commit message>
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfull\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+commit <sha1>
+Author: <author>
+Commit: <committer>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<title line>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<full commit message>
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfuller\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+commit <sha1>
+Author:     <author>
+AuthorDate: <author date>
+Commit:     <committer>
+CommitDate: <committer date>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<title line>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<full commit message>
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIemail\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+From <sha1> <date>
+From: <author>
+Date: <author date>
+Subject: [PATCH] <title line>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<full commit message>
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIraw\fR
+.sp
+The
+\fIraw\fR
+format shows the entire commit exactly as stored in the commit object\&. Notably, the SHA\-1s are displayed in full, regardless of whether \-\-abbrev or \-\-no\-abbrev are used, and
+\fIparents\fR
+information show the true parent commits, without taking grafts or history simplification into account\&. Note that this format affects the way commits are displayed, but not the way the diff is shown e\&.g\&. with
+\fBgit log \-\-raw\fR\&. To get full object names in a raw diff format, use
+\fB\-\-no\-abbrev\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIformat:<string>\fR
+.sp
+The
+\fIformat:<string>\fR
+format allows you to specify which information you want to show\&. It works a little bit like printf format, with the notable exception that you get a newline with
+\fI%n\fR
+instead of
+\fI\en\fR\&.
+.sp
+E\&.g,
+\fIformat:"The author of %h was %an, %ar%nThe title was >>%s<<%n"\fR
+would show something like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The author of fe6e0ee was Junio C Hamano, 23 hours ago
+The title was >>t4119: test autocomputing \-p<n> for traditional diff input\&.<<
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The placeholders are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%H\fR: commit hash
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%h\fR: abbreviated commit hash
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%T\fR: tree hash
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%t\fR: abbreviated tree hash
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%P\fR: parent hashes
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%p\fR: abbreviated parent hashes
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%an\fR: author name
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%aN\fR: author name (respecting \&.mailmap, see
+\fBgit-shortlog\fR(1)
+or
+\fBgit-blame\fR(1))
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%ae\fR: author email
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%aE\fR: author email (respecting \&.mailmap, see
+\fBgit-shortlog\fR(1)
+or
+\fBgit-blame\fR(1))
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%ad\fR: author date (format respects \-\-date= option)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%aD\fR: author date, RFC2822 style
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%ar\fR: author date, relative
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%at\fR: author date, UNIX timestamp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%ai\fR: author date, ISO 8601\-like format
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%aI\fR: author date, strict ISO 8601 format
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%cn\fR: committer name
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%cN\fR: committer name (respecting \&.mailmap, see
+\fBgit-shortlog\fR(1)
+or
+\fBgit-blame\fR(1))
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%ce\fR: committer email
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%cE\fR: committer email (respecting \&.mailmap, see
+\fBgit-shortlog\fR(1)
+or
+\fBgit-blame\fR(1))
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%cd\fR: committer date (format respects \-\-date= option)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%cD\fR: committer date, RFC2822 style
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%cr\fR: committer date, relative
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%ct\fR: committer date, UNIX timestamp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%ci\fR: committer date, ISO 8601\-like format
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%cI\fR: committer date, strict ISO 8601 format
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%d\fR: ref names, like the \-\-decorate option of
+\fBgit-log\fR(1)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%D\fR: ref names without the " (", ")" wrapping\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%e\fR: encoding
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%s\fR: subject
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%f\fR: sanitized subject line, suitable for a filename
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%b\fR: body
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%B\fR: raw body (unwrapped subject and body)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%GG\fR: raw verification message from GPG for a signed commit
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%G?\fR: show "G" for a good (valid) signature, "B" for a bad signature, "U" for a good signature with unknown validity, "X" for a good signature that has expired, "Y" for a good signature made by an expired key, "R" for a good signature made by a revoked key, "E" if the signature cannot be checked (e\&.g\&. missing key) and "N" for no signature
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%GS\fR: show the name of the signer for a signed commit
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%GK\fR: show the key used to sign a signed commit
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%gD\fR: reflog selector, e\&.g\&.,
+\fBrefs/stash@{1}\fR
+or
+\fBrefs/stash@{2 minutes ago\fR}; the format follows the rules described for the
+\fB\-g\fR
+option\&. The portion before the
+\fB@\fR
+is the refname as given on the command line (so
+\fBgit log \-g refs/heads/master\fR
+would yield
+\fBrefs/heads/master@{0}\fR)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%gd\fR: shortened reflog selector; same as
+\fB%gD\fR, but the refname portion is shortened for human readability (so
+\fBrefs/heads/master\fR
+becomes just
+\fBmaster\fR)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%gn\fR: reflog identity name
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%gN\fR: reflog identity name (respecting \&.mailmap, see
+\fBgit-shortlog\fR(1)
+or
+\fBgit-blame\fR(1))
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%ge\fR: reflog identity email
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%gE\fR: reflog identity email (respecting \&.mailmap, see
+\fBgit-shortlog\fR(1)
+or
+\fBgit-blame\fR(1))
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%gs\fR: reflog subject
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%Cred\fR: switch color to red
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%Cgreen\fR: switch color to green
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%Cblue\fR: switch color to blue
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%Creset\fR: reset color
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%C(\&...)\fR: color specification, as described under Values in the "CONFIGURATION FILE" section of
+\fBgit-config\fR(1)\&. By default, colors are shown only when enabled for log output (by
+\fBcolor\&.diff\fR,
+\fBcolor\&.ui\fR, or
+\fB\-\-color\fR, and respecting the
+\fBauto\fR
+settings of the former if we are going to a terminal)\&.
+\fB%C(auto,\&.\&.\&.)\fR
+is accepted as a historical synonym for the default (e\&.g\&.,
+\fB%C(auto,red)\fR)\&. Specifying
+\fB%C(always,\&.\&.\&.) will show the colors even when color is not otherwise enabled (though consider just using `\-\-color=always\fR
+to enable color for the whole output, including this format and anything else git might color)\&.
+\fBauto\fR
+alone (i\&.e\&.
+\fB%C(auto)\fR) will turn on auto coloring on the next placeholders until the color is switched again\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%m\fR: left (\fB<\fR), right (\fB>\fR) or boundary (\fB\-\fR) mark
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%n\fR: newline
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%%\fR: a raw
+\fI%\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%x00\fR: print a byte from a hex code
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%w([<w>[,<i1>[,<i2>]]])\fR: switch line wrapping, like the \-w option of
+\fBgit-shortlog\fR(1)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%<(<N>[,trunc|ltrunc|mtrunc])\fR: make the next placeholder take at least N columns, padding spaces on the right if necessary\&. Optionally truncate at the beginning (ltrunc), the middle (mtrunc) or the end (trunc) if the output is longer than N columns\&. Note that truncating only works correctly with N >= 2\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%<|(<N>)\fR: make the next placeholder take at least until Nth columns, padding spaces on the right if necessary
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%>(<N>)\fR,
+\fI%>|(<N>)\fR: similar to
+\fI%<(<N>)\fR,
+\fI%<|(<N>)\fR
+respectively, but padding spaces on the left
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%>>(<N>)\fR,
+\fI%>>|(<N>)\fR: similar to
+\fI%>(<N>)\fR,
+\fI%>|(<N>)\fR
+respectively, except that if the next placeholder takes more spaces than given and there are spaces on its left, use those spaces
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI%><(<N>)\fR,
+\fI%><|(<N>)\fR: similar to
+\fI%<(<N>)\fR,
+\fI%<|(<N>)\fR
+respectively, but padding both sides (i\&.e\&. the text is centered)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+%(trailers[:options]): display the trailers of the body as interpreted by
+\fBgit-interpret-trailers\fR(1)\&. The
+\fBtrailers\fR
+string may be followed by a colon and zero or more comma\-separated options\&. If the
+\fBonly\fR
+option is given, omit non\-trailer lines from the trailer block\&. If the
+\fBunfold\fR
+option is given, behave as if interpret\-trailer\(cqs
+\fB\-\-unfold\fR
+option was given\&. E\&.g\&.,
+\fB%(trailers:only,unfold)\fR
+to do both\&.
+.RE
+.RE
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+Some placeholders may depend on other options given to the revision traversal engine\&. For example, the \fB%g*\fR reflog options will insert an empty string unless we are traversing reflog entries (e\&.g\&., by \fBgit log \-g\fR)\&. The \fB%d\fR and \fB%D\fR placeholders will use the "short" decoration format if \fB\-\-decorate\fR was not already provided on the command line\&.
+.sp .5v
+.RE
+.sp
+If you add a \fB+\fR (plus sign) after \fI%\fR of a placeholder, a line\-feed is inserted immediately before the expansion if and only if the placeholder expands to a non\-empty string\&.
+.sp
+If you add a \fB\-\fR (minus sign) after \fI%\fR of a placeholder, all consecutive line\-feeds immediately preceding the expansion are deleted if and only if the placeholder expands to an empty string\&.
+.sp
+If you add a ` ` (space) after \fI%\fR of a placeholder, a space is inserted immediately before the expansion if and only if the placeholder expands to a non\-empty string\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fItformat:\fR
+.sp
+The
+\fItformat:\fR
+format works exactly like
+\fIformat:\fR, except that it provides "terminator" semantics instead of "separator" semantics\&. In other words, each commit has the message terminator character (usually a newline) appended, rather than a separator placed between entries\&. This means that the final entry of a single\-line format will be properly terminated with a new line, just as the "oneline" format does\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git log \-2 \-\-pretty=format:%h 4da45bef \e
+  | perl \-pe \(aq$_ \&.= " \-\- NO NEWLINE\en" unless /\en/\(aq
+4da45be
+7134973 \-\- NO NEWLINE
+
+$ git log \-2 \-\-pretty=tformat:%h 4da45bef \e
+  | perl \-pe \(aq$_ \&.= " \-\- NO NEWLINE\en" unless /\en/\(aq
+4da45be
+7134973
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+In addition, any unrecognized string that has a
+\fB%\fR
+in it is interpreted as if it has
+\fBtformat:\fR
+in front of it\&. For example, these two are equivalent:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git log \-2 \-\-pretty=tformat:%h 4da45bef
+$ git log \-2 \-\-pretty=%h 4da45bef
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

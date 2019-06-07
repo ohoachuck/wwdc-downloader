@@ -1,0 +1,125 @@
+'\" t
+.\"     Title: git-sh-setup
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-SH\-SETUP" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-sh-setup \- Common Git shell script setup code
+.SH "SYNOPSIS"
+.sp
+.nf
+\fI\&. "$(git \-\-exec\-path)/git\-sh\-setup"\fR
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This is not a command the end user would want to run\&. Ever\&. This documentation is meant for people who are studying the Porcelain\-ish scripts and/or are writing new ones\&.
+.sp
+The \fIgit sh\-setup\fR scriptlet is designed to be sourced (using \fB\&.\fR) by other shell scripts to set up some variables pointing at the normal Git directories and a few helper shell functions\&.
+.sp
+Before sourcing it, your script should set up a few variables; \fBUSAGE\fR (and \fBLONG_USAGE\fR, if any) is used to define message given by \fBusage()\fR shell function\&. \fBSUBDIRECTORY_OK\fR can be set if the script can run from a subdirectory of the working tree (some commands do not)\&.
+.sp
+The scriptlet sets \fBGIT_DIR\fR and \fBGIT_OBJECT_DIRECTORY\fR shell variables, but does \fBnot\fR export them to the environment\&.
+.SH "FUNCTIONS"
+.PP
+die
+.RS 4
+exit after emitting the supplied error message to the standard error stream\&.
+.RE
+.PP
+usage
+.RS 4
+die with the usage message\&.
+.RE
+.PP
+set_reflog_action
+.RS 4
+Set
+\fBGIT_REFLOG_ACTION\fR
+environment to a given string (typically the name of the program) unless it is already set\&. Whenever the script runs a
+\fBgit\fR
+command that updates refs, a reflog entry is created using the value of this string to leave the record of what command updated the ref\&.
+.RE
+.PP
+git_editor
+.RS 4
+runs an editor of user\(cqs choice (GIT_EDITOR, core\&.editor, VISUAL or EDITOR) on a given file, but error out if no editor is specified and the terminal is dumb\&.
+.RE
+.PP
+is_bare_repository
+.RS 4
+outputs
+\fBtrue\fR
+or
+\fBfalse\fR
+to the standard output stream to indicate if the repository is a bare repository (i\&.e\&. without an associated working tree)\&.
+.RE
+.PP
+cd_to_toplevel
+.RS 4
+runs chdir to the toplevel of the working tree\&.
+.RE
+.PP
+require_work_tree
+.RS 4
+checks if the current directory is within the working tree of the repository, and otherwise dies\&.
+.RE
+.PP
+require_work_tree_exists
+.RS 4
+checks if the working tree associated with the repository exists, and otherwise dies\&. Often done before calling cd_to_toplevel, which is impossible to do if there is no working tree\&.
+.RE
+.PP
+require_clean_work_tree <action> [<hint>]
+.RS 4
+checks that the working tree and index associated with the repository have no uncommitted changes to tracked files\&. Otherwise it emits an error message of the form
+\fBCannot <action>: <reason>\&. <hint>\fR, and dies\&. Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+require_clean_work_tree rebase "Please commit or stash them\&."
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+get_author_ident_from_commit
+.RS 4
+outputs code for use with eval to set the GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL and GIT_AUTHOR_DATE variables for a given commit\&.
+.RE
+.PP
+create_virtual_base
+.RS 4
+modifies the first file so only lines in common with the second file remain\&. If there is insufficient common material, then the first file is left empty\&. The result is suitable as a virtual base input for a 3\-way merge\&.
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

@@ -1,0 +1,65 @@
+'\" t
+.\"     Title: git-pack-refs
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-PACK\-REFS" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-pack-refs \- Pack heads and tags for efficient repository access
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit pack\-refs\fR [\-\-all] [\-\-no\-prune]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Traditionally, tips of branches and tags (collectively known as \fIrefs\fR) were stored one file per ref in a (sub)directory under \fB$GIT_DIR/refs\fR directory\&. While many branch tips tend to be updated often, most tags and some branch tips are never updated\&. When a repository has hundreds or thousands of tags, this one\-file\-per\-ref format both wastes storage and hurts performance\&.
+.sp
+This command is used to solve the storage and performance problem by storing the refs in a single file, \fB$GIT_DIR/packed\-refs\fR\&. When a ref is missing from the traditional \fB$GIT_DIR/refs\fR directory hierarchy, it is looked up in this file and used if found\&.
+.sp
+Subsequent updates to branches always create new files under \fB$GIT_DIR/refs\fR directory hierarchy\&.
+.sp
+A recommended practice to deal with a repository with too many refs is to pack its refs with \fB\-\-all\fR once, and occasionally run \fBgit pack\-refs\fR\&. Tags are by definition stationary and are not expected to change\&. Branch heads will be packed with the initial \fBpack\-refs \-\-all\fR, but only the currently active branch heads will become unpacked, and the next \fBpack\-refs\fR (without \fB\-\-all\fR) will leave them unpacked\&.
+.SH "OPTIONS"
+.PP
+\-\-all
+.RS 4
+The command by default packs all tags and refs that are already packed, and leaves other refs alone\&. This is because branches are expected to be actively developed and packing their tips does not help performance\&. This option causes branch tips to be packed as well\&. Useful for a repository with many branches of historical interests\&.
+.RE
+.PP
+\-\-no\-prune
+.RS 4
+The command usually removes loose refs under
+\fB$GIT_DIR/refs\fR
+hierarchy after packing them\&. This option tells it not to\&.
+.RE
+.SH "BUGS"
+.sp
+Older documentation written before the packed\-refs mechanism was introduced may still say things like "\&.git/refs/heads/<branch> file exists" when it means "branch <branch> exists"\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

@@ -1,0 +1,348 @@
+'\" t
+.\"     Title: git-remote
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-REMOTE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-remote \- Manage set of tracked repositories
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit remote\fR [\-v | \-\-verbose]
+\fIgit remote add\fR [\-t <branch>] [\-m <master>] [\-f] [\-\-[no\-]tags] [\-\-mirror=<fetch|push>] <name> <url>
+\fIgit remote rename\fR <old> <new>
+\fIgit remote remove\fR <name>
+\fIgit remote set\-head\fR <name> (\-a | \-\-auto | \-d | \-\-delete | <branch>)
+\fIgit remote set\-branches\fR [\-\-add] <name> <branch>\&...
+\fIgit remote get\-url\fR [\-\-push] [\-\-all] <name>
+\fIgit remote set\-url\fR [\-\-push] <name> <newurl> [<oldurl>]
+\fIgit remote set\-url \-\-add\fR [\-\-push] <name> <newurl>
+\fIgit remote set\-url \-\-delete\fR [\-\-push] <name> <url>
+\fIgit remote\fR [\-v | \-\-verbose] \fIshow\fR [\-n] <name>\&...
+\fIgit remote prune\fR [\-n | \-\-dry\-run] <name>\&...
+\fIgit remote\fR [\-v | \-\-verbose] \fIupdate\fR [\-p | \-\-prune] [(<group> | <remote>)\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Manage the set of repositories ("remotes") whose branches you track\&.
+.SH "OPTIONS"
+.PP
+\-v, \-\-verbose
+.RS 4
+Be a little more verbose and show remote url after name\&. NOTE: This must be placed between
+\fBremote\fR
+and
+\fBsubcommand\fR\&.
+.RE
+.SH "COMMANDS"
+.sp
+With no arguments, shows a list of existing remotes\&. Several subcommands are available to perform operations on the remotes\&.
+.PP
+\fIadd\fR
+.RS 4
+Adds a remote named <name> for the repository at <url>\&. The command
+\fBgit fetch <name>\fR
+can then be used to create and update remote\-tracking branches <name>/<branch>\&.
+.sp
+With
+\fB\-f\fR
+option,
+\fBgit fetch <name>\fR
+is run immediately after the remote information is set up\&.
+.sp
+With
+\fB\-\-tags\fR
+option,
+\fBgit fetch <name>\fR
+imports every tag from the remote repository\&.
+.sp
+With
+\fB\-\-no\-tags\fR
+option,
+\fBgit fetch <name>\fR
+does not import tags from the remote repository\&.
+.sp
+By default, only tags on fetched branches are imported (see
+\fBgit-fetch\fR(1))\&.
+.sp
+With
+\fB\-t <branch>\fR
+option, instead of the default glob refspec for the remote to track all branches under the
+\fBrefs/remotes/<name>/\fR
+namespace, a refspec to track only
+\fB<branch>\fR
+is created\&. You can give more than one
+\fB\-t <branch>\fR
+to track multiple branches without grabbing all branches\&.
+.sp
+With
+\fB\-m <master>\fR
+option, a symbolic\-ref
+\fBrefs/remotes/<name>/HEAD\fR
+is set up to point at remote\(cqs
+\fB<master>\fR
+branch\&. See also the set\-head command\&.
+.sp
+When a fetch mirror is created with
+\fB\-\-mirror=fetch\fR, the refs will not be stored in the
+\fIrefs/remotes/\fR
+namespace, but rather everything in
+\fIrefs/\fR
+on the remote will be directly mirrored into
+\fIrefs/\fR
+in the local repository\&. This option only makes sense in bare repositories, because a fetch would overwrite any local commits\&.
+.sp
+When a push mirror is created with
+\fB\-\-mirror=push\fR, then
+\fBgit push\fR
+will always behave as if
+\fB\-\-mirror\fR
+was passed\&.
+.RE
+.PP
+\fIrename\fR
+.RS 4
+Rename the remote named <old> to <new>\&. All remote\-tracking branches and configuration settings for the remote are updated\&.
+.sp
+In case <old> and <new> are the same, and <old> is a file under
+\fB$GIT_DIR/remotes\fR
+or
+\fB$GIT_DIR/branches\fR, the remote is converted to the configuration file format\&.
+.RE
+.PP
+\fIremove\fR, \fIrm\fR
+.RS 4
+Remove the remote named <name>\&. All remote\-tracking branches and configuration settings for the remote are removed\&.
+.RE
+.PP
+\fIset\-head\fR
+.RS 4
+Sets or deletes the default branch (i\&.e\&. the target of the symbolic\-ref
+\fBrefs/remotes/<name>/HEAD\fR) for the named remote\&. Having a default branch for a remote is not required, but allows the name of the remote to be specified in lieu of a specific branch\&. For example, if the default branch for
+\fBorigin\fR
+is set to
+\fBmaster\fR, then
+\fBorigin\fR
+may be specified wherever you would normally specify
+\fBorigin/master\fR\&.
+.sp
+With
+\fB\-d\fR
+or
+\fB\-\-delete\fR, the symbolic ref
+\fBrefs/remotes/<name>/HEAD\fR
+is deleted\&.
+.sp
+With
+\fB\-a\fR
+or
+\fB\-\-auto\fR, the remote is queried to determine its
+\fBHEAD\fR, then the symbolic\-ref
+\fBrefs/remotes/<name>/HEAD\fR
+is set to the same branch\&. e\&.g\&., if the remote
+\fBHEAD\fR
+is pointed at
+\fBnext\fR, "\fBgit remote set\-head origin \-a\fR" will set the symbolic\-ref
+\fBrefs/remotes/origin/HEAD\fR
+to
+\fBrefs/remotes/origin/next\fR\&. This will only work if
+\fBrefs/remotes/origin/next\fR
+already exists; if not it must be fetched first\&.
+.sp
+Use
+\fB<branch>\fR
+to set the symbolic\-ref
+\fBrefs/remotes/<name>/HEAD\fR
+explicitly\&. e\&.g\&., "git remote set\-head origin master" will set the symbolic\-ref
+\fBrefs/remotes/origin/HEAD\fR
+to
+\fBrefs/remotes/origin/master\fR\&. This will only work if
+\fBrefs/remotes/origin/master\fR
+already exists; if not it must be fetched first\&.
+.RE
+.PP
+\fIset\-branches\fR
+.RS 4
+Changes the list of branches tracked by the named remote\&. This can be used to track a subset of the available remote branches after the initial setup for a remote\&.
+.sp
+The named branches will be interpreted as if specified with the
+\fB\-t\fR
+option on the
+\fIgit remote add\fR
+command line\&.
+.sp
+With
+\fB\-\-add\fR, instead of replacing the list of currently tracked branches, adds to that list\&.
+.RE
+.PP
+\fIget\-url\fR
+.RS 4
+Retrieves the URLs for a remote\&. Configurations for
+\fBinsteadOf\fR
+and
+\fBpushInsteadOf\fR
+are expanded here\&. By default, only the first URL is listed\&.
+.sp
+With
+\fB\-\-push\fR, push URLs are queried rather than fetch URLs\&.
+.sp
+With
+\fB\-\-all\fR, all URLs for the remote will be listed\&.
+.RE
+.PP
+\fIset\-url\fR
+.RS 4
+Changes URLs for the remote\&. Sets first URL for remote <name> that matches regex <oldurl> (first URL if no <oldurl> is given) to <newurl>\&. If <oldurl> doesn\(cqt match any URL, an error occurs and nothing is changed\&.
+.sp
+With
+\fB\-\-push\fR, push URLs are manipulated instead of fetch URLs\&.
+.sp
+With
+\fB\-\-add\fR, instead of changing existing URLs, new URL is added\&.
+.sp
+With
+\fB\-\-delete\fR, instead of changing existing URLs, all URLs matching regex <url> are deleted for remote <name>\&. Trying to delete all non\-push URLs is an error\&.
+.sp
+Note that the push URL and the fetch URL, even though they can be set differently, must still refer to the same place\&. What you pushed to the push URL should be what you would see if you immediately fetched from the fetch URL\&. If you are trying to fetch from one place (e\&.g\&. your upstream) and push to another (e\&.g\&. your publishing repository), use two separate remotes\&.
+.RE
+.PP
+\fIshow\fR
+.RS 4
+Gives some information about the remote <name>\&.
+.sp
+With
+\fB\-n\fR
+option, the remote heads are not queried first with
+\fBgit ls\-remote <name>\fR; cached information is used instead\&.
+.RE
+.PP
+\fIprune\fR
+.RS 4
+Deletes stale references associated with <name>\&. By default, stale remote\-tracking branches under <name> are deleted, but depending on global configuration and the configuration of the remote we might even prune local tags that haven\(cqt been pushed there\&. Equivalent to
+\fBgit fetch \-\-prune <name>\fR, except that no new references will be fetched\&.
+.sp
+See the PRUNING section of
+\fBgit-fetch\fR(1)
+for what it\(cqll prune depending on various configuration\&.
+.sp
+With
+\fB\-\-dry\-run\fR
+option, report what branches will be pruned, but do not actually prune them\&.
+.RE
+.PP
+\fIupdate\fR
+.RS 4
+Fetch updates for a named set of remotes in the repository as defined by remotes\&.<group>\&. If a named group is not specified on the command line, the configuration parameter remotes\&.default will be used; if remotes\&.default is not defined, all remotes which do not have the configuration parameter remote\&.<name>\&.skipDefaultUpdate set to true will be updated\&. (See
+\fBgit-config\fR(1))\&.
+.sp
+With
+\fB\-\-prune\fR
+option, run pruning against all the remotes that are updated\&.
+.RE
+.SH "DISCUSSION"
+.sp
+The remote configuration is achieved using the \fBremote\&.origin\&.url\fR and \fBremote\&.origin\&.fetch\fR configuration variables\&. (See \fBgit-config\fR(1))\&.
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Add a new remote, fetch, and check out a branch from it
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git remote
+origin
+$ git branch \-r
+  origin/HEAD \-> origin/master
+  origin/master
+$ git remote add staging git://git\&.kernel\&.org/\&.\&.\&./gregkh/staging\&.git
+$ git remote
+origin
+staging
+$ git fetch staging
+\&.\&.\&.
+From git://git\&.kernel\&.org/pub/scm/linux/kernel/git/gregkh/staging
+ * [new branch]      master     \-> staging/master
+ * [new branch]      staging\-linus \-> staging/staging\-linus
+ * [new branch]      staging\-next \-> staging/staging\-next
+$ git branch \-r
+  origin/HEAD \-> origin/master
+  origin/master
+  staging/master
+  staging/staging\-linus
+  staging/staging\-next
+$ git checkout \-b staging staging/master
+\&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Imitate
+\fIgit clone\fR
+but track only selected branches
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ mkdir project\&.git
+$ cd project\&.git
+$ git init
+$ git remote add \-f \-t master \-m master origin git://example\&.com/git\&.git/
+$ git merge origin
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgit-fetch\fR(1) \fBgit-branch\fR(1) \fBgit-config\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

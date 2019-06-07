@@ -1,0 +1,84 @@
+.\" Copyright (c) 2002 Apple Computer, Inc. All Rights Reserved.
+.Dd April 12, 2004
+.Dt CPMAC 1
+.Os "Mac OS X"
+.Sh NAME
+.Nm /usr/bin/CpMac
+.Nd copy files preserving metadata and forks (DEPRECATED)
+.Sh SYNOPSIS
+.Nm
+.Op Fl rp
+.Op Fl mac
+.Ar source target
+.Nm
+.Op Fl rp
+.Op Fl mac
+.Ar source ... directory
+.Sh DESCRIPTION
+.Pp
+Tools supporting Carbon development, including
+.Nm ,
+were deprecated with Xcode 6.
+.Pp
+In its first form, the
+.Nm
+utility copies the contents of the file named by the
+.Ar source
+operand to the destination path named by the
+.Ar target
+operand.
+This form is assumed when the last operand does not name an already
+existing directory.
+.Pp
+In its second form,
+.Nm
+copies each file named by a
+.Ar source
+operand to a destination directory named by the
+.Ar directory
+operand.
+The destination path for each operand is the pathname produced by the
+concatenation of the last operand, a slash, and the final pathname
+component of the named file.
+.Pp
+The following options are available:
+.Bl -tag -width flag
+.It Fl r
+If
+.Ar source
+designates a directory,
+.Nm
+copies the directory and the entire subtree connected at that point.
+This option also causes symbolic links to be copied, rather than
+indirected through, and for
+.Nm
+to create special files rather than copying them as normal files.
+Created directories have the same mode as the corresponding source
+directory, unmodified by the process' umask.
+.It Fl p
+Causes
+.Nm
+to preserve in the copy as many of the modification time, access time,   
+file flags, file mode, user ID, and group ID as allowed by permissions.       
+.It Fl mac
+Allows use of HFS-style paths for both source and target.  Path elements must be separated by colons, and the path must begin with a volume name or a colon (to designate current directory).
+.El
+.Sh NOTES
+The
+.Nm
+command does not support the same options as the POSIX 
+.Nm cp 
+command, and is much less flexible in its operands.  It cannot be used as a direct substitute for 
+.Nm cp
+in scripts.
+.Pp
+As of Mac OS X 10.4, the 
+.Nm cp
+command preserves metadata and resource forks of files on Extended HFS volumes, so it can be used in place of 
+.Nm CpMac .
+The 
+.Nm
+command will be deprecated in future versions of Mac OS X.
+.Sh SEE ALSO
+.Xr cp 1
+.Xr MvMac 1

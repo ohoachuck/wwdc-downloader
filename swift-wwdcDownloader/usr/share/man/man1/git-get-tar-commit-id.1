@@ -1,0 +1,45 @@
+'\" t
+.\"     Title: git-get-tar-commit-id
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-GET\-TAR\-COMMI" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-get-tar-commit-id \- Extract commit ID from an archive created using git\-archive
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit get\-tar\-commit\-id\fR
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Read a tar archive created by \fIgit archive\fR from the standard input and extract the commit ID stored in it\&. It reads only the first 1024 bytes of input, thus its runtime is not influenced by the size of the tar archive very much\&.
+.sp
+If no commit ID is found, \fIgit get\-tar\-commit\-id\fR quietly exists with a return code of 1\&. This can happen if the archive had not been created using \fIgit archive\fR or if the first parameter of \fIgit archive\fR had been a tree ID instead of a commit ID or tag\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

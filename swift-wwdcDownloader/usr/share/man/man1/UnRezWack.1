@@ -1,0 +1,42 @@
+.\" Copyright (c) 2004 Apple Computer, Inc. All Rights Reserved.
+.Dd April 12, 2004
+.Dt UNREZWACK 1 
+.Os "Mac OS X"
+.Sh NAME 
+.Nm /usr/bin/UnRezWack
+.Nd Split a RezWack file into separate data and resource files. (DEPRECATED)
+.Sh SYNOPSIS
+.Nm
+.Ar file
+.Fl o Ar outFileNameBase
+.Op Fl f
+.Sh DESCRIPTION
+Tools supporting Carbon development, including
+.Nm ,
+were deprecated with Xcode 6.
+.Pp
+The
+.Nm
+command takes a file created by
+.Xr RezWack 1
+as its input file (it does not read Standard In) and divides it into two files, one containing the data fork and one containing the resource data.
+.Nm
+takes the following flags and arguments:
+.Bl -tag -width -indent  \" Begins a tagged list 
+.It Ar file
+Path to the input file.  This must be a file created with 
+.Xr RezWack 1 .
+.It Fl o Ar outFileNameBase
+Base path of the output files.  UnRezWack will create two files at this base path, one with the extension ".data" and one with the extension ".qtr".  The resource data will be written to the data fork of the resource data file; it is not possible to create a HFS or Extended HFS resource fork file using UnRezWack.
+.Pp
+If either file exists,
+.Nm
+will exit with error 2 unless the -f flag is provided.
+.It Fl f
+Force overwriting of output files.
+.El
+.Sh SEE ALSO 
+.Xr Rez 1 , 
+.Xr DeRez 1 ,
+.Xr RezWack 1 ,
+.Xr SplitForks 1

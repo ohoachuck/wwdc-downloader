@@ -1,0 +1,270 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "XCRUN" "1" "July 09, 2015" "Mac OS X" "BSD General Commands Manual"
+.SH NAME
+xcrun \- Run or locate development tools and properties.
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH SYNOPSIS
+.sp
+\fBxcrun\fP [\-\-sdk <SDK name>] \-\-find <tool name>
+.sp
+\fBxcrun\fP [\-\-sdk <SDK name>] <tool name> ... tool arguments ...
+.sp
+\fB<tool name>\fP ... tool arguments ...
+.SH DESCRIPTION
+.sp
+\fBxcrun\fP provides a means to locate or invoke developer tools from the
+command\-line, without requiring users to modify Makefiles or otherwise take
+inconvenient measures to support multiple Xcode tool chains.
+.sp
+The tool \fBxcode\-select(1)\fP is used to set a system default for the
+active developer directory, and may be overridden by the DEVELOPER_DIR
+environment variable (see \fI\%ENVIRONMENT\fP).
+.sp
+The SDK which will be searched defaults to the most recent available SDK, and
+can be specified by the SDKROOT environment variable or the \fI\%\-\-sdk\fP
+option (which takes precedences over SDKROOT). When used to invoke another tool
+(as opposed to simply finding it), \fBxcrun\fP will provide the absolute
+path to the selected SDK in the SDKROOT environment variable. See
+\fI\%ENVIRONMENT\fP for more information.
+.SS Usage
+.sp
+\fBxcrun\fP supports several different usages, to both look up the paths to
+tools as well as execute them.
+.sp
+When used with the \fI\%\-\-find\fP argument, as in \fBxcrun [\-\-sdk <SDK
+name>] \-\-find <tool name>\fP, the absolute path to the tool (in the provided SDK,
+if given) will be printed.
+.sp
+When used without \fI\%\-\-find\fP, the name of a tool is required and the tool
+will be executed with the provided arguments.
+.sp
+When used as the target of a symbolic link, it derives the tool name to use from
+the name it was invoked under, and then executes that tool.
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.B \-v, \-\-verbose
+Add verbose information on how the tool lookup is performed.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-n, \-\-no\-cache
+Don\(aqt consult the cache when looking up values. In effect, causes the cache
+entry to be refreshed.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-k, \-\-kill\-cache
+Removes the cache. Causes all values to be re\-cached.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-sdk
+Specifies which SDK to search for tools. If no \fI\%\-\-sdk\fP argument is
+provided, then the SDK used will be taken from the SDKROOT environment
+variable, if present.
+.sp
+Use \fBxcodebuild \-showsdks\fP to list the available SDK names.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-toolchain
+Specifies which toolchain to use to perform the lookup. If no
+\fI\%\-\-toolchain\fP argument is provided, then the toolchain to use will be
+taken from the TOOLCHAINS environment variable, if present.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-l, \-\-log
+Print the full command line that is invoked.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-f, \-\-find
+Enable "find" mode, in which the resolved tool path is printed instead of
+the tool being executed.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-r, \-\-run
+Enable "run" mode, in which the resolved tool path is executed with any
+provided additional arguments. This is the default mode.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-show\-sdk\-path
+Print the path to the selected SDK.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-show\-sdk\-version
+Print the version number of the selected SDK.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-show\-sdk\-build\-version
+Print the build version number of the selected SDK.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-show\-sdk\-platform\-path
+Print the path to the platform for the selected SDK.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-show\-sdk\-platform\-version
+Print the version number of the platform for the selected SDK.
+.UNINDENT
+.SH ENVIRONMENT
+.sp
+CPATH
+.INDENT 0.0
+.INDENT 3.5
+This environment variable is modified by xcrun to include /usr/local/include
+when an explicit SDK is not requested via environment variable nor command line
+argument and neither -nostdinc nor -nostdsysteminc are present.
+.UNINDENT
+.UNINDENT
+.sp
+DEVELOPER_DIR
+.INDENT 0.0
+.INDENT 3.5
+Overrides the active developer directory. When DEVELOPER_DIR is set, its value
+will be used instead of the system\-wide active developer directory.
+.UNINDENT
+.UNINDENT
+.sp
+LIBRARY_PATH
+.INDENT 0.0
+.INDENT 3.5
+This environment variable is modified by xcrun to include /usr/local/lib
+when an explicit SDK is not requested via environment variable nor command line
+argument and -Z is not being passed to the linker.
+.UNINDENT
+.UNINDENT
+.sp
+SDKROOT
+.INDENT 0.0
+.INDENT 3.5
+Specifies the default SDK to be used when looking up tools (some tools may have
+SDK specific versions).
+.sp
+This environment variable is also \fBset\fP by \fBxcrun\fP to be the
+absolute path to the user provided SDK (either via SDKROOT or the
+\fI\%\-\-sdk\fP option), when it is used to invoke a normal developer tool
+(build tools like \fBxcodebuild\fP or \fBmake\fP are exempt from this
+behavior).
+.sp
+For example, if \fBxcrun\fP is used to invoke \fBclang\fP via:
+.INDENT 0.0
+.INDENT 3.5
+\fBxcrun \-\-sdk macosx clang test.c\fP
+.UNINDENT
+.UNINDENT
+.sp
+then \fBxcrun\fP will provide the full path to the \fBmacosx\fP SDK in the
+environment variable SDKROOT. That in turn will be used by \fBclang(1)\fP
+to automatically select that SDK when compiling the \fBtest.c\fP file.
+.UNINDENT
+.UNINDENT
+.sp
+TOOLCHAINS
+.INDENT 0.0
+.INDENT 3.5
+Specifies the default toolchain to be used when looking up tools (for tools
+which are toolchain specific).
+.UNINDENT
+.UNINDENT
+.sp
+xcrun_log
+.INDENT 0.0
+.INDENT 3.5
+Same as specifying \-\-log.
+.UNINDENT
+.UNINDENT
+.sp
+xcrun_nocache
+.INDENT 0.0
+.INDENT 3.5
+Same as specifying \-\-no\-cache.
+.UNINDENT
+.UNINDENT
+.sp
+xcrun_verbose
+.INDENT 0.0
+.INDENT 3.5
+Same as specifying \-\-verbose.
+.UNINDENT
+.UNINDENT
+.SH EXAMPLES
+.sp
+\fBxcrun \-\-find clang\fP
+.INDENT 0.0
+.INDENT 3.5
+Finds the path to the \fBclang\fP binary in the default SDK.
+.UNINDENT
+.UNINDENT
+.sp
+\fBxcrun \-\-sdk iphoneos \-\-find texturetool\fP
+.INDENT 0.0
+.INDENT 3.5
+Finds the path to the \fBtexturetool\fP binary in the iOS SDK.
+.UNINDENT
+.UNINDENT
+.sp
+\fBxcrun \-\-sdk macosx \-\-show\-sdk\-path\fP
+.INDENT 0.0
+.INDENT 3.5
+Prints the path to the current Mac OS X SDK.
+.UNINDENT
+.UNINDENT
+.sp
+\fBxcrun git status\fP
+.INDENT 0.0
+.INDENT 3.5
+Locates the \fBgit\fP command and then executes it with a single argument
+(\fI"status"\fP).
+.UNINDENT
+.UNINDENT
+.SH DIAGNOSTICS
+.sp
+When \fBxcrun\fP is invoked with the name \fBxcrun\fP, the options
+\fI\%\-\-log\fP and \fI\%\-\-verbose\fP are useful debugging aids. The option
+\fI\%\-\-no\-cache\fP can be used to bypass cache lookup, but often at a
+significant cost in performance.
+.sp
+When \fBxcrun\fP has taken the place of another tool, the arguments are
+those of the tool replaced, and the various \fBxcrun\fP options can\(aqt be
+used. In this case, use the specific environment variables instead.
+.SH SEE ALSO
+.sp
+\fIxcodebuild(1)\fP, \fIxcode\-select(1)\fP
+.\" Generated by docutils manpage writer.
+.

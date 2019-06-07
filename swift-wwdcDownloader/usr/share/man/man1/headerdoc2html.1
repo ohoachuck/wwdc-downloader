@@ -1,0 +1,81 @@
+.\"
+.\" Copyright (c) 2003 Apple Computer, Inc.
+.\" All rights reserved.
+.\"
+.Dd June 13, 2003
+.Dt HEADERDOC2HTML 1
+.Os Darwin
+.Sh NAME
+.Nm headerdoc2html
+.Nd header documentation processor
+.Sh SYNOPSIS
+.Nm headerdoc2html
+.Op Fl HXdhquvx
+.Op Fl o Ar output_dir
+.Ar file
+.Op file ...
+.Sh DESCRIPTION
+.Nm Headerdoc2html
+processes the header
+.Ar file
+or files and generates HTML documentation based
+on specially-formatted comments.
+.Pp
+The options are as follows:
+.Bl -tag -width flag
+.It Fl H
+The
+.Fl H
+option turns on inclusion of the htmlHeader line, as specified in the config file.
+.It Fl X
+The
+.Fl X
+option switches from HTML to XML output
+.It Fl d
+The
+.Fl d
+option turns on extra debugging output.
+.It Fl h
+The
+.Fl h
+option causes headerdoc to output an XML
+file containing metadata about the resulting
+document.
+.It Fl p
+The
+.Fl p
+option turns on the C preprocessor.
+.It Fl q
+The
+.Fl q
+option causes headerdoc to be excessively quiet.
+.It Fl u
+The
+.Fl u
+option causes headerdoc to produce unsorted output.
+.It Fl v
+The
+.Fl v
+option causes headerdoc to print version information.
+.El
+.Pp
+If no options are specified, headerdoc will produce directories
+containing its standard HTML output.
+.Pp
+For a complete list of flags, see the HeaderDoc User Guide.
+.Pp
+.Sh FILES
+.Bl -tag -width /$HOME/Library/Preferences/com.apple.headerDoc2HTML.config -compact
+.It Pa /$HOME/Library/Preferences/com.apple.headerDoc2HTML.config
+.El
+.Sh SEE ALSO
+.Xr gatherheaderdoc 1
+.Pp
+For more information, see the HeaderDoc User Guide.
+It can be found in
+.Pa /Developer/Documentation/
+if you have the Xcode Tools package installed, or at
+.UR http://developer.apple.com/mac/library/documentation/DeveloperTools/Conceptual/HeaderDoc/
+<http://developer.apple.com/mac/library/documentation/DeveloperTools/Conceptual/HeaderDoc/>
+.UE
+in the reference library.

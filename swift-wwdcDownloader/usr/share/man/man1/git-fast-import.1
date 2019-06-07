@@ -1,0 +1,1580 @@
+'\" t
+.\"     Title: git-fast-import
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-FAST\-IMPORT" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-fast-import \- Backend for fast Git data importers
+.SH "SYNOPSIS"
+.sp
+.nf
+frontend | \fIgit fast\-import\fR [options]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This program is usually not what the end user wants to run directly\&. Most end users want to use one of the existing frontend programs, which parses a specific type of foreign source and feeds the contents stored there to \fIgit fast\-import\fR\&.
+.sp
+fast\-import reads a mixed command/data stream from standard input and writes one or more packfiles directly into the current repository\&. When EOF is received on standard input, fast import writes out updated branch and tag refs, fully updating the current repository with the newly imported data\&.
+.sp
+The fast\-import backend itself can import into an empty repository (one that has already been initialized by \fIgit init\fR) or incrementally update an existing populated repository\&. Whether or not incremental imports are supported from a particular foreign source depends on the frontend program in use\&.
+.SH "OPTIONS"
+.PP
+\-\-force
+.RS 4
+Force updating modified existing branches, even if doing so would cause commits to be lost (as the new commit does not contain the old commit)\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Disable all non\-fatal output, making fast\-import silent when it is successful\&. This option disables the output shown by \-\-stats\&.
+.RE
+.PP
+\-\-stats
+.RS 4
+Display some basic statistics about the objects fast\-import has created, the packfiles they were stored into, and the memory used by fast\-import during this run\&. Showing this output is currently the default, but can be disabled with \-\-quiet\&.
+.RE
+.SS "Options for Frontends"
+.PP
+\-\-cat\-blob\-fd=<fd>
+.RS 4
+Write responses to
+\fBget\-mark\fR,
+\fBcat\-blob\fR, and
+\fBls\fR
+queries to the file descriptor <fd> instead of
+\fBstdout\fR\&. Allows
+\fBprogress\fR
+output intended for the end\-user to be separated from other output\&.
+.RE
+.PP
+\-\-date\-format=<fmt>
+.RS 4
+Specify the type of dates the frontend will supply to fast\-import within
+\fBauthor\fR,
+\fBcommitter\fR
+and
+\fBtagger\fR
+commands\&. See \(lqDate Formats\(rq below for details about which formats are supported, and their syntax\&.
+.RE
+.PP
+\-\-done
+.RS 4
+Terminate with error if there is no
+\fBdone\fR
+command at the end of the stream\&. This option might be useful for detecting errors that cause the frontend to terminate before it has started to write a stream\&.
+.RE
+.SS "Locations of Marks Files"
+.PP
+\-\-export\-marks=<file>
+.RS 4
+Dumps the internal marks table to <file> when complete\&. Marks are written one per line as
+\fB:markid SHA\-1\fR\&. Frontends can use this file to validate imports after they have been completed, or to save the marks table across incremental runs\&. As <file> is only opened and truncated at checkpoint (or completion) the same path can also be safely given to \-\-import\-marks\&.
+.RE
+.PP
+\-\-import\-marks=<file>
+.RS 4
+Before processing any input, load the marks specified in <file>\&. The input file must exist, must be readable, and must use the same format as produced by \-\-export\-marks\&. Multiple options may be supplied to import more than one set of marks\&. If a mark is defined to different values, the last file wins\&.
+.RE
+.PP
+\-\-import\-marks\-if\-exists=<file>
+.RS 4
+Like \-\-import\-marks but instead of erroring out, silently skips the file if it does not exist\&.
+.RE
+.PP
+\-\-[no\-]relative\-marks
+.RS 4
+After specifying \-\-relative\-marks the paths specified with \-\-import\-marks= and \-\-export\-marks= are relative to an internal directory in the current repository\&. In git\-fast\-import this means that the paths are relative to the \&.git/info/fast\-import directory\&. However, other importers may use a different location\&.
+.sp
+Relative and non\-relative marks may be combined by interweaving \-\-(no\-)\-relative\-marks with the \-\-(import|export)\-marks= options\&.
+.RE
+.SS "Performance and Compression Tuning"
+.PP
+\-\-active\-branches=<n>
+.RS 4
+Maximum number of branches to maintain active at once\&. See \(lqMemory Utilization\(rq below for details\&. Default is 5\&.
+.RE
+.PP
+\-\-big\-file\-threshold=<n>
+.RS 4
+Maximum size of a blob that fast\-import will attempt to create a delta for, expressed in bytes\&. The default is 512m (512 MiB)\&. Some importers may wish to lower this on systems with constrained memory\&.
+.RE
+.PP
+\-\-depth=<n>
+.RS 4
+Maximum delta depth, for blob and tree deltification\&. Default is 50\&.
+.RE
+.PP
+\-\-export\-pack\-edges=<file>
+.RS 4
+After creating a packfile, print a line of data to <file> listing the filename of the packfile and the last commit on each branch that was written to that packfile\&. This information may be useful after importing projects whose total object set exceeds the 4 GiB packfile limit, as these commits can be used as edge points during calls to
+\fIgit pack\-objects\fR\&.
+.RE
+.PP
+\-\-max\-pack\-size=<n>
+.RS 4
+Maximum size of each output packfile\&. The default is unlimited\&.
+.RE
+.PP
+fastimport\&.unpackLimit
+.RS 4
+See
+\fBgit-config\fR(1)
+.RE
+.SH "PERFORMANCE"
+.sp
+The design of fast\-import allows it to import large projects in a minimum amount of memory usage and processing time\&. Assuming the frontend is able to keep up with fast\-import and feed it a constant stream of data, import times for projects holding 10+ years of history and containing 100,000+ individual commits are generally completed in just 1\-2 hours on quite modest (~$2,000 USD) hardware\&.
+.sp
+Most bottlenecks appear to be in foreign source data access (the source just cannot extract revisions fast enough) or disk IO (fast\-import writes as fast as the disk will take the data)\&. Imports will run faster if the source data is stored on a different drive than the destination Git repository (due to less IO contention)\&.
+.SH "DEVELOPMENT COST"
+.sp
+A typical frontend for fast\-import tends to weigh in at approximately 200 lines of Perl/Python/Ruby code\&. Most developers have been able to create working importers in just a couple of hours, even though it is their first exposure to fast\-import, and sometimes even to Git\&. This is an ideal situation, given that most conversion tools are throw\-away (use once, and never look back)\&.
+.SH "PARALLEL OPERATION"
+.sp
+Like \fIgit push\fR or \fIgit fetch\fR, imports handled by fast\-import are safe to run alongside parallel \fBgit repack \-a \-d\fR or \fBgit gc\fR invocations, or any other Git operation (including \fIgit prune\fR, as loose objects are never used by fast\-import)\&.
+.sp
+fast\-import does not lock the branch or tag refs it is actively importing\&. After the import, during its ref update phase, fast\-import tests each existing branch ref to verify the update will be a fast\-forward update (the commit stored in the ref is contained in the new history of the commit to be written)\&. If the update is not a fast\-forward update, fast\-import will skip updating that ref and instead prints a warning message\&. fast\-import will always attempt to update all branch refs, and does not stop on the first failure\&.
+.sp
+Branch updates can be forced with \-\-force, but it\(cqs recommended that this only be used on an otherwise quiet repository\&. Using \-\-force is not necessary for an initial import into an empty repository\&.
+.SH "TECHNICAL DISCUSSION"
+.sp
+fast\-import tracks a set of branches in memory\&. Any branch can be created or modified at any point during the import process by sending a \fBcommit\fR command on the input stream\&. This design allows a frontend program to process an unlimited number of branches simultaneously, generating commits in the order they are available from the source data\&. It also simplifies the frontend programs considerably\&.
+.sp
+fast\-import does not use or alter the current working directory, or any file within it\&. (It does however update the current Git repository, as referenced by \fBGIT_DIR\fR\&.) Therefore an import frontend may use the working directory for its own purposes, such as extracting file revisions from the foreign source\&. This ignorance of the working directory also allows fast\-import to run very quickly, as it does not need to perform any costly file update operations when switching between branches\&.
+.SH "INPUT FORMAT"
+.sp
+With the exception of raw file data (which Git does not interpret) the fast\-import input format is text (ASCII) based\&. This text based format simplifies development and debugging of frontend programs, especially when a higher level language such as Perl, Python or Ruby is being used\&.
+.sp
+fast\-import is very strict about its input\&. Where we say SP below we mean \fBexactly\fR one space\&. Likewise LF means one (and only one) linefeed and HT one (and only one) horizontal tab\&. Supplying additional whitespace characters will cause unexpected results, such as branch names or file names with leading or trailing spaces in their name, or early termination of fast\-import when it encounters unexpected input\&.
+.SS "Stream Comments"
+.sp
+To aid in debugging frontends fast\-import ignores any line that begins with \fB#\fR (ASCII pound/hash) up to and including the line ending \fBLF\fR\&. A comment line may contain any sequence of bytes that does not contain an LF and therefore may be used to include any detailed debugging information that might be specific to the frontend and useful when inspecting a fast\-import data stream\&.
+.SS "Date Formats"
+.sp
+The following date formats are supported\&. A frontend should select the format it will use for this import by passing the format name in the \-\-date\-format=<fmt> command\-line option\&.
+.PP
+\fBraw\fR
+.RS 4
+This is the Git native format and is
+\fB<time> SP <offutc>\fR\&. It is also fast\-import\(cqs default format, if \-\-date\-format was not specified\&.
+.sp
+The time of the event is specified by
+\fB<time>\fR
+as the number of seconds since the UNIX epoch (midnight, Jan 1, 1970, UTC) and is written as an ASCII decimal integer\&.
+.sp
+The local offset is specified by
+\fB<offutc>\fR
+as a positive or negative offset from UTC\&. For example EST (which is 5 hours behind UTC) would be expressed in
+\fB<tz>\fR
+by \(lq\-0500\(rq while UTC is \(lq+0000\(rq\&. The local offset does not affect
+\fB<time>\fR; it is used only as an advisement to help formatting routines display the timestamp\&.
+.sp
+If the local offset is not available in the source material, use \(lq+0000\(rq, or the most common local offset\&. For example many organizations have a CVS repository which has only ever been accessed by users who are located in the same location and time zone\&. In this case a reasonable offset from UTC could be assumed\&.
+.sp
+Unlike the
+\fBrfc2822\fR
+format, this format is very strict\&. Any variation in formatting will cause fast\-import to reject the value\&.
+.RE
+.PP
+\fBrfc2822\fR
+.RS 4
+This is the standard email format as described by RFC 2822\&.
+.sp
+An example value is \(lqTue Feb 6 11:22:18 2007 \-0500\(rq\&. The Git parser is accurate, but a little on the lenient side\&. It is the same parser used by
+\fIgit am\fR
+when applying patches received from email\&.
+.sp
+Some malformed strings may be accepted as valid dates\&. In some of these cases Git will still be able to obtain the correct date from the malformed string\&. There are also some types of malformed strings which Git will parse wrong, and yet consider valid\&. Seriously malformed strings will be rejected\&.
+.sp
+Unlike the
+\fBraw\fR
+format above, the time zone/UTC offset information contained in an RFC 2822 date string is used to adjust the date value to UTC prior to storage\&. Therefore it is important that this information be as accurate as possible\&.
+.sp
+If the source material uses RFC 2822 style dates, the frontend should let fast\-import handle the parsing and conversion (rather than attempting to do it itself) as the Git parser has been well tested in the wild\&.
+.sp
+Frontends should prefer the
+\fBraw\fR
+format if the source material already uses UNIX\-epoch format, can be coaxed to give dates in that format, or its format is easily convertible to it, as there is no ambiguity in parsing\&.
+.RE
+.PP
+\fBnow\fR
+.RS 4
+Always use the current time and time zone\&. The literal
+\fBnow\fR
+must always be supplied for
+\fB<when>\fR\&.
+.sp
+This is a toy format\&. The current time and time zone of this system is always copied into the identity string at the time it is being created by fast\-import\&. There is no way to specify a different time or time zone\&.
+.sp
+This particular format is supplied as it\(cqs short to implement and may be useful to a process that wants to create a new commit right now, without needing to use a working directory or
+\fIgit update\-index\fR\&.
+.sp
+If separate
+\fBauthor\fR
+and
+\fBcommitter\fR
+commands are used in a
+\fBcommit\fR
+the timestamps may not match, as the system clock will be polled twice (once for each command)\&. The only way to ensure that both author and committer identity information has the same timestamp is to omit
+\fBauthor\fR
+(thus copying from
+\fBcommitter\fR) or to use a date format other than
+\fBnow\fR\&.
+.RE
+.SS "Commands"
+.sp
+fast\-import accepts several commands to update the current repository and control the current import process\&. More detailed discussion (with examples) of each command follows later\&.
+.PP
+\fBcommit\fR
+.RS 4
+Creates a new branch or updates an existing branch by creating a new commit and updating the branch to point at the newly created commit\&.
+.RE
+.PP
+\fBtag\fR
+.RS 4
+Creates an annotated tag object from an existing commit or branch\&. Lightweight tags are not supported by this command, as they are not recommended for recording meaningful points in time\&.
+.RE
+.PP
+\fBreset\fR
+.RS 4
+Reset an existing branch (or a new branch) to a specific revision\&. This command must be used to change a branch to a specific revision without making a commit on it\&.
+.RE
+.PP
+\fBblob\fR
+.RS 4
+Convert raw file data into a blob, for future use in a
+\fBcommit\fR
+command\&. This command is optional and is not needed to perform an import\&.
+.RE
+.PP
+\fBcheckpoint\fR
+.RS 4
+Forces fast\-import to close the current packfile, generate its unique SHA\-1 checksum and index, and start a new packfile\&. This command is optional and is not needed to perform an import\&.
+.RE
+.PP
+\fBprogress\fR
+.RS 4
+Causes fast\-import to echo the entire line to its own standard output\&. This command is optional and is not needed to perform an import\&.
+.RE
+.PP
+\fBdone\fR
+.RS 4
+Marks the end of the stream\&. This command is optional unless the
+\fBdone\fR
+feature was requested using the
+\fB\-\-done\fR
+command\-line option or
+\fBfeature done\fR
+command\&.
+.RE
+.PP
+\fBget\-mark\fR
+.RS 4
+Causes fast\-import to print the SHA\-1 corresponding to a mark to the file descriptor set with
+\fB\-\-cat\-blob\-fd\fR, or
+\fBstdout\fR
+if unspecified\&.
+.RE
+.PP
+\fBcat\-blob\fR
+.RS 4
+Causes fast\-import to print a blob in
+\fIcat\-file \-\-batch\fR
+format to the file descriptor set with
+\fB\-\-cat\-blob\-fd\fR
+or
+\fBstdout\fR
+if unspecified\&.
+.RE
+.PP
+\fBls\fR
+.RS 4
+Causes fast\-import to print a line describing a directory entry in
+\fIls\-tree\fR
+format to the file descriptor set with
+\fB\-\-cat\-blob\-fd\fR
+or
+\fBstdout\fR
+if unspecified\&.
+.RE
+.PP
+\fBfeature\fR
+.RS 4
+Enable the specified feature\&. This requires that fast\-import supports the specified feature, and aborts if it does not\&.
+.RE
+.PP
+\fBoption\fR
+.RS 4
+Specify any of the options listed under OPTIONS that do not change stream semantic to suit the frontend\(cqs needs\&. This command is optional and is not needed to perform an import\&.
+.RE
+.SS "\fBcommit\fR"
+.sp
+Create or update a branch with a new commit, recording one logical change to the project\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqcommit\(aq SP <ref> LF
+        mark?
+        (\(aqauthor\(aq (SP <name>)? SP LT <email> GT SP <when> LF)?
+        \(aqcommitter\(aq (SP <name>)? SP LT <email> GT SP <when> LF
+        data
+        (\(aqfrom\(aq SP <commit\-ish> LF)?
+        (\(aqmerge\(aq SP <commit\-ish> LF)?
+        (filemodify | filedelete | filecopy | filerename | filedeleteall | notemodify)*
+        LF?
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+where \fB<ref>\fR is the name of the branch to make the commit on\&. Typically branch names are prefixed with \fBrefs/heads/\fR in Git, so importing the CVS branch symbol \fBRELENG\-1_0\fR would use \fBrefs/heads/RELENG\-1_0\fR for the value of \fB<ref>\fR\&. The value of \fB<ref>\fR must be a valid refname in Git\&. As \fBLF\fR is not valid in a Git refname, no quoting or escaping syntax is supported here\&.
+.sp
+A \fBmark\fR command may optionally appear, requesting fast\-import to save a reference to the newly created commit for future use by the frontend (see below for format)\&. It is very common for frontends to mark every commit they create, thereby allowing future branch creation from any imported commit\&.
+.sp
+The \fBdata\fR command following \fBcommitter\fR must supply the commit message (see below for \fBdata\fR command syntax)\&. To import an empty commit message use a 0 length data\&. Commit messages are free\-form and are not interpreted by Git\&. Currently they must be encoded in UTF\-8, as fast\-import does not permit other encodings to be specified\&.
+.sp
+Zero or more \fBfilemodify\fR, \fBfiledelete\fR, \fBfilecopy\fR, \fBfilerename\fR, \fBfiledeleteall\fR and \fBnotemodify\fR commands may be included to update the contents of the branch prior to creating the commit\&. These commands may be supplied in any order\&. However it is recommended that a \fBfiledeleteall\fR command precede all \fBfilemodify\fR, \fBfilecopy\fR, \fBfilerename\fR and \fBnotemodify\fR commands in the same commit, as \fBfiledeleteall\fR wipes the branch clean (see below)\&.
+.sp
+The \fBLF\fR after the command is optional (it used to be required)\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBauthor\fR
+.RS 4
+.sp
+An \fBauthor\fR command may optionally appear, if the author information might differ from the committer information\&. If \fBauthor\fR is omitted then fast\-import will automatically use the committer\(cqs information for the author portion of the commit\&. See below for a description of the fields in \fBauthor\fR, as they are identical to \fBcommitter\fR\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBcommitter\fR
+.RS 4
+.sp
+The \fBcommitter\fR command indicates who made this commit, and when they made it\&.
+.sp
+Here \fB<name>\fR is the person\(cqs display name (for example \(lqCom M Itter\(rq) and \fB<email>\fR is the person\(cqs email address (\(lqcm@example\&.com\(rq)\&. \fBLT\fR and \fBGT\fR are the literal less\-than (\ex3c) and greater\-than (\ex3e) symbols\&. These are required to delimit the email address from the other fields in the line\&. Note that \fB<name>\fR and \fB<email>\fR are free\-form and may contain any sequence of bytes, except \fBLT\fR, \fBGT\fR and \fBLF\fR\&. \fB<name>\fR is typically UTF\-8 encoded\&.
+.sp
+The time of the change is specified by \fB<when>\fR using the date format that was selected by the \-\-date\-format=<fmt> command\-line option\&. See \(lqDate Formats\(rq above for the set of supported formats, and their syntax\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBfrom\fR
+.RS 4
+.sp
+The \fBfrom\fR command is used to specify the commit to initialize this branch from\&. This revision will be the first ancestor of the new commit\&. The state of the tree built at this commit will begin with the state at the \fBfrom\fR commit, and be altered by the content modifications in this commit\&.
+.sp
+Omitting the \fBfrom\fR command in the first commit of a new branch will cause fast\-import to create that commit with no ancestor\&. This tends to be desired only for the initial commit of a project\&. If the frontend creates all files from scratch when making a new branch, a \fBmerge\fR command may be used instead of \fBfrom\fR to start the commit with an empty tree\&. Omitting the \fBfrom\fR command on existing branches is usually desired, as the current commit on that branch is automatically assumed to be the first ancestor of the new commit\&.
+.sp
+As \fBLF\fR is not valid in a Git refname or SHA\-1 expression, no quoting or escaping syntax is supported within \fB<commit\-ish>\fR\&.
+.sp
+Here \fB<commit\-ish>\fR is any of the following:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The name of an existing branch already in fast\-import\(cqs internal branch table\&. If fast\-import doesn\(cqt know the name, it\(cqs treated as a SHA\-1 expression\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A mark reference,
+\fB:<idnum>\fR, where
+\fB<idnum>\fR
+is the mark number\&.
+.sp
+The reason fast\-import uses
+\fB:\fR
+to denote a mark reference is this character is not legal in a Git branch name\&. The leading
+\fB:\fR
+makes it easy to distinguish between the mark 42 (\fB:42\fR) and the branch 42 (\fB42\fR
+or
+\fBrefs/heads/42\fR), or an abbreviated SHA\-1 which happened to consist only of base\-10 digits\&.
+.sp
+Marks must be declared (via
+\fBmark\fR) before they can be used\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A complete 40 byte or abbreviated commit SHA\-1 in hex\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Any valid Git SHA\-1 expression that resolves to a commit\&. See \(lqSPECIFYING REVISIONS\(rq in
+\fBgitrevisions\fR(7)
+for details\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The special null SHA\-1 (40 zeros) specifies that the branch is to be removed\&.
+.RE
+.sp
+The special case of restarting an incremental import from the current branch value should be written as:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        from refs/heads/branch^0
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The \fB^0\fR suffix is necessary as fast\-import does not permit a branch to start from itself, and the branch is created in memory before the \fBfrom\fR command is even read from the input\&. Adding \fB^0\fR will force fast\-import to resolve the commit through Git\(cqs revision parsing library, rather than its internal branch table, thereby loading in the existing value of the branch\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBmerge\fR
+.RS 4
+.sp
+Includes one additional ancestor commit\&. The additional ancestry link does not change the way the tree state is built at this commit\&. If the \fBfrom\fR command is omitted when creating a new branch, the first \fBmerge\fR commit will be the first ancestor of the current commit, and the branch will start out with no files\&. An unlimited number of \fBmerge\fR commands per commit are permitted by fast\-import, thereby establishing an n\-way merge\&.
+.sp
+Here \fB<commit\-ish>\fR is any of the commit specification expressions also accepted by \fBfrom\fR (see above)\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBfilemodify\fR
+.RS 4
+.sp
+Included in a \fBcommit\fR command to add a new file or change the content of an existing file\&. This command has two different means of specifying the content of the file\&.
+.PP
+External data format
+.RS 4
+The data content for the file was already supplied by a prior
+\fBblob\fR
+command\&. The frontend just needs to connect it\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqM\(aq SP <mode> SP <dataref> SP <path> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Here usually
+\fB<dataref>\fR
+must be either a mark reference (\fB:<idnum>\fR) set by a prior
+\fBblob\fR
+command, or a full 40\-byte SHA\-1 of an existing Git blob object\&. If
+\fB<mode>\fR
+is
+\fB040000`\fR
+then
+\fB<dataref>\fR
+must be the full 40\-byte SHA\-1 of an existing Git tree object or a mark reference set with
+\fB\-\-import\-marks\fR\&.
+.RE
+.PP
+Inline data format
+.RS 4
+The data content for the file has not been supplied yet\&. The frontend wants to supply it as part of this modify command\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqM\(aq SP <mode> SP \(aqinline\(aq SP <path> LF
+        data
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+See below for a detailed description of the
+\fBdata\fR
+command\&.
+.RE
+.sp
+In both formats \fB<mode>\fR is the type of file entry, specified in octal\&. Git only supports the following modes:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fB100644\fR
+or
+\fB644\fR: A normal (not\-executable) file\&. The majority of files in most projects use this mode\&. If in doubt, this is what you want\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fB100755\fR
+or
+\fB755\fR: A normal, but executable, file\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fB120000\fR: A symlink, the content of the file will be the link target\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fB160000\fR: A gitlink, SHA\-1 of the object refers to a commit in another repository\&. Git links can only be specified by SHA or through a commit mark\&. They are used to implement submodules\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fB040000\fR: A subdirectory\&. Subdirectories can only be specified by SHA or through a tree mark set with
+\fB\-\-import\-marks\fR\&.
+.RE
+.sp
+In both formats \fB<path>\fR is the complete path of the file to be added (if not already existing) or modified (if already existing)\&.
+.sp
+A \fB<path>\fR string must use UNIX\-style directory separators (forward slash \fB/\fR), may contain any byte other than \fBLF\fR, and must not start with double quote (\fB"\fR)\&.
+.sp
+A path can use C\-style string quoting; this is accepted in all cases and mandatory if the filename starts with double quote or contains \fBLF\fR\&. In C\-style quoting, the complete name should be surrounded with double quotes, and any \fBLF\fR, backslash, or double quote characters must be escaped by preceding them with a backslash (e\&.g\&., \fB"path/with\en, \e\e and \e" in it"\fR)\&.
+.sp
+The value of \fB<path>\fR must be in canonical form\&. That is it must not:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+contain an empty directory component (e\&.g\&.
+\fBfoo//bar\fR
+is invalid),
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+end with a directory separator (e\&.g\&.
+\fBfoo/\fR
+is invalid),
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+start with a directory separator (e\&.g\&.
+\fB/foo\fR
+is invalid),
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+contain the special component
+\fB\&.\fR
+or
+\fB\&.\&.\fR
+(e\&.g\&.
+\fBfoo/\&./bar\fR
+and
+\fBfoo/\&.\&./bar\fR
+are invalid)\&.
+.RE
+.sp
+The root of the tree can be represented by an empty string as \fB<path>\fR\&.
+.sp
+It is recommended that \fB<path>\fR always be encoded using UTF\-8\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBfiledelete\fR
+.RS 4
+.sp
+Included in a \fBcommit\fR command to remove a file or recursively delete an entire directory from the branch\&. If the file or directory removal makes its parent directory empty, the parent directory will be automatically removed too\&. This cascades up the tree until the first non\-empty directory or the root is reached\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqD\(aq SP <path> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+here \fB<path>\fR is the complete path of the file or subdirectory to be removed from the branch\&. See \fBfilemodify\fR above for a detailed description of \fB<path>\fR\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBfilecopy\fR
+.RS 4
+.sp
+Recursively copies an existing file or subdirectory to a different location within the branch\&. The existing file or directory must exist\&. If the destination exists it will be completely replaced by the content copied from the source\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqC\(aq SP <path> SP <path> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+here the first \fB<path>\fR is the source location and the second \fB<path>\fR is the destination\&. See \fBfilemodify\fR above for a detailed description of what \fB<path>\fR may look like\&. To use a source path that contains SP the path must be quoted\&.
+.sp
+A \fBfilecopy\fR command takes effect immediately\&. Once the source location has been copied to the destination any future commands applied to the source location will not impact the destination of the copy\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBfilerename\fR
+.RS 4
+.sp
+Renames an existing file or subdirectory to a different location within the branch\&. The existing file or directory must exist\&. If the destination exists it will be replaced by the source directory\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqR\(aq SP <path> SP <path> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+here the first \fB<path>\fR is the source location and the second \fB<path>\fR is the destination\&. See \fBfilemodify\fR above for a detailed description of what \fB<path>\fR may look like\&. To use a source path that contains SP the path must be quoted\&.
+.sp
+A \fBfilerename\fR command takes effect immediately\&. Once the source location has been renamed to the destination any future commands applied to the source location will create new files there and not impact the destination of the rename\&.
+.sp
+Note that a \fBfilerename\fR is the same as a \fBfilecopy\fR followed by a \fBfiledelete\fR of the source location\&. There is a slight performance advantage to using \fBfilerename\fR, but the advantage is so small that it is never worth trying to convert a delete/add pair in source material into a rename for fast\-import\&. This \fBfilerename\fR command is provided just to simplify frontends that already have rename information and don\(cqt want bother with decomposing it into a \fBfilecopy\fR followed by a \fBfiledelete\fR\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBfiledeleteall\fR
+.RS 4
+.sp
+Included in a \fBcommit\fR command to remove all files (and also all directories) from the branch\&. This command resets the internal branch structure to have no files in it, allowing the frontend to subsequently add all interesting files from scratch\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqdeleteall\(aq LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This command is extremely useful if the frontend does not know (or does not care to know) what files are currently on the branch, and therefore cannot generate the proper \fBfiledelete\fR commands to update the content\&.
+.sp
+Issuing a \fBfiledeleteall\fR followed by the needed \fBfilemodify\fR commands to set the correct content will produce the same results as sending only the needed \fBfilemodify\fR and \fBfiledelete\fR commands\&. The \fBfiledeleteall\fR approach may however require fast\-import to use slightly more memory per active branch (less than 1 MiB for even most large projects); so frontends that can easily obtain only the affected paths for a commit are encouraged to do so\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBnotemodify\fR
+.RS 4
+.sp
+Included in a \fBcommit\fR \fB<notes_ref>\fR command to add a new note annotating a \fB<commit\-ish>\fR or change this annotation contents\&. Internally it is similar to filemodify 100644 on \fB<commit\-ish>\fR path (maybe split into subdirectories)\&. It\(cqs not advised to use any other commands to write to the \fB<notes_ref>\fR tree except \fBfiledeleteall\fR to delete all existing notes in this tree\&. This command has two different means of specifying the content of the note\&.
+.PP
+External data format
+.RS 4
+The data content for the note was already supplied by a prior
+\fBblob\fR
+command\&. The frontend just needs to connect it to the commit that is to be annotated\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqN\(aq SP <dataref> SP <commit\-ish> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Here
+\fB<dataref>\fR
+can be either a mark reference (\fB:<idnum>\fR) set by a prior
+\fBblob\fR
+command, or a full 40\-byte SHA\-1 of an existing Git blob object\&.
+.RE
+.PP
+Inline data format
+.RS 4
+The data content for the note has not been supplied yet\&. The frontend wants to supply it as part of this modify command\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqN\(aq SP \(aqinline\(aq SP <commit\-ish> LF
+        data
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+See below for a detailed description of the
+\fBdata\fR
+command\&.
+.RE
+.sp
+In both formats \fB<commit\-ish>\fR is any of the commit specification expressions also accepted by \fBfrom\fR (see above)\&.
+.RE
+.SS "\fBmark\fR"
+.sp
+Arranges for fast\-import to save a reference to the current object, allowing the frontend to recall this object at a future point in time, without knowing its SHA\-1\&. Here the current object is the object creation command the \fBmark\fR command appears within\&. This can be \fBcommit\fR, \fBtag\fR, and \fBblob\fR, but \fBcommit\fR is the most common usage\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqmark\(aq SP \(aq:\(aq <idnum> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+where \fB<idnum>\fR is the number assigned by the frontend to this mark\&. The value of \fB<idnum>\fR is expressed as an ASCII decimal integer\&. The value 0 is reserved and cannot be used as a mark\&. Only values greater than or equal to 1 may be used as marks\&.
+.sp
+New marks are created automatically\&. Existing marks can be moved to another object simply by reusing the same \fB<idnum>\fR in another \fBmark\fR command\&.
+.SS "\fBtag\fR"
+.sp
+Creates an annotated tag referring to a specific commit\&. To create lightweight (non\-annotated) tags see the \fBreset\fR command below\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqtag\(aq SP <name> LF
+        \(aqfrom\(aq SP <commit\-ish> LF
+        \(aqtagger\(aq (SP <name>)? SP LT <email> GT SP <when> LF
+        data
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+where \fB<name>\fR is the name of the tag to create\&.
+.sp
+Tag names are automatically prefixed with \fBrefs/tags/\fR when stored in Git, so importing the CVS branch symbol \fBRELENG\-1_0\-FINAL\fR would use just \fBRELENG\-1_0\-FINAL\fR for \fB<name>\fR, and fast\-import will write the corresponding ref as \fBrefs/tags/RELENG\-1_0\-FINAL\fR\&.
+.sp
+The value of \fB<name>\fR must be a valid refname in Git and therefore may contain forward slashes\&. As \fBLF\fR is not valid in a Git refname, no quoting or escaping syntax is supported here\&.
+.sp
+The \fBfrom\fR command is the same as in the \fBcommit\fR command; see above for details\&.
+.sp
+The \fBtagger\fR command uses the same format as \fBcommitter\fR within \fBcommit\fR; again see above for details\&.
+.sp
+The \fBdata\fR command following \fBtagger\fR must supply the annotated tag message (see below for \fBdata\fR command syntax)\&. To import an empty tag message use a 0 length data\&. Tag messages are free\-form and are not interpreted by Git\&. Currently they must be encoded in UTF\-8, as fast\-import does not permit other encodings to be specified\&.
+.sp
+Signing annotated tags during import from within fast\-import is not supported\&. Trying to include your own PGP/GPG signature is not recommended, as the frontend does not (easily) have access to the complete set of bytes which normally goes into such a signature\&. If signing is required, create lightweight tags from within fast\-import with \fBreset\fR, then create the annotated versions of those tags offline with the standard \fIgit tag\fR process\&.
+.SS "\fBreset\fR"
+.sp
+Creates (or recreates) the named branch, optionally starting from a specific revision\&. The reset command allows a frontend to issue a new \fBfrom\fR command for an existing branch, or to create a new branch from an existing commit without creating a new commit\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqreset\(aq SP <ref> LF
+        (\(aqfrom\(aq SP <commit\-ish> LF)?
+        LF?
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+For a detailed description of \fB<ref>\fR and \fB<commit\-ish>\fR see above under \fBcommit\fR and \fBfrom\fR\&.
+.sp
+The \fBLF\fR after the command is optional (it used to be required)\&.
+.sp
+The \fBreset\fR command can also be used to create lightweight (non\-annotated) tags\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+reset refs/tags/938
+from :938
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+would create the lightweight tag \fBrefs/tags/938\fR referring to whatever commit mark \fB:938\fR references\&.
+.SS "\fBblob\fR"
+.sp
+Requests writing one file revision to the packfile\&. The revision is not connected to any commit; this connection must be formed in a subsequent \fBcommit\fR command by referencing the blob through an assigned mark\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqblob\(aq LF
+        mark?
+        data
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The mark command is optional here as some frontends have chosen to generate the Git SHA\-1 for the blob on their own, and feed that directly to \fBcommit\fR\&. This is typically more work than it\(cqs worth however, as marks are inexpensive to store and easy to use\&.
+.SS "\fBdata\fR"
+.sp
+Supplies raw data (for use as blob/file content, commit messages, or annotated tag messages) to fast\-import\&. Data can be supplied using an exact byte count or delimited with a terminating line\&. Real frontends intended for production\-quality conversions should always use the exact byte count format, as it is more robust and performs better\&. The delimited format is intended primarily for testing fast\-import\&.
+.sp
+Comment lines appearing within the \fB<raw>\fR part of \fBdata\fR commands are always taken to be part of the body of the data and are therefore never ignored by fast\-import\&. This makes it safe to import any file/message content whose lines might start with \fB#\fR\&.
+.PP
+Exact byte count format
+.RS 4
+The frontend must specify the number of bytes of data\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqdata\(aq SP <count> LF
+        <raw> LF?
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+where
+\fB<count>\fR
+is the exact number of bytes appearing within
+\fB<raw>\fR\&. The value of
+\fB<count>\fR
+is expressed as an ASCII decimal integer\&. The
+\fBLF\fR
+on either side of
+\fB<raw>\fR
+is not included in
+\fB<count>\fR
+and will not be included in the imported data\&.
+.sp
+The
+\fBLF\fR
+after
+\fB<raw>\fR
+is optional (it used to be required) but recommended\&. Always including it makes debugging a fast\-import stream easier as the next command always starts in column 0 of the next line, even if
+\fB<raw>\fR
+did not end with an
+\fBLF\fR\&.
+.RE
+.PP
+Delimited format
+.RS 4
+A delimiter string is used to mark the end of the data\&. fast\-import will compute the length by searching for the delimiter\&. This format is primarily useful for testing and is not recommended for real data\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqdata\(aq SP \(aq<<\(aq <delim> LF
+        <raw> LF
+        <delim> LF
+        LF?
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+where
+\fB<delim>\fR
+is the chosen delimiter string\&. The string
+\fB<delim>\fR
+must not appear on a line by itself within
+\fB<raw>\fR, as otherwise fast\-import will think the data ends earlier than it really does\&. The
+\fBLF\fR
+immediately trailing
+\fB<raw>\fR
+is part of
+\fB<raw>\fR\&. This is one of the limitations of the delimited format, it is impossible to supply a data chunk which does not have an LF as its last byte\&.
+.sp
+The
+\fBLF\fR
+after
+\fB<delim> LF\fR
+is optional (it used to be required)\&.
+.RE
+.SS "\fBcheckpoint\fR"
+.sp
+Forces fast\-import to close the current packfile, start a new one, and to save out all current branch refs, tags and marks\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqcheckpoint\(aq LF
+        LF?
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Note that fast\-import automatically switches packfiles when the current packfile reaches \-\-max\-pack\-size, or 4 GiB, whichever limit is smaller\&. During an automatic packfile switch fast\-import does not update the branch refs, tags or marks\&.
+.sp
+As a \fBcheckpoint\fR can require a significant amount of CPU time and disk IO (to compute the overall pack SHA\-1 checksum, generate the corresponding index file, and update the refs) it can easily take several minutes for a single \fBcheckpoint\fR command to complete\&.
+.sp
+Frontends may choose to issue checkpoints during extremely large and long running imports, or when they need to allow another Git process access to a branch\&. However given that a 30 GiB Subversion repository can be loaded into Git through fast\-import in about 3 hours, explicit checkpointing may not be necessary\&.
+.sp
+The \fBLF\fR after the command is optional (it used to be required)\&.
+.SS "\fBprogress\fR"
+.sp
+Causes fast\-import to print the entire \fBprogress\fR line unmodified to its standard output channel (file descriptor 1) when the command is processed from the input stream\&. The command otherwise has no impact on the current import, or on any of fast\-import\(cqs internal state\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqprogress\(aq SP <any> LF
+        LF?
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fB<any>\fR part of the command may contain any sequence of bytes that does not contain \fBLF\fR\&. The \fBLF\fR after the command is optional\&. Callers may wish to process the output through a tool such as sed to remove the leading part of the line, for example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+frontend | git fast\-import | sed \(aqs/^progress //\(aq
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Placing a \fBprogress\fR command immediately after a \fBcheckpoint\fR will inform the reader when the \fBcheckpoint\fR has been completed and it can safely access the refs that fast\-import updated\&.
+.SS "\fBget\-mark\fR"
+.sp
+Causes fast\-import to print the SHA\-1 corresponding to a mark to stdout or to the file descriptor previously arranged with the \fB\-\-cat\-blob\-fd\fR argument\&. The command otherwise has no impact on the current import; its purpose is to retrieve SHA\-1s that later commits might want to refer to in their commit messages\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqget\-mark\(aq SP \(aq:\(aq <idnum> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This command can be used anywhere in the stream that comments are accepted\&. In particular, the \fBget\-mark\fR command can be used in the middle of a commit but not in the middle of a \fBdata\fR command\&.
+.sp
+See \(lqResponses To Commands\(rq below for details about how to read this output safely\&.
+.SS "\fBcat\-blob\fR"
+.sp
+Causes fast\-import to print a blob to a file descriptor previously arranged with the \fB\-\-cat\-blob\-fd\fR argument\&. The command otherwise has no impact on the current import; its main purpose is to retrieve blobs that may be in fast\-import\(cqs memory but not accessible from the target repository\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqcat\-blob\(aq SP <dataref> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fB<dataref>\fR can be either a mark reference (\fB:<idnum>\fR) set previously or a full 40\-byte SHA\-1 of a Git blob, preexisting or ready to be written\&.
+.sp
+Output uses the same format as \fBgit cat\-file \-\-batch\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<sha1> SP \(aqblob\(aq SP <size> LF
+<contents> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This command can be used anywhere in the stream that comments are accepted\&. In particular, the \fBcat\-blob\fR command can be used in the middle of a commit but not in the middle of a \fBdata\fR command\&.
+.sp
+See \(lqResponses To Commands\(rq below for details about how to read this output safely\&.
+.SS "\fBls\fR"
+.sp
+Prints information about the object at a path to a file descriptor previously arranged with the \fB\-\-cat\-blob\-fd\fR argument\&. This allows printing a blob from the active commit (with \fBcat\-blob\fR) or copying a blob or tree from a previous commit for use in the current one (with \fBfilemodify\fR)\&.
+.sp
+The \fBls\fR command can be used anywhere in the stream that comments are accepted, including the middle of a commit\&.
+.PP
+Reading from the active commit
+.RS 4
+This form can only be used in the middle of a
+\fBcommit\fR\&. The path names a directory entry within fast\-import\(cqs active commit\&. The path must be quoted in this case\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqls\(aq SP <path> LF
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+Reading from a named tree
+.RS 4
+The
+\fB<dataref>\fR
+can be a mark reference (\fB:<idnum>\fR) or the full 40\-byte SHA\-1 of a Git tag, commit, or tree object, preexisting or waiting to be written\&. The path is relative to the top level of the tree named by
+\fB<dataref>\fR\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqls\(aq SP <dataref> SP <path> LF
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+See \fBfilemodify\fR above for a detailed description of \fB<path>\fR\&.
+.sp
+Output uses the same format as \fBgit ls\-tree <tree> \-\- <path>\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<mode> SP (\(aqblob\(aq | \(aqtree\(aq | \(aqcommit\(aq) SP <dataref> HT <path> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The <dataref> represents the blob, tree, or commit object at <path> and can be used in later \fIget\-mark\fR, \fIcat\-blob\fR, \fIfilemodify\fR, or \fIls\fR commands\&.
+.sp
+If there is no file or subtree at that path, \fIgit fast\-import\fR will instead report
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+missing SP <path> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+See \(lqResponses To Commands\(rq below for details about how to read this output safely\&.
+.SS "\fBfeature\fR"
+.sp
+Require that fast\-import supports the specified feature, or abort if it does not\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        \(aqfeature\(aq SP <feature> (\(aq=\(aq <argument>)? LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The <feature> part of the command may be any one of the following:
+.PP
+date\-format, export\-marks, relative\-marks, no\-relative\-marks, force
+.RS 4
+Act as though the corresponding command\-line option with a leading
+\fB\-\-\fR
+was passed on the command line (see OPTIONS, above)\&.
+.RE
+.PP
+import\-marks, import\-marks\-if\-exists
+.RS 4
+Like \-\-import\-marks except in two respects: first, only one "feature import\-marks" or "feature import\-marks\-if\-exists" command is allowed per stream; second, an \-\-import\-marks= or \-\-import\-marks\-if\-exists command\-line option overrides any of these "feature" commands in the stream; third, "feature import\-marks\-if\-exists" like a corresponding command\-line option silently skips a nonexistent file\&.
+.RE
+.PP
+get\-mark, cat\-blob, ls
+.RS 4
+Require that the backend support the
+\fIget\-mark\fR,
+\fIcat\-blob\fR, or
+\fIls\fR
+command respectively\&. Versions of fast\-import not supporting the specified command will exit with a message indicating so\&. This lets the import error out early with a clear message, rather than wasting time on the early part of an import before the unsupported command is detected\&.
+.RE
+.PP
+notes
+.RS 4
+Require that the backend support the
+\fInotemodify\fR
+(N) subcommand to the
+\fIcommit\fR
+command\&. Versions of fast\-import not supporting notes will exit with a message indicating so\&.
+.RE
+.PP
+done
+.RS 4
+Error out if the stream ends without a
+\fIdone\fR
+command\&. Without this feature, errors causing the frontend to end abruptly at a convenient point in the stream can go undetected\&. This may occur, for example, if an import front end dies in mid\-operation without emitting SIGTERM or SIGKILL at its subordinate git fast\-import instance\&.
+.RE
+.SS "\fBoption\fR"
+.sp
+Processes the specified option so that git fast\-import behaves in a way that suits the frontend\(cqs needs\&. Note that options specified by the frontend are overridden by any options the user may specify to git fast\-import itself\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    \(aqoption\(aq SP <option> LF
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fB<option>\fR part of the command may contain any of the options listed in the OPTIONS section that do not change import semantics, without the leading \fB\-\-\fR and is treated in the same way\&.
+.sp
+Option commands must be the first commands on the input (not counting feature commands), to give an option command after any non\-option command is an error\&.
+.sp
+The following command\-line options change import semantics and may therefore not be passed as option:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+date\-format
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+import\-marks
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+export\-marks
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+cat\-blob\-fd
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+force
+.RE
+.SS "\fBdone\fR"
+.sp
+If the \fBdone\fR feature is not in use, treated as if EOF was read\&. This can be used to tell fast\-import to finish early\&.
+.sp
+If the \fB\-\-done\fR command\-line option or \fBfeature done\fR command is in use, the \fBdone\fR command is mandatory and marks the end of the stream\&.
+.SH "RESPONSES TO COMMANDS"
+.sp
+New objects written by fast\-import are not available immediately\&. Most fast\-import commands have no visible effect until the next checkpoint (or completion)\&. The frontend can send commands to fill fast\-import\(cqs input pipe without worrying about how quickly they will take effect, which improves performance by simplifying scheduling\&.
+.sp
+For some frontends, though, it is useful to be able to read back data from the current repository as it is being updated (for example when the source material describes objects in terms of patches to be applied to previously imported objects)\&. This can be accomplished by connecting the frontend and fast\-import via bidirectional pipes:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+mkfifo fast\-import\-output
+frontend <fast\-import\-output |
+git fast\-import >fast\-import\-output
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+A frontend set up this way can use \fBprogress\fR, \fBget\-mark\fR, \fBls\fR, and \fBcat\-blob\fR commands to read information from the import in progress\&.
+.sp
+To avoid deadlock, such frontends must completely consume any pending output from \fBprogress\fR, \fBls\fR, \fBget\-mark\fR, and \fBcat\-blob\fR before performing writes to fast\-import that might block\&.
+.SH "CRASH REPORTS"
+.sp
+If fast\-import is supplied invalid input it will terminate with a non\-zero exit status and create a crash report in the top level of the Git repository it was importing into\&. Crash reports contain a snapshot of the internal fast\-import state as well as the most recent commands that lead up to the crash\&.
+.sp
+All recent commands (including stream comments, file changes and progress commands) are shown in the command history within the crash report, but raw file data and commit messages are excluded from the crash report\&. This exclusion saves space within the report file and reduces the amount of buffering that fast\-import must perform during execution\&.
+.sp
+After writing a crash report fast\-import will close the current packfile and export the marks table\&. This allows the frontend developer to inspect the repository state and resume the import from the point where it crashed\&. The modified branches and tags are not updated during a crash, as the import did not complete successfully\&. Branch and tag information can be found in the crash report and must be applied manually if the update is needed\&.
+.sp
+An example crash:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ cat >in <<END_OF_INPUT
+# my very first test commit
+commit refs/heads/master
+committer Shawn O\&. Pearce <spearce> 19283 \-0400
+# who is that guy anyway?
+data <<EOF
+this is my commit
+EOF
+M 644 inline \&.gitignore
+data <<EOF
+\&.gitignore
+EOF
+M 777 inline bob
+END_OF_INPUT
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git fast\-import <in
+fatal: Corrupt mode: M 777 inline bob
+fast\-import: dumping crash report to \&.git/fast_import_crash_8434
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ cat \&.git/fast_import_crash_8434
+fast\-import crash report:
+    fast\-import process: 8434
+    parent process     : 1391
+    at Sat Sep 1 00:58:12 2007
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+fatal: Corrupt mode: M 777 inline bob
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Most Recent Commands Before Crash
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+  # my very first test commit
+  commit refs/heads/master
+  committer Shawn O\&. Pearce <spearce> 19283 \-0400
+  # who is that guy anyway?
+  data <<EOF
+  M 644 inline \&.gitignore
+  data <<EOF
+* M 777 inline bob
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Active Branch LRU
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+    active_branches = 1 cur, 5 max
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+pos  clock name
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1)      0 refs/heads/master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Inactive Branches
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+refs/heads/master:
+  status      : active loaded dirty
+  tip commit  : 0000000000000000000000000000000000000000
+  old tree    : 0000000000000000000000000000000000000000
+  cur tree    : 0000000000000000000000000000000000000000
+  commit clock: 0
+  last pack   :
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+END OF CRASH REPORT
+.fi
+.if n \{\
+.RE
+.\}
+.SH "TIPS AND TRICKS"
+.sp
+The following tips and tricks have been collected from various users of fast\-import, and are offered here as suggestions\&.
+.SS "Use One Mark Per Commit"
+.sp
+When doing a repository conversion, use a unique mark per commit (\fBmark :<n>\fR) and supply the \-\-export\-marks option on the command line\&. fast\-import will dump a file which lists every mark and the Git object SHA\-1 that corresponds to it\&. If the frontend can tie the marks back to the source repository, it is easy to verify the accuracy and completeness of the import by comparing each Git commit to the corresponding source revision\&.
+.sp
+Coming from a system such as Perforce or Subversion this should be quite simple, as the fast\-import mark can also be the Perforce changeset number or the Subversion revision number\&.
+.SS "Freely Skip Around Branches"
+.sp
+Don\(cqt bother trying to optimize the frontend to stick to one branch at a time during an import\&. Although doing so might be slightly faster for fast\-import, it tends to increase the complexity of the frontend code considerably\&.
+.sp
+The branch LRU builtin to fast\-import tends to behave very well, and the cost of activating an inactive branch is so low that bouncing around between branches has virtually no impact on import performance\&.
+.SS "Handling Renames"
+.sp
+When importing a renamed file or directory, simply delete the old name(s) and modify the new name(s) during the corresponding commit\&. Git performs rename detection after\-the\-fact, rather than explicitly during a commit\&.
+.SS "Use Tag Fixup Branches"
+.sp
+Some other SCM systems let the user create a tag from multiple files which are not from the same commit/changeset\&. Or to create tags which are a subset of the files available in the repository\&.
+.sp
+Importing these tags as\-is in Git is impossible without making at least one commit which \(lqfixes up\(rq the files to match the content of the tag\&. Use fast\-import\(cqs \fBreset\fR command to reset a dummy branch outside of your normal branch space to the base commit for the tag, then commit one or more file fixup commits, and finally tag the dummy branch\&.
+.sp
+For example since all normal branches are stored under \fBrefs/heads/\fR name the tag fixup branch \fBTAG_FIXUP\fR\&. This way it is impossible for the fixup branch used by the importer to have namespace conflicts with real branches imported from the source (the name \fBTAG_FIXUP\fR is not \fBrefs/heads/TAG_FIXUP\fR)\&.
+.sp
+When committing fixups, consider using \fBmerge\fR to connect the commit(s) which are supplying file revisions to the fixup branch\&. Doing so will allow tools such as \fIgit blame\fR to track through the real commit history and properly annotate the source files\&.
+.sp
+After fast\-import terminates the frontend will need to do \fBrm \&.git/TAG_FIXUP\fR to remove the dummy branch\&.
+.SS "Import Now, Repack Later"
+.sp
+As soon as fast\-import completes the Git repository is completely valid and ready for use\&. Typically this takes only a very short time, even for considerably large projects (100,000+ commits)\&.
+.sp
+However repacking the repository is necessary to improve data locality and access performance\&. It can also take hours on extremely large projects (especially if \-f and a large \-\-window parameter is used)\&. Since repacking is safe to run alongside readers and writers, run the repack in the background and let it finish when it finishes\&. There is no reason to wait to explore your new Git project!
+.sp
+If you choose to wait for the repack, don\(cqt try to run benchmarks or performance tests until repacking is completed\&. fast\-import outputs suboptimal packfiles that are simply never seen in real use situations\&.
+.SS "Repacking Historical Data"
+.sp
+If you are repacking very old imported data (e\&.g\&. older than the last year), consider expending some extra CPU time and supplying \-\-window=50 (or higher) when you run \fIgit repack\fR\&. This will take longer, but will also produce a smaller packfile\&. You only need to expend the effort once, and everyone using your project will benefit from the smaller repository\&.
+.SS "Include Some Progress Messages"
+.sp
+Every once in a while have your frontend emit a \fBprogress\fR message to fast\-import\&. The contents of the messages are entirely free\-form, so one suggestion would be to output the current month and year each time the current commit date moves into the next month\&. Your users will feel better knowing how much of the data stream has been processed\&.
+.SH "PACKFILE OPTIMIZATION"
+.sp
+When packing a blob fast\-import always attempts to deltify against the last blob written\&. Unless specifically arranged for by the frontend, this will probably not be a prior version of the same file, so the generated delta will not be the smallest possible\&. The resulting packfile will be compressed, but will not be optimal\&.
+.sp
+Frontends which have efficient access to all revisions of a single file (for example reading an RCS/CVS ,v file) can choose to supply all revisions of that file as a sequence of consecutive \fBblob\fR commands\&. This allows fast\-import to deltify the different file revisions against each other, saving space in the final packfile\&. Marks can be used to later identify individual file revisions during a sequence of \fBcommit\fR commands\&.
+.sp
+The packfile(s) created by fast\-import do not encourage good disk access patterns\&. This is caused by fast\-import writing the data in the order it is received on standard input, while Git typically organizes data within packfiles to make the most recent (current tip) data appear before historical data\&. Git also clusters commits together, speeding up revision traversal through better cache locality\&.
+.sp
+For this reason it is strongly recommended that users repack the repository with \fBgit repack \-a \-d\fR after fast\-import completes, allowing Git to reorganize the packfiles for faster data access\&. If blob deltas are suboptimal (see above) then also adding the \fB\-f\fR option to force recomputation of all deltas can significantly reduce the final packfile size (30\-50% smaller can be quite typical)\&.
+.SH "MEMORY UTILIZATION"
+.sp
+There are a number of factors which affect how much memory fast\-import requires to perform an import\&. Like critical sections of core Git, fast\-import uses its own memory allocators to amortize any overheads associated with malloc\&. In practice fast\-import tends to amortize any malloc overheads to 0, due to its use of large block allocations\&.
+.SS "per object"
+.sp
+fast\-import maintains an in\-memory structure for every object written in this execution\&. On a 32 bit system the structure is 32 bytes, on a 64 bit system the structure is 40 bytes (due to the larger pointer sizes)\&. Objects in the table are not deallocated until fast\-import terminates\&. Importing 2 million objects on a 32 bit system will require approximately 64 MiB of memory\&.
+.sp
+The object table is actually a hashtable keyed on the object name (the unique SHA\-1)\&. This storage configuration allows fast\-import to reuse an existing or already written object and avoid writing duplicates to the output packfile\&. Duplicate blobs are surprisingly common in an import, typically due to branch merges in the source\&.
+.SS "per mark"
+.sp
+Marks are stored in a sparse array, using 1 pointer (4 bytes or 8 bytes, depending on pointer size) per mark\&. Although the array is sparse, frontends are still strongly encouraged to use marks between 1 and n, where n is the total number of marks required for this import\&.
+.SS "per branch"
+.sp
+Branches are classified as active and inactive\&. The memory usage of the two classes is significantly different\&.
+.sp
+Inactive branches are stored in a structure which uses 96 or 120 bytes (32 bit or 64 bit systems, respectively), plus the length of the branch name (typically under 200 bytes), per branch\&. fast\-import will easily handle as many as 10,000 inactive branches in under 2 MiB of memory\&.
+.sp
+Active branches have the same overhead as inactive branches, but also contain copies of every tree that has been recently modified on that branch\&. If subtree \fBinclude\fR has not been modified since the branch became active, its contents will not be loaded into memory, but if subtree \fBsrc\fR has been modified by a commit since the branch became active, then its contents will be loaded in memory\&.
+.sp
+As active branches store metadata about the files contained on that branch, their in\-memory storage size can grow to a considerable size (see below)\&.
+.sp
+fast\-import automatically moves active branches to inactive status based on a simple least\-recently\-used algorithm\&. The LRU chain is updated on each \fBcommit\fR command\&. The maximum number of active branches can be increased or decreased on the command line with \-\-active\-branches=\&.
+.SS "per active tree"
+.sp
+Trees (aka directories) use just 12 bytes of memory on top of the memory required for their entries (see \(lqper active file\(rq below)\&. The cost of a tree is virtually 0, as its overhead amortizes out over the individual file entries\&.
+.SS "per active file entry"
+.sp
+Files (and pointers to subtrees) within active trees require 52 or 64 bytes (32/64 bit platforms) per entry\&. To conserve space, file and tree names are pooled in a common string table, allowing the filename \(lqMakefile\(rq to use just 16 bytes (after including the string header overhead) no matter how many times it occurs within the project\&.
+.sp
+The active branch LRU, when coupled with the filename string pool and lazy loading of subtrees, allows fast\-import to efficiently import projects with 2,000+ branches and 45,114+ files in a very limited memory footprint (less than 2\&.7 MiB per active branch)\&.
+.SH "SIGNALS"
+.sp
+Sending \fBSIGUSR1\fR to the \fIgit fast\-import\fR process ends the current packfile early, simulating a \fBcheckpoint\fR command\&. The impatient operator can use this facility to peek at the objects and refs from an import in progress, at the cost of some added running time and worse compression\&.
+.SH "SEE ALSO"
+.sp
+\fBgit-fast-export\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

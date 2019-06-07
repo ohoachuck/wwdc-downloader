@@ -1,0 +1,87 @@
+'\" t
+.\"     Title: git-mv
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-MV" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-mv \- Move or rename a file, a directory, or a symlink
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit mv\fR <options>\&... <args>\&...
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Move or rename a file, directory or symlink\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git mv [\-v] [\-f] [\-n] [\-k] <source> <destination>
+git mv [\-v] [\-f] [\-n] [\-k] <source> \&.\&.\&. <destination directory>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+In the first form, it renames <source>, which must exist and be either a file, symlink or directory, to <destination>\&. In the second form, the last argument has to be an existing directory; the given sources will be moved into this directory\&.
+.sp
+The index is updated after successful completion, but the change must still be committed\&.
+.SH "OPTIONS"
+.PP
+\-f, \-\-force
+.RS 4
+Force renaming or moving of a file even if the target exists
+.RE
+.PP
+\-k
+.RS 4
+Skip move or rename actions which would lead to an error condition\&. An error happens when a source is neither existing nor controlled by Git, or when it would overwrite an existing file unless
+\fB\-f\fR
+is given\&.
+.RE
+.PP
+\-n, \-\-dry\-run
+.RS 4
+Do nothing; only show what would happen
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Report the names of files as they are moved\&.
+.RE
+.SH "SUBMODULES"
+.sp
+Moving a submodule using a gitfile (which means they were cloned with a Git version 1\&.7\&.8 or newer) will update the gitfile and core\&.worktree setting to make the submodule work in the new location\&. It also will attempt to update the submodule\&.<name>\&.path setting in the \fBgitmodules\fR(5) file and stage that file (unless \-n is used)\&.
+.SH "BUGS"
+.sp
+Each time a superproject update moves a populated submodule (e\&.g\&. when switching between commits before and after the move) a stale submodule checkout will remain in the old location and an empty directory will appear in the new location\&. To populate the submodule again in the new location the user will have to run "git submodule update" afterwards\&. Removing the old directory is only safe when it uses a gitfile, as otherwise the history of the submodule will be deleted too\&. Both steps will be obsolete when recursive submodule update has been implemented\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

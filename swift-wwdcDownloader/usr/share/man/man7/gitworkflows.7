@@ -1,0 +1,468 @@
+'\" t
+.\"     Title: gitworkflows
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GITWORKFLOWS" "7" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+gitworkflows \- An overview of recommended workflows with Git
+.SH "SYNOPSIS"
+.sp
+.nf
+git *
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This document attempts to write down and motivate some of the workflow elements used for \fBgit\&.git\fR itself\&. Many ideas apply in general, though the full workflow is rarely required for smaller projects with fewer people involved\&.
+.sp
+We formulate a set of \fIrules\fR for quick reference, while the prose tries to motivate each of them\&. Do not always take them literally; you should value good reasons for your actions higher than manpages such as this one\&.
+.SH "SEPARATE CHANGES"
+.sp
+As a general rule, you should try to split your changes into small logical steps, and commit each of them\&. They should be consistent, working independently of any later commits, pass the test suite, etc\&. This makes the review process much easier, and the history much more useful for later inspection and analysis, for example with \fBgit-blame\fR(1) and \fBgit-bisect\fR(1)\&.
+.sp
+To achieve this, try to split your work into small steps from the very beginning\&. It is always easier to squash a few commits together than to split one big commit into several\&. Don\(cqt be afraid of making too small or imperfect steps along the way\&. You can always go back later and edit the commits with \fBgit rebase \-\-interactive\fR before you publish them\&. You can use \fBgit stash push \-\-keep\-index\fR to run the test suite independent of other uncommitted changes; see the EXAMPLES section of \fBgit-stash\fR(1)\&.
+.SH "MANAGING BRANCHES"
+.sp
+There are two main tools that can be used to include changes from one branch on another: \fBgit-merge\fR(1) and \fBgit-cherry-pick\fR(1)\&.
+.sp
+Merges have many advantages, so we try to solve as many problems as possible with merges alone\&. Cherry\-picking is still occasionally useful; see "Merging upwards" below for an example\&.
+.sp
+Most importantly, merging works at the branch level, while cherry\-picking works at the commit level\&. This means that a merge can carry over the changes from 1, 10, or 1000 commits with equal ease, which in turn means the workflow scales much better to a large number of contributors (and contributions)\&. Merges are also easier to understand because a merge commit is a "promise" that all changes from all its parents are now included\&.
+.sp
+There is a tradeoff of course: merges require a more careful branch management\&. The following subsections discuss the important points\&.
+.SS "Graduation"
+.sp
+As a given feature goes from experimental to stable, it also "graduates" between the corresponding branches of the software\&. \fBgit\&.git\fR uses the following \fIintegration branches\fR:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fImaint\fR
+tracks the commits that should go into the next "maintenance release", i\&.e\&., update of the last released stable version;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fImaster\fR
+tracks the commits that should go into the next release;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fInext\fR
+is intended as a testing branch for topics being tested for stability for master\&.
+.RE
+.sp
+There is a fourth official branch that is used slightly differently:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIpu\fR
+(proposed updates) is an integration branch for things that are not quite ready for inclusion yet (see "Integration Branches" below)\&.
+.RE
+.sp
+Each of the four branches is usually a direct descendant of the one above it\&.
+.sp
+Conceptually, the feature enters at an unstable branch (usually \fInext\fR or \fIpu\fR), and "graduates" to \fImaster\fR for the next release once it is considered stable enough\&.
+.SS "Merging upwards"
+.sp
+The "downwards graduation" discussed above cannot be done by actually merging downwards, however, since that would merge \fIall\fR changes on the unstable branch into the stable one\&. Hence the following:
+.PP
+\fBExample\ \&1.\ \&Merge upwards\fR
+.sp
+Always commit your fixes to the oldest supported branch that require them\&. Then (periodically) merge the integration branches upwards into each other\&.
+.sp
+This gives a very controlled flow of fixes\&. If you notice that you have applied a fix to e\&.g\&. \fImaster\fR that is also required in \fImaint\fR, you will need to cherry\-pick it (using \fBgit-cherry-pick\fR(1)) downwards\&. This will happen a few times and is nothing to worry about unless you do it very frequently\&.
+.SS "Topic branches"
+.sp
+Any nontrivial feature will require several patches to implement, and may get extra bugfixes or improvements during its lifetime\&.
+.sp
+Committing everything directly on the integration branches leads to many problems: Bad commits cannot be undone, so they must be reverted one by one, which creates confusing histories and further error potential when you forget to revert part of a group of changes\&. Working in parallel mixes up the changes, creating further confusion\&.
+.sp
+Use of "topic branches" solves these problems\&. The name is pretty self explanatory, with a caveat that comes from the "merge upwards" rule above:
+.PP
+\fBExample\ \&2.\ \&Topic branches\fR
+.sp
+Make a side branch for every topic (feature, bugfix, \&...)\&. Fork it off at the oldest integration branch that you will eventually want to merge it into\&.
+.sp
+Many things can then be done very naturally:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+To get the feature/bugfix into an integration branch, simply merge it\&. If the topic has evolved further in the meantime, merge again\&. (Note that you do not necessarily have to merge it to the oldest integration branch first\&. For example, you can first merge a bugfix to
+\fInext\fR, give it some testing time, and merge to
+\fImaint\fR
+when you know it is stable\&.)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If you find you need new features from the branch
+\fIother\fR
+to continue working on your topic, merge
+\fIother\fR
+to
+\fItopic\fR\&. (However, do not do this "just habitually", see below\&.)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If you find you forked off the wrong branch and want to move it "back in time", use
+\fBgit-rebase\fR(1)\&.
+.RE
+.sp
+Note that the last point clashes with the other two: a topic that has been merged elsewhere should not be rebased\&. See the section on RECOVERING FROM UPSTREAM REBASE in \fBgit-rebase\fR(1)\&.
+.sp
+We should point out that "habitually" (regularly for no real reason) merging an integration branch into your topics \(em and by extension, merging anything upstream into anything downstream on a regular basis \(em is frowned upon:
+.PP
+\fBExample\ \&3.\ \&Merge to downstream only at well\-defined points\fR
+.sp
+Do not merge to downstream except with a good reason: upstream API changes affect your branch; your branch no longer merges to upstream cleanly; etc\&.
+.sp
+Otherwise, the topic that was merged to suddenly contains more than a single (well\-separated) change\&. The many resulting small merges will greatly clutter up history\&. Anyone who later investigates the history of a file will have to find out whether that merge affected the topic in development\&. An upstream might even inadvertently be merged into a "more stable" branch\&. And so on\&.
+.SS "Throw\-away integration"
+.sp
+If you followed the last paragraph, you will now have many small topic branches, and occasionally wonder how they interact\&. Perhaps the result of merging them does not even work? But on the other hand, we want to avoid merging them anywhere "stable" because such merges cannot easily be undone\&.
+.sp
+The solution, of course, is to make a merge that we can undo: merge into a throw\-away branch\&.
+.PP
+\fBExample\ \&4.\ \&Throw\-away integration branches\fR
+.sp
+To test the interaction of several topics, merge them into a throw\-away branch\&. You must never base any work on such a branch!
+.sp
+If you make it (very) clear that this branch is going to be deleted right after the testing, you can even publish this branch, for example to give the testers a chance to work with it, or other developers a chance to see if their in\-progress work will be compatible\&. \fBgit\&.git\fR has such an official throw\-away integration branch called \fIpu\fR\&.
+.SS "Branch management for a release"
+.sp
+Assuming you are using the merge approach discussed above, when you are releasing your project you will need to do some additional branch management work\&.
+.sp
+A feature release is created from the \fImaster\fR branch, since \fImaster\fR tracks the commits that should go into the next feature release\&.
+.sp
+The \fImaster\fR branch is supposed to be a superset of \fImaint\fR\&. If this condition does not hold, then \fImaint\fR contains some commits that are not included on \fImaster\fR\&. The fixes represented by those commits will therefore not be included in your feature release\&.
+.sp
+To verify that \fImaster\fR is indeed a superset of \fImaint\fR, use git log:
+.PP
+\fBExample\ \&5.\ \&Verify \fImaster\fR is a superset of \fImaint\fR\fR
+.sp
+\fBgit log master\&.\&.maint\fR
+.sp
+This command should not list any commits\&. Otherwise, check out \fImaster\fR and merge \fImaint\fR into it\&.
+.sp
+Now you can proceed with the creation of the feature release\&. Apply a tag to the tip of \fImaster\fR indicating the release version:
+.PP
+\fBExample\ \&6.\ \&Release tagging\fR
+.sp
+\fBgit tag \-s \-m "Git X\&.Y\&.Z" vX\&.Y\&.Z master\fR
+.sp
+You need to push the new tag to a public Git server (see "DISTRIBUTED WORKFLOWS" below)\&. This makes the tag available to others tracking your project\&. The push could also trigger a post\-update hook to perform release\-related items such as building release tarballs and preformatted documentation pages\&.
+.sp
+Similarly, for a maintenance release, \fImaint\fR is tracking the commits to be released\&. Therefore, in the steps above simply tag and push \fImaint\fR rather than \fImaster\fR\&.
+.SS "Maintenance branch management after a feature release"
+.sp
+After a feature release, you need to manage your maintenance branches\&.
+.sp
+First, if you wish to continue to release maintenance fixes for the feature release made before the recent one, then you must create another branch to track commits for that previous release\&.
+.sp
+To do this, the current maintenance branch is copied to another branch named with the previous release version number (e\&.g\&. maint\-X\&.Y\&.(Z\-1) where X\&.Y\&.Z is the current release)\&.
+.PP
+\fBExample\ \&7.\ \&Copy maint\fR
+.sp
+\fBgit branch maint\-X\&.Y\&.(Z\-1) maint\fR
+.sp
+The \fImaint\fR branch should now be fast\-forwarded to the newly released code so that maintenance fixes can be tracked for the current release:
+.PP
+\fBExample\ \&8.\ \&Update maint to new release\fR
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit checkout maint\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit merge \-\-ff\-only master\fR
+.RE
+.sp
+If the merge fails because it is not a fast\-forward, then it is possible some fixes on \fImaint\fR were missed in the feature release\&. This will not happen if the content of the branches was verified as described in the previous section\&.
+.SS "Branch management for next and pu after a feature release"
+.sp
+After a feature release, the integration branch \fInext\fR may optionally be rewound and rebuilt from the tip of \fImaster\fR using the surviving topics on \fInext\fR:
+.PP
+\fBExample\ \&9.\ \&Rewind and rebuild next\fR
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit checkout next\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit reset \-\-hard master\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit merge ai/topic_in_next1\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit merge ai/topic_in_next2\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\&...
+.RE
+.sp
+The advantage of doing this is that the history of \fInext\fR will be clean\&. For example, some topics merged into \fInext\fR may have initially looked promising, but were later found to be undesirable or premature\&. In such a case, the topic is reverted out of \fInext\fR but the fact remains in the history that it was once merged and reverted\&. By recreating \fInext\fR, you give another incarnation of such topics a clean slate to retry, and a feature release is a good point in history to do so\&.
+.sp
+If you do this, then you should make a public announcement indicating that \fInext\fR was rewound and rebuilt\&.
+.sp
+The same rewind and rebuild process may be followed for \fIpu\fR\&. A public announcement is not necessary since \fIpu\fR is a throw\-away branch, as described above\&.
+.SH "DISTRIBUTED WORKFLOWS"
+.sp
+After the last section, you should know how to manage topics\&. In general, you will not be the only person working on the project, so you will have to share your work\&.
+.sp
+Roughly speaking, there are two important workflows: merge and patch\&. The important difference is that the merge workflow can propagate full history, including merges, while patches cannot\&. Both workflows can be used in parallel: in \fBgit\&.git\fR, only subsystem maintainers use the merge workflow, while everyone else sends patches\&.
+.sp
+Note that the maintainer(s) may impose restrictions, such as "Signed\-off\-by" requirements, that all commits/patches submitted for inclusion must adhere to\&. Consult your project\(cqs documentation for more information\&.
+.SS "Merge workflow"
+.sp
+The merge workflow works by copying branches between upstream and downstream\&. Upstream can merge contributions into the official history; downstream base their work on the official history\&.
+.sp
+There are three main tools that can be used for this:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit-push\fR(1)
+copies your branches to a remote repository, usually to one that can be read by all involved parties;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit-fetch\fR(1)
+that copies remote branches to your repository; and
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit-pull\fR(1)
+that does fetch and merge in one go\&.
+.RE
+.sp
+Note the last point\&. Do \fInot\fR use \fIgit pull\fR unless you actually want to merge the remote branch\&.
+.sp
+Getting changes out is easy:
+.PP
+\fBExample\ \&10.\ \&Push/pull: Publishing branches/topics\fR
+.sp
+\fBgit push <remote> <branch>\fR and tell everyone where they can fetch from\&.
+.sp
+You will still have to tell people by other means, such as mail\&. (Git provides the \fBgit-request-pull\fR(1) to send preformatted pull requests to upstream maintainers to simplify this task\&.)
+.sp
+If you just want to get the newest copies of the integration branches, staying up to date is easy too:
+.PP
+\fBExample\ \&11.\ \&Push/pull: Staying up to date\fR
+.sp
+Use \fBgit fetch <remote>\fR or \fBgit remote update\fR to stay up to date\&.
+.sp
+Then simply fork your topic branches from the stable remotes as explained earlier\&.
+.sp
+If you are a maintainer and would like to merge other people\(cqs topic branches to the integration branches, they will typically send a request to do so by mail\&. Such a request looks like
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Please pull from
+    <url> <branch>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+In that case, \fIgit pull\fR can do the fetch and merge in one go, as follows\&.
+.PP
+\fBExample\ \&12.\ \&Push/pull: Merging remote topics\fR
+.sp
+\fBgit pull <url> <branch>\fR
+.sp
+Occasionally, the maintainer may get merge conflicts when they try to pull changes from downstream\&. In this case, they can ask downstream to do the merge and resolve the conflicts themselves (perhaps they will know better how to resolve them)\&. It is one of the rare cases where downstream \fIshould\fR merge from upstream\&.
+.SS "Patch workflow"
+.sp
+If you are a contributor that sends changes upstream in the form of emails, you should use topic branches as usual (see above)\&. Then use \fBgit-format-patch\fR(1) to generate the corresponding emails (highly recommended over manually formatting them because it makes the maintainer\(cqs life easier)\&.
+.PP
+\fBExample\ \&13.\ \&format\-patch/am: Publishing branches/topics\fR
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit format\-patch \-M upstream\&.\&.topic\fR
+to turn them into preformatted patch files
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgit send\-email \-\-to=<recipient> <patches>\fR
+.RE
+.sp
+See the \fBgit-format-patch\fR(1) and \fBgit-send-email\fR(1) manpages for further usage notes\&.
+.sp
+If the maintainer tells you that your patch no longer applies to the current upstream, you will have to rebase your topic (you cannot use a merge because you cannot format\-patch merges):
+.PP
+\fBExample\ \&14.\ \&format\-patch/am: Keeping topics up to date\fR
+.sp
+\fBgit pull \-\-rebase <url> <branch>\fR
+.sp
+You can then fix the conflicts during the rebase\&. Presumably you have not published your topic other than by mail, so rebasing it is not a problem\&.
+.sp
+If you receive such a patch series (as maintainer, or perhaps as a reader of the mailing list it was sent to), save the mails to files, create a new topic branch and use \fIgit am\fR to import the commits:
+.PP
+\fBExample\ \&15.\ \&format\-patch/am: Importing patches\fR
+.sp
+\fBgit am < patch\fR
+.sp
+One feature worth pointing out is the three\-way merge, which can help if you get conflicts: \fBgit am \-3\fR will use index information contained in patches to figure out the merge base\&. See \fBgit-am\fR(1) for other options\&.
+.SH "SEE ALSO"
+.sp
+\fBgittutorial\fR(7), \fBgit-push\fR(1), \fBgit-pull\fR(1), \fBgit-merge\fR(1), \fBgit-rebase\fR(1), \fBgit-format-patch\fR(1), \fBgit-send-email\fR(1), \fBgit-am\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

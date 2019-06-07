@@ -1,0 +1,234 @@
+'\" t
+.\"     Title: git-checkout-index
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-CHECKOUT\-INDEX" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-checkout-index \- Copy files from the index to the working tree
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit checkout\-index\fR [\-u] [\-q] [\-a] [\-f] [\-n] [\-\-prefix=<string>]
+                   [\-\-stage=<number>|all]
+                   [\-\-temp]
+                   [\-z] [\-\-stdin]
+                   [\-\-] [<file>\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Will copy all files listed from the index to the working directory (not overwriting existing files)\&.
+.SH "OPTIONS"
+.PP
+\-u, \-\-index
+.RS 4
+update stat information for the checked out entries in the index file\&.
+.RE
+.PP
+\-q, \-\-quiet
+.RS 4
+be quiet if files exist or are not in the index
+.RE
+.PP
+\-f, \-\-force
+.RS 4
+forces overwrite of existing files
+.RE
+.PP
+\-a, \-\-all
+.RS 4
+checks out all files in the index\&. Cannot be used together with explicit filenames\&.
+.RE
+.PP
+\-n, \-\-no\-create
+.RS 4
+Don\(cqt checkout new files, only refresh files already checked out\&.
+.RE
+.PP
+\-\-prefix=<string>
+.RS 4
+When creating files, prepend <string> (usually a directory including a trailing /)
+.RE
+.PP
+\-\-stage=<number>|all
+.RS 4
+Instead of checking out unmerged entries, copy out the files from named stage\&. <number> must be between 1 and 3\&. Note: \-\-stage=all automatically implies \-\-temp\&.
+.RE
+.PP
+\-\-temp
+.RS 4
+Instead of copying the files to the working directory write the content to temporary files\&. The temporary name associations will be written to stdout\&.
+.RE
+.PP
+\-\-stdin
+.RS 4
+Instead of taking list of paths from the command line, read list of paths from the standard input\&. Paths are separated by LF (i\&.e\&. one path per line) by default\&.
+.RE
+.PP
+\-z
+.RS 4
+Only meaningful with
+\fB\-\-stdin\fR; paths are separated with NUL character instead of LF\&.
+.RE
+.PP
+\-\-
+.RS 4
+Do not interpret any more arguments as options\&.
+.RE
+.sp
+The order of the flags used to matter, but not anymore\&.
+.sp
+Just doing \fBgit checkout\-index\fR does nothing\&. You probably meant \fBgit checkout\-index \-a\fR\&. And if you want to force it, you want \fBgit checkout\-index \-f \-a\fR\&.
+.sp
+Intuitiveness is not the goal here\&. Repeatability is\&. The reason for the "no arguments means no work" behavior is that from scripts you are supposed to be able to do:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ find \&. \-name \(aq*\&.h\(aq \-print0 | xargs \-0 git checkout\-index \-f \-\-
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+which will force all existing \fB*\&.h\fR files to be replaced with their cached copies\&. If an empty command line implied "all", then this would force\-refresh everything in the index, which was not the point\&. But since \fIgit checkout\-index\fR accepts \-\-stdin it would be faster to use:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ find \&. \-name \(aq*\&.h\(aq \-print0 | git checkout\-index \-f \-z \-\-stdin
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The \fB\-\-\fR is just a good idea when you know the rest will be filenames; it will prevent problems with a filename of, for example, \fB\-a\fR\&. Using \fB\-\-\fR is probably a good policy in scripts\&.
+.SH "USING \-\-TEMP OR \-\-STAGE=ALL"
+.sp
+When \fB\-\-temp\fR is used (or implied by \fB\-\-stage=all\fR) \fIgit checkout\-index\fR will create a temporary file for each index entry being checked out\&. The index will not be updated with stat information\&. These options can be useful if the caller needs all stages of all unmerged entries so that the unmerged files can be processed by an external merge tool\&.
+.sp
+A listing will be written to stdout providing the association of temporary file names to tracked path names\&. The listing format has two variations:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+tempname TAB path RS
+.sp
+The first format is what gets used when
+\fB\-\-stage\fR
+is omitted or is not
+\fB\-\-stage=all\fR\&. The field tempname is the temporary file name holding the file content and path is the tracked path name in the index\&. Only the requested entries are output\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+stage1temp SP stage2temp SP stage3tmp TAB path RS
+.sp
+The second format is what gets used when
+\fB\-\-stage=all\fR\&. The three stage temporary fields (stage1temp, stage2temp, stage3temp) list the name of the temporary file if there is a stage entry in the index or
+\fB\&.\fR
+if there is no stage entry\&. Paths which only have a stage 0 entry will always be omitted from the output\&.
+.RE
+.sp
+In both formats RS (the record separator) is newline by default but will be the null byte if \-z was passed on the command line\&. The temporary file names are always safe strings; they will never contain directory separators or whitespace characters\&. The path field is always relative to the current directory and the temporary file names are always relative to the top level directory\&.
+.sp
+If the object being copied out to a temporary file is a symbolic link the content of the link will be written to a normal file\&. It is up to the end\-user or the Porcelain to make use of this information\&.
+.SH "EXAMPLES"
+.PP
+To update and refresh only the files already checked out
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout\-index \-n \-f \-a && git update\-index \-\-ignore\-missing \-\-refresh
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+Using \fIgit checkout\-index\fR to "export an entire tree"
+.RS 4
+The prefix ability basically makes it trivial to use
+\fIgit checkout\-index\fR
+as an "export as tree" function\&. Just read the desired tree into the index, and do:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout\-index \-\-prefix=git\-export\-dir/ \-a
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBgit checkout\-index\fR
+will "export" the index into the specified directory\&.
+.sp
+The final "/" is important\&. The exported name is literally just prefixed with the specified string\&. Contrast this with the following example\&.
+.RE
+.PP
+Export files with a prefix
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout\-index \-\-prefix=\&.merged\- Makefile
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This will check out the currently cached copy of
+\fBMakefile\fR
+into the file
+\fB\&.merged\-Makefile\fR\&.
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

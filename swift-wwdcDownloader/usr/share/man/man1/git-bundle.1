@@ -1,0 +1,259 @@
+'\" t
+.\"     Title: git-bundle
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-BUNDLE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-bundle \- Move objects and refs by archive
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit bundle\fR create <file> <git\-rev\-list\-args>
+\fIgit bundle\fR verify <file>
+\fIgit bundle\fR list\-heads <file> [<refname>\&...]
+\fIgit bundle\fR unbundle <file> [<refname>\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Some workflows require that one or more branches of development on one machine be replicated on another machine, but the two machines cannot be directly connected, and therefore the interactive Git protocols (git, ssh, http) cannot be used\&. This command provides support for \fIgit fetch\fR and \fIgit pull\fR to operate by packaging objects and references in an archive at the originating machine, then importing those into another repository using \fIgit fetch\fR and \fIgit pull\fR after moving the archive by some means (e\&.g\&., by sneakernet)\&. As no direct connection between the repositories exists, the user must specify a basis for the bundle that is held by the destination repository: the bundle assumes that all objects in the basis are already in the destination repository\&.
+.SH "OPTIONS"
+.PP
+create <file>
+.RS 4
+Used to create a bundle named
+\fIfile\fR\&. This requires the
+\fIgit\-rev\-list\-args\fR
+arguments to define the bundle contents\&.
+.RE
+.PP
+verify <file>
+.RS 4
+Used to check that a bundle file is valid and will apply cleanly to the current repository\&. This includes checks on the bundle format itself as well as checking that the prerequisite commits exist and are fully linked in the current repository\&.
+\fIgit bundle\fR
+prints a list of missing commits, if any, and exits with a non\-zero status\&.
+.RE
+.PP
+list\-heads <file>
+.RS 4
+Lists the references defined in the bundle\&. If followed by a list of references, only references matching those given are printed out\&.
+.RE
+.PP
+unbundle <file>
+.RS 4
+Passes the objects in the bundle to
+\fIgit index\-pack\fR
+for storage in the repository, then prints the names of all defined references\&. If a list of references is given, only references matching those in the list are printed\&. This command is really plumbing, intended to be called only by
+\fIgit fetch\fR\&.
+.RE
+.PP
+<git\-rev\-list\-args>
+.RS 4
+A list of arguments, acceptable to
+\fIgit rev\-parse\fR
+and
+\fIgit rev\-list\fR
+(and containing a named ref, see SPECIFYING REFERENCES below), that specifies the specific objects and references to transport\&. For example,
+\fBmaster~10\&.\&.master\fR
+causes the current master reference to be packaged along with all objects added since its 10th ancestor commit\&. There is no explicit limit to the number of references and objects that may be packaged\&.
+.RE
+.PP
+[<refname>\&...]
+.RS 4
+A list of references used to limit the references reported as available\&. This is principally of use to
+\fIgit fetch\fR, which expects to receive only those references asked for and not necessarily everything in the pack (in this case,
+\fIgit bundle\fR
+acts like
+\fIgit fetch\-pack\fR)\&.
+.RE
+.SH "SPECIFYING REFERENCES"
+.sp
+\fIgit bundle\fR will only package references that are shown by \fIgit show\-ref\fR: this includes heads, tags, and remote heads\&. References such as \fBmaster~1\fR cannot be packaged, but are perfectly suitable for defining the basis\&. More than one reference may be packaged, and more than one basis can be specified\&. The objects packaged are those not contained in the union of the given bases\&. Each basis can be specified explicitly (e\&.g\&. \fB^master~10\fR), or implicitly (e\&.g\&. \fBmaster~10\&.\&.master\fR, \fB\-\-since=10\&.days\&.ago master\fR)\&.
+.sp
+It is very important that the basis used be held by the destination\&. It is okay to err on the side of caution, causing the bundle file to contain objects already in the destination, as these are ignored when unpacking at the destination\&.
+.SH "EXAMPLE"
+.sp
+Assume you want to transfer the history from a repository R1 on machine A to another repository R2 on machine B\&. For whatever reason, direct connection between A and B is not allowed, but we can move data from A to B via some mechanism (CD, email, etc\&.)\&. We want to update R2 with development made on the branch master in R1\&.
+.sp
+To bootstrap the process, you can first create a bundle that does not have any basis\&. You can use a tag to remember up to what commit you last processed, in order to make it easy to later update the other repository with an incremental bundle:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+machineA$ cd R1
+machineA$ git bundle create file\&.bundle master
+machineA$ git tag \-f lastR2bundle master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Then you transfer file\&.bundle to the target machine B\&. Because this bundle does not require any existing object to be extracted, you can create a new repository on machine B by cloning from it:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+machineB$ git clone \-b master /home/me/tmp/file\&.bundle R2
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+This will define a remote called "origin" in the resulting repository that lets you fetch and pull from the bundle\&. The $GIT_DIR/config file in R2 will have an entry like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[remote "origin"]
+    url = /home/me/tmp/file\&.bundle
+    fetch = refs/heads/*:refs/remotes/origin/*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+To update the resulting mine\&.git repository, you can fetch or pull after replacing the bundle stored at /home/me/tmp/file\&.bundle with incremental updates\&.
+.sp
+After working some more in the original repository, you can create an incremental bundle to update the other repository:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+machineA$ cd R1
+machineA$ git bundle create file\&.bundle lastR2bundle\&.\&.master
+machineA$ git tag \-f lastR2bundle master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+You then transfer the bundle to the other machine to replace /home/me/tmp/file\&.bundle, and pull from it\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+machineB$ cd R2
+machineB$ git pull
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If you know up to what commit the intended recipient repository should have the necessary objects, you can use that knowledge to specify the basis, giving a cut\-off point to limit the revisions and objects that go in the resulting bundle\&. The previous example used the lastR2bundle tag for this purpose, but you can use any other options that you would give to the \fBgit-log\fR(1) command\&. Here are more examples:
+.sp
+You can use a tag that is present in both:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git bundle create mybundle v1\&.0\&.0\&.\&.master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+You can use a basis based on time:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git bundle create mybundle \-\-since=10\&.days master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+You can use the number of commits:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git bundle create mybundle \-10 master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+You can run \fBgit\-bundle verify\fR to see if you can extract from a bundle that was created with a basis:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git bundle verify mybundle
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+This will list what commits you must have in order to extract from the bundle and will error out if you do not have them\&.
+.sp
+A bundle from a recipient repository\(cqs point of view is just like a regular repository which it fetches or pulls from\&. You can, for example, map references when fetching:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git fetch mybundle master:localRef
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+You can also see what references it offers:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git ls\-remote mybundle
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

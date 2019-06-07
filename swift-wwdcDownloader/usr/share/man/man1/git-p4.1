@@ -1,0 +1,915 @@
+'\" t
+.\"     Title: git-p4
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-P4" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-p4 \- Import from and submit to Perforce repositories
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit p4 clone\fR [<sync options>] [<clone options>] <p4 depot path>\&...
+\fIgit p4 sync\fR [<sync options>] [<p4 depot path>\&...]
+\fIgit p4 rebase\fR
+\fIgit p4 submit\fR [<submit options>] [<master branch name>]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This command provides a way to interact with p4 repositories using Git\&.
+.sp
+Create a new Git repository from an existing p4 repository using \fIgit p4 clone\fR, giving it one or more p4 depot paths\&. Incorporate new commits from p4 changes with \fIgit p4 sync\fR\&. The \fIsync\fR command is also used to include new branches from other p4 depot paths\&. Submit Git changes back to p4 using \fIgit p4 submit\fR\&. The command \fIgit p4 rebase\fR does a sync plus rebases the current branch onto the updated p4 remote branch\&.
+.SH "EXAMPLE"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Clone a repository:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 clone //depot/path/project
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Do some work in the newly created Git repository:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ cd project
+$ vi foo\&.h
+$ git commit \-a \-m "edited foo\&.h"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Update the Git repository with recent changes from p4, rebasing your work on top:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 rebase
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Submit your commits back to p4:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 submit
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.SH "COMMANDS"
+.SS "Clone"
+.sp
+Generally, \fIgit p4 clone\fR is used to create a new Git directory from an existing p4 repository:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 clone //depot/path/project
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+This:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Creates an empty Git repository in a subdirectory called
+\fIproject\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Imports the full contents of the head revision from the given p4 depot path into a single commit in the Git branch
+\fIrefs/remotes/p4/master\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+Creates a local branch,
+\fImaster\fR
+from this remote and checks it out\&.
+.RE
+.sp
+To reproduce the entire p4 history in Git, use the \fI@all\fR modifier on the depot path:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 clone //depot/path/project@all
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SS "Sync"
+.sp
+As development continues in the p4 repository, those changes can be included in the Git repository using:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 sync
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+This command finds new changes in p4 and imports them as Git commits\&.
+.sp
+P4 repositories can be added to an existing Git repository using \fIgit p4 sync\fR too:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ mkdir repo\-git
+$ cd repo\-git
+$ git init
+$ git p4 sync //path/in/your/perforce/depot
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+This imports the specified depot into \fIrefs/remotes/p4/master\fR in an existing Git repository\&. The \fB\-\-branch\fR option can be used to specify a different branch to be used for the p4 content\&.
+.sp
+If a Git repository includes branches \fIrefs/remotes/origin/p4\fR, these will be fetched and consulted first during a \fIgit p4 sync\fR\&. Since importing directly from p4 is considerably slower than pulling changes from a Git remote, this can be useful in a multi\-developer environment\&.
+.sp
+If there are multiple branches, doing \fIgit p4 sync\fR will automatically use the "BRANCH DETECTION" algorithm to try to partition new changes into the right branch\&. This can be overridden with the \fB\-\-branch\fR option to specify just a single branch to update\&.
+.SS "Rebase"
+.sp
+A common working pattern is to fetch the latest changes from the p4 depot and merge them with local uncommitted changes\&. Often, the p4 repository is the ultimate location for all code, thus a rebase workflow makes sense\&. This command does \fIgit p4 sync\fR followed by \fIgit rebase\fR to move local commits on top of updated p4 changes\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 rebase
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SS "Submit"
+.sp
+Submitting changes from a Git repository back to the p4 repository requires a separate p4 client workspace\&. This should be specified using the \fBP4CLIENT\fR environment variable or the Git configuration variable \fIgit\-p4\&.client\fR\&. The p4 client must exist, but the client root will be created and populated if it does not already exist\&.
+.sp
+To submit all changes that are in the current Git branch but not in the \fIp4/master\fR branch, use:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 submit
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+To specify a branch other than the current one, use:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 submit topicbranch
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The upstream reference is generally \fIrefs/remotes/p4/master\fR, but can be overridden using the \fB\-\-origin=\fR command\-line option\&.
+.sp
+The p4 changes will be created as the user invoking \fIgit p4 submit\fR\&. The \fB\-\-preserve\-user\fR option will cause ownership to be modified according to the author of the Git commit\&. This option requires admin privileges in p4, which can be granted using \fIp4 protect\fR\&.
+.sp
+To shelve changes instead of submitting, use \fB\-\-shelve\fR and \fB\-\-update\-shelve\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git p4 submit \-\-shelve
+$ git p4 submit \-\-update\-shelve 1234 \-\-update\-shelve 2345
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "OPTIONS"
+.SS "General options"
+.sp
+All commands except clone accept these options\&.
+.PP
+\-\-git\-dir <dir>
+.RS 4
+Set the
+\fBGIT_DIR\fR
+environment variable\&. See
+\fBgit\fR(1)\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Provide more progress information\&.
+.RE
+.SS "Sync options"
+.sp
+These options can be used in the initial \fIclone\fR as well as in subsequent \fIsync\fR operations\&.
+.PP
+\-\-branch <ref>
+.RS 4
+Import changes into <ref> instead of refs/remotes/p4/master\&. If <ref> starts with refs/, it is used as is\&. Otherwise, if it does not start with p4/, that prefix is added\&.
+.sp
+By default a <ref> not starting with refs/ is treated as the name of a remote\-tracking branch (under refs/remotes/)\&. This behavior can be modified using the \-\-import\-local option\&.
+.sp
+The default <ref> is "master"\&.
+.sp
+This example imports a new remote "p4/proj2" into an existing Git repository:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    $ git init
+    $ git p4 sync \-\-branch=refs/remotes/p4/proj2 //depot/proj2
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+\-\-detect\-branches
+.RS 4
+Use the branch detection algorithm to find new paths in p4\&. It is documented below in "BRANCH DETECTION"\&.
+.RE
+.PP
+\-\-changesfile <file>
+.RS 4
+Import exactly the p4 change numbers listed in
+\fIfile\fR, one per line\&. Normally,
+\fIgit p4\fR
+inspects the current p4 repository state and detects the changes it should import\&.
+.RE
+.PP
+\-\-silent
+.RS 4
+Do not print any progress information\&.
+.RE
+.PP
+\-\-detect\-labels
+.RS 4
+Query p4 for labels associated with the depot paths, and add them as tags in Git\&. Limited usefulness as only imports labels associated with new changelists\&. Deprecated\&.
+.RE
+.PP
+\-\-import\-labels
+.RS 4
+Import labels from p4 into Git\&.
+.RE
+.PP
+\-\-import\-local
+.RS 4
+By default, p4 branches are stored in
+\fIrefs/remotes/p4/\fR, where they will be treated as remote\-tracking branches by
+\fBgit-branch\fR(1)
+and other commands\&. This option instead puts p4 branches in
+\fIrefs/heads/p4/\fR\&. Note that future sync operations must specify
+\fB\-\-import\-local\fR
+as well so that they can find the p4 branches in refs/heads\&.
+.RE
+.PP
+\-\-max\-changes <n>
+.RS 4
+Import at most
+\fIn\fR
+changes, rather than the entire range of changes included in the given revision specifier\&. A typical usage would be use
+\fI@all\fR
+as the revision specifier, but then to use
+\fI\-\-max\-changes 1000\fR
+to import only the last 1000 revisions rather than the entire revision history\&.
+.RE
+.PP
+\-\-changes\-block\-size <n>
+.RS 4
+The internal block size to use when converting a revision specifier such as
+\fI@all\fR
+into a list of specific change numbers\&. Instead of using a single call to
+\fIp4 changes\fR
+to find the full list of changes for the conversion, there are a sequence of calls to
+\fIp4 changes \-m\fR, each of which requests one block of changes of the given size\&. The default block size is 500, which should usually be suitable\&.
+.RE
+.PP
+\-\-keep\-path
+.RS 4
+The mapping of file names from the p4 depot path to Git, by default, involves removing the entire depot path\&. With this option, the full p4 depot path is retained in Git\&. For example, path
+\fI//depot/main/foo/bar\&.c\fR, when imported from
+\fI//depot/main/\fR, becomes
+\fIfoo/bar\&.c\fR\&. With
+\fB\-\-keep\-path\fR, the Git path is instead
+\fIdepot/main/foo/bar\&.c\fR\&.
+.RE
+.PP
+\-\-use\-client\-spec
+.RS 4
+Use a client spec to find the list of interesting files in p4\&. See the "CLIENT SPEC" section below\&.
+.RE
+.PP
+\-/ <path>
+.RS 4
+Exclude selected depot paths when cloning or syncing\&.
+.RE
+.SS "Clone options"
+.sp
+These options can be used in an initial \fIclone\fR, along with the \fIsync\fR options described above\&.
+.PP
+\-\-destination <directory>
+.RS 4
+Where to create the Git repository\&. If not provided, the last component in the p4 depot path is used to create a new directory\&.
+.RE
+.PP
+\-\-bare
+.RS 4
+Perform a bare clone\&. See
+\fBgit-clone\fR(1)\&.
+.RE
+.SS "Submit options"
+.sp
+These options can be used to modify \fIgit p4 submit\fR behavior\&.
+.PP
+\-\-origin <commit>
+.RS 4
+Upstream location from which commits are identified to submit to p4\&. By default, this is the most recent p4 commit reachable from
+\fBHEAD\fR\&.
+.RE
+.PP
+\-M
+.RS 4
+Detect renames\&. See
+\fBgit-diff\fR(1)\&. Renames will be represented in p4 using explicit
+\fImove\fR
+operations\&. There is no corresponding option to detect copies, but there are variables for both moves and copies\&.
+.RE
+.PP
+\-\-preserve\-user
+.RS 4
+Re\-author p4 changes before submitting to p4\&. This option requires p4 admin privileges\&.
+.RE
+.PP
+\-\-export\-labels
+.RS 4
+Export tags from Git as p4 labels\&. Tags found in Git are applied to the perforce working directory\&.
+.RE
+.PP
+\-n, \-\-dry\-run
+.RS 4
+Show just what commits would be submitted to p4; do not change state in Git or p4\&.
+.RE
+.PP
+\-\-prepare\-p4\-only
+.RS 4
+Apply a commit to the p4 workspace, opening, adding and deleting files in p4 as for a normal submit operation\&. Do not issue the final "p4 submit", but instead print a message about how to submit manually or revert\&. This option always stops after the first (oldest) commit\&. Git tags are not exported to p4\&.
+.RE
+.PP
+\-\-shelve
+.RS 4
+Instead of submitting create a series of shelved changelists\&. After creating each shelve, the relevant files are reverted/deleted\&. If you have multiple commits pending multiple shelves will be created\&.
+.RE
+.PP
+\-\-update\-shelve CHANGELIST
+.RS 4
+Update an existing shelved changelist with this commit\&. Implies \-\-shelve\&. Repeat for multiple shelved changelists\&.
+.RE
+.PP
+\-\-conflict=(ask|skip|quit)
+.RS 4
+Conflicts can occur when applying a commit to p4\&. When this happens, the default behavior ("ask") is to prompt whether to skip this commit and continue, or quit\&. This option can be used to bypass the prompt, causing conflicting commits to be automatically skipped, or to quit trying to apply commits, without prompting\&.
+.RE
+.PP
+\-\-branch <branch>
+.RS 4
+After submitting, sync this named branch instead of the default p4/master\&. See the "Sync options" section above for more information\&.
+.RE
+.SS "Rebase options"
+.sp
+These options can be used to modify \fIgit p4 rebase\fR behavior\&.
+.PP
+\-\-import\-labels
+.RS 4
+Import p4 labels\&.
+.RE
+.SH "DEPOT PATH SYNTAX"
+.sp
+The p4 depot path argument to \fIgit p4 sync\fR and \fIgit p4 clone\fR can be one or more space\-separated p4 depot paths, with an optional p4 revision specifier on the end:
+.PP
+"//depot/my/project"
+.RS 4
+Import one commit with all files in the
+\fI#head\fR
+change under that tree\&.
+.RE
+.PP
+"//depot/my/project@all"
+.RS 4
+Import one commit for each change in the history of that depot path\&.
+.RE
+.PP
+"//depot/my/project@1,6"
+.RS 4
+Import only changes 1 through 6\&.
+.RE
+.PP
+"//depot/proj1@all //depot/proj2@all"
+.RS 4
+Import all changes from both named depot paths into a single repository\&. Only files below these directories are included\&. There is not a subdirectory in Git for each "proj1" and "proj2"\&. You must use the
+\fB\-\-destination\fR
+option when specifying more than one depot path\&. The revision specifier must be specified identically on each depot path\&. If there are files in the depot paths with the same name, the path with the most recently updated version of the file is the one that appears in Git\&.
+.RE
+.sp
+See \fIp4 help revisions\fR for the full syntax of p4 revision specifiers\&.
+.SH "CLIENT SPEC"
+.sp
+The p4 client specification is maintained with the \fIp4 client\fR command and contains among other fields, a View that specifies how the depot is mapped into the client repository\&. The \fIclone\fR and \fIsync\fR commands can consult the client spec when given the \fB\-\-use\-client\-spec\fR option or when the useClientSpec variable is true\&. After \fIgit p4 clone\fR, the useClientSpec variable is automatically set in the repository configuration file\&. This allows future \fIgit p4 submit\fR commands to work properly; the submit command looks only at the variable and does not have a command\-line option\&.
+.sp
+The full syntax for a p4 view is documented in \fIp4 help views\fR\&. \fIgit p4\fR knows only a subset of the view syntax\&. It understands multi\-line mappings, overlays with \fI+\fR, exclusions with \fI\-\fR and double\-quotes around whitespace\&. Of the possible wildcards, \fIgit p4\fR only handles \fI\&...\fR, and only when it is at the end of the path\&. \fIgit p4\fR will complain if it encounters an unhandled wildcard\&.
+.sp
+Bugs in the implementation of overlap mappings exist\&. If multiple depot paths map through overlays to the same location in the repository, \fIgit p4\fR can choose the wrong one\&. This is hard to solve without dedicating a client spec just for \fIgit p4\fR\&.
+.sp
+The name of the client can be given to \fIgit p4\fR in multiple ways\&. The variable \fIgit\-p4\&.client\fR takes precedence if it exists\&. Otherwise, normal p4 mechanisms of determining the client are used: environment variable P4CLIENT, a file referenced by P4CONFIG, or the local host name\&.
+.SH "BRANCH DETECTION"
+.sp
+P4 does not have the same concept of a branch as Git\&. Instead, p4 organizes its content as a directory tree, where by convention different logical branches are in different locations in the tree\&. The \fIp4 branch\fR command is used to maintain mappings between different areas in the tree, and indicate related content\&. \fIgit p4\fR can use these mappings to determine branch relationships\&.
+.sp
+If you have a repository where all the branches of interest exist as subdirectories of a single depot path, you can use \fB\-\-detect\-branches\fR when cloning or syncing to have \fIgit p4\fR automatically find subdirectories in p4, and to generate these as branches in Git\&.
+.sp
+For example, if the P4 repository structure is:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+//depot/main/\&.\&.\&.
+//depot/branch1/\&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+And "p4 branch \-o branch1" shows a View line that looks like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+//depot/main/\&.\&.\&. //depot/branch1/\&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Then this \fIgit p4 clone\fR command:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git p4 clone \-\-detect\-branches //depot@all
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+produces a separate branch in \fIrefs/remotes/p4/\fR for //depot/main, called \fImaster\fR, and one for //depot/branch1 called \fIdepot/branch1\fR\&.
+.sp
+However, it is not necessary to create branches in p4 to be able to use them like branches\&. Because it is difficult to infer branch relationships automatically, a Git configuration setting \fIgit\-p4\&.branchList\fR can be used to explicitly identify branch relationships\&. It is a list of "source:destination" pairs, like a simple p4 branch specification, where the "source" and "destination" are the path elements in the p4 repository\&. The example above relied on the presence of the p4 branch\&. Without p4 branches, the same result will occur with:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git init depot
+cd depot
+git config git\-p4\&.branchList main:branch1
+git p4 clone \-\-detect\-branches //depot@all \&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "PERFORMANCE"
+.sp
+The fast\-import mechanism used by \fIgit p4\fR creates one pack file for each invocation of \fIgit p4 sync\fR\&. Normally, Git garbage compression (\fBgit-gc\fR(1)) automatically compresses these to fewer pack files, but explicit invocation of \fIgit repack \-adf\fR may improve performance\&.
+.SH "CONFIGURATION VARIABLES"
+.sp
+The following config settings can be used to modify \fIgit p4\fR behavior\&. They all are in the \fIgit\-p4\fR section\&.
+.SS "General variables"
+.PP
+git\-p4\&.user
+.RS 4
+User specified as an option to all p4 commands, with
+\fI\-u <user>\fR\&. The environment variable
+\fIP4USER\fR
+can be used instead\&.
+.RE
+.PP
+git\-p4\&.password
+.RS 4
+Password specified as an option to all p4 commands, with
+\fI\-P <password>\fR\&. The environment variable
+\fIP4PASS\fR
+can be used instead\&.
+.RE
+.PP
+git\-p4\&.port
+.RS 4
+Port specified as an option to all p4 commands, with
+\fI\-p <port>\fR\&. The environment variable
+\fIP4PORT\fR
+can be used instead\&.
+.RE
+.PP
+git\-p4\&.host
+.RS 4
+Host specified as an option to all p4 commands, with
+\fI\-h <host>\fR\&. The environment variable
+\fIP4HOST\fR
+can be used instead\&.
+.RE
+.PP
+git\-p4\&.client
+.RS 4
+Client specified as an option to all p4 commands, with
+\fI\-c <client>\fR, including the client spec\&.
+.RE
+.PP
+git\-p4\&.retries
+.RS 4
+Specifies the number of times to retry a p4 command (notably,
+\fIp4 sync\fR) if the network times out\&. The default value is 3\&. Set the value to 0 to disable retries or if your p4 version does not support retries (pre 2012\&.2)\&.
+.RE
+.SS "Clone and sync variables"
+.PP
+git\-p4\&.syncFromOrigin
+.RS 4
+Because importing commits from other Git repositories is much faster than importing them from p4, a mechanism exists to find p4 changes first in Git remotes\&. If branches exist under
+\fIrefs/remote/origin/p4\fR, those will be fetched and used when syncing from p4\&. This variable can be set to
+\fIfalse\fR
+to disable this behavior\&.
+.RE
+.PP
+git\-p4\&.branchUser
+.RS 4
+One phase in branch detection involves looking at p4 branches to find new ones to import\&. By default, all branches are inspected\&. This option limits the search to just those owned by the single user named in the variable\&.
+.RE
+.PP
+git\-p4\&.branchList
+.RS 4
+List of branches to be imported when branch detection is enabled\&. Each entry should be a pair of branch names separated by a colon (:)\&. This example declares that both branchA and branchB were created from main:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git config       git\-p4\&.branchList main:branchA
+git config \-\-add git\-p4\&.branchList main:branchB
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+git\-p4\&.ignoredP4Labels
+.RS 4
+List of p4 labels to ignore\&. This is built automatically as unimportable labels are discovered\&.
+.RE
+.PP
+git\-p4\&.importLabels
+.RS 4
+Import p4 labels into git, as per \-\-import\-labels\&.
+.RE
+.PP
+git\-p4\&.labelImportRegexp
+.RS 4
+Only p4 labels matching this regular expression will be imported\&. The default value is
+\fI[a\-zA\-Z0\-9_\e\-\&.]+$\fR\&.
+.RE
+.PP
+git\-p4\&.useClientSpec
+.RS 4
+Specify that the p4 client spec should be used to identify p4 depot paths of interest\&. This is equivalent to specifying the option
+\fB\-\-use\-client\-spec\fR\&. See the "CLIENT SPEC" section above\&. This variable is a boolean, not the name of a p4 client\&.
+.RE
+.PP
+git\-p4\&.pathEncoding
+.RS 4
+Perforce keeps the encoding of a path as given by the originating OS\&. Git expects paths encoded as UTF\-8\&. Use this config to tell git\-p4 what encoding Perforce had used for the paths\&. This encoding is used to transcode the paths to UTF\-8\&. As an example, Perforce on Windows often uses "cp1252" to encode path names\&.
+.RE
+.PP
+git\-p4\&.largeFileSystem
+.RS 4
+Specify the system that is used for large (binary) files\&. Please note that large file systems do not support the
+\fIgit p4 submit\fR
+command\&. Only Git LFS is implemented right now (see
+\m[blue]\fBhttps://git\-lfs\&.github\&.com/\fR\m[]
+for more information)\&. Download and install the Git LFS command line extension to use this option and configure it like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git config       git\-p4\&.largeFileSystem GitLFS
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+git\-p4\&.largeFileExtensions
+.RS 4
+All files matching a file extension in the list will be processed by the large file system\&. Do not prefix the extensions with
+\fI\&.\fR\&.
+.RE
+.PP
+git\-p4\&.largeFileThreshold
+.RS 4
+All files with an uncompressed size exceeding the threshold will be processed by the large file system\&. By default the threshold is defined in bytes\&. Add the suffix k, m, or g to change the unit\&.
+.RE
+.PP
+git\-p4\&.largeFileCompressedThreshold
+.RS 4
+All files with a compressed size exceeding the threshold will be processed by the large file system\&. This option might slow down your clone/sync process\&. By default the threshold is defined in bytes\&. Add the suffix k, m, or g to change the unit\&.
+.RE
+.PP
+git\-p4\&.largeFilePush
+.RS 4
+Boolean variable which defines if large files are automatically pushed to a server\&.
+.RE
+.PP
+git\-p4\&.keepEmptyCommits
+.RS 4
+A changelist that contains only excluded files will be imported as an empty commit if this boolean option is set to true\&.
+.RE
+.PP
+git\-p4\&.mapUser
+.RS 4
+Map a P4 user to a name and email address in Git\&. Use a string with the following format to create a mapping:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git config \-\-add git\-p4\&.mapUser "p4user = First Last <mail@address\&.com>"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+A mapping will override any user information from P4\&. Mappings for multiple P4 user can be defined\&.
+.RE
+.SS "Submit variables"
+.PP
+git\-p4\&.detectRenames
+.RS 4
+Detect renames\&. See
+\fBgit-diff\fR(1)\&. This can be true, false, or a score as expected by
+\fIgit diff \-M\fR\&.
+.RE
+.PP
+git\-p4\&.detectCopies
+.RS 4
+Detect copies\&. See
+\fBgit-diff\fR(1)\&. This can be true, false, or a score as expected by
+\fIgit diff \-C\fR\&.
+.RE
+.PP
+git\-p4\&.detectCopiesHarder
+.RS 4
+Detect copies harder\&. See
+\fBgit-diff\fR(1)\&. A boolean\&.
+.RE
+.PP
+git\-p4\&.preserveUser
+.RS 4
+On submit, re\-author changes to reflect the Git author, regardless of who invokes
+\fIgit p4 submit\fR\&.
+.RE
+.PP
+git\-p4\&.allowMissingP4Users
+.RS 4
+When
+\fIpreserveUser\fR
+is true,
+\fIgit p4\fR
+normally dies if it cannot find an author in the p4 user map\&. This setting submits the change regardless\&.
+.RE
+.PP
+git\-p4\&.skipSubmitEdit
+.RS 4
+The submit process invokes the editor before each p4 change is submitted\&. If this setting is true, though, the editing step is skipped\&.
+.RE
+.PP
+git\-p4\&.skipSubmitEditCheck
+.RS 4
+After editing the p4 change message,
+\fIgit p4\fR
+makes sure that the description really was changed by looking at the file modification time\&. This option disables that test\&.
+.RE
+.PP
+git\-p4\&.allowSubmit
+.RS 4
+By default, any branch can be used as the source for a
+\fIgit p4 submit\fR
+operation\&. This configuration variable, if set, permits only the named branches to be used as submit sources\&. Branch names must be the short names (no "refs/heads/"), and should be separated by commas (","), with no spaces\&.
+.RE
+.PP
+git\-p4\&.skipUserNameCheck
+.RS 4
+If the user running
+\fIgit p4 submit\fR
+does not exist in the p4 user map,
+\fIgit p4\fR
+exits\&. This option can be used to force submission regardless\&.
+.RE
+.PP
+git\-p4\&.attemptRCSCleanup
+.RS 4
+If enabled,
+\fIgit p4 submit\fR
+will attempt to cleanup RCS keywords ($Header$, etc)\&. These would otherwise cause merge conflicts and prevent the submit going ahead\&. This option should be considered experimental at present\&.
+.RE
+.PP
+git\-p4\&.exportLabels
+.RS 4
+Export Git tags to p4 labels, as per \-\-export\-labels\&.
+.RE
+.PP
+git\-p4\&.labelExportRegexp
+.RS 4
+Only p4 labels matching this regular expression will be exported\&. The default value is
+\fI[a\-zA\-Z0\-9_\e\-\&.]+$\fR\&.
+.RE
+.PP
+git\-p4\&.conflict
+.RS 4
+Specify submit behavior when a conflict with p4 is found, as per \-\-conflict\&. The default behavior is
+\fIask\fR\&.
+.RE
+.SH "IMPLEMENTATION DETAILS"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Changesets from p4 are imported using Git fast\-import\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Cloning or syncing does not require a p4 client; file contents are collected using
+\fIp4 print\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Submitting requires a p4 client, which is not in the same location as the Git repository\&. Patches are applied, one at a time, to this p4 client and submitted from there\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Each commit imported by
+\fIgit p4\fR
+has a line at the end of the log message indicating the p4 depot location and change number\&. This line is used by later
+\fIgit p4 sync\fR
+operations to know which p4 changes are new\&.
+.RE

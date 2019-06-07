@@ -1,0 +1,137 @@
+.Dd May 15, 2018
+.Dt STAPLER 1
+.Os
+.Sh NAME
+.Nm stapler
+.Nd Attach and validate tickets for notarized executables
+.Sh SYNOPSIS
+.Nm
+.Ar staple
+.Op Fl q
+.Op Fl v
+.Ar path
+.Nm
+.Ar validate
+.Op Fl q
+.Op Fl v
+.Ar path
+.Sh DESCRIPTION
+The
+.Nm
+utility attaches tickets for notarized executables to app bundles, disk images, and packages.
+.Pp
+Developer ID requires apps to be notarized before distribution. A ticket contains a list of the code signatures for executables within a
+.Ar supported file format.
+The
+.Nm
+utility downloads and attaches (staples) a ticket to these files, enabling Gatekeeper to verify that executables they contain have been properly notarized.
+.Pp
+Stapling is performed automatically by Xcode as part of the Developer ID distribution workflow for notarized apps. The
+.Nm
+utility must be applied separately to a
+.Ar supported file format
+that was built or packaged with command-line tools, before distributing it. This enables Gatekeeper to verify the ticket offline.
+.Pp
+Stapling does not invalidate the code signature and must be run after an executable or archive has been code-signed and notarized with Developer ID. Code-signing a
+.Ar supported file format
+invalidates any stapled tickets, so
+.Nm
+.Ar staple
+must be run again if this occurs.
+.Pp
+.Nm
+requires internet access to retrieve tickets when stapling or validating.
+.Pp
+.Sh SUPPORTED FILE FORMATS
+.Nm
+works only with UDIF disk images, signed "flat" installer packages, and certain code-signed executable bundles such as ".app". Passing an unsigned "flat" installer package or an unsigned executable bundle in
+.Ar path
+to
+.Nm
+is considered an error.
+.Pp
+.Sh OPTIONS
+The options are as follows:
+.Bl -tag -width -indent
+.It Sy staple
+Retrieves a ticket and attaches it to the 
+.Ar supported file format
+at 
+.Ar path.
+The executable must have completed the notarization process.
+.It Sy validate
+Validates a stapled ticket. This includes verifying the contents and comparing it to the latest ticket retrieved from the ticketing service.
+.It Fl q, -quiet
+When validating or attaching tickets,
+.Nm
+will only return the exit code.
+.Fl -verbose
+overrides this option.
+.It Fl v, -verbose
+Sets the output of
+.Nm
+to include additional diagnostic output.
+Without the verbose option, no output is produced upon success.
+.El
+.Pp
+.Sh EXAMPLES
+.Bl -tag -width -indent
+.It Li "stapler staple Example.app"
+Retrieve and staple a ticket to Xcode.app.
+.It Li "stapler validate -v SampleInstaller.pkg"
+Validate the ticket stapled to a package with verbose output.
+.El
+.Sh DIAGNOSTICS
+.Nm
+returns 0 on successful stapling or validation.
+If an error occurs, it returns one of the non-zero codes defined in
+.Xr sysexits 3 .
+.Nm
+exits upon encountering the first error. It may exit with codes other than those listed below in less common scenarios.
+.Bl -tag -width Er
+.It Bq Er EX_USAGE
+Options appear malformed or are missing.
+.It Bq Er EX_NOINPUT
+.Ar path
+cannot be found, is not code-signed, or is not of a supported file format, or, if the
+.Sy validate
+option is passed, the existing ticket is missing or invalid.
+.It Bq Er EX_DATAERR
+The ticket data is invalid.
+.It Bq Er EX_NOPERM
+The ticket has been revoked by the ticketing service.
+.It Bq Er EX_NOHOST
+The 
+.Ar path
+has not been previously notarized or the ticketing service returns an unexpected response.
+.It Bq Er EX_CANTCREAT
+The ticket has been retrieved from the ticketing service and was properly validated but the ticket could not be written out to disk.
+.El
+.Pp
+.Sh SEE ALSO
+.Pp
+.Xr codesign 1 ,
+.Xr spctl 8 ,
+.Xr syspolicyd 8 
+.Sh HISTORY
+The
+.Nm
+command first appeared in macOS 10.14.
+.Sh BUGS
+.Nm
+can only act on one
+.Ar path
+per invocation. If multiple paths are specified,
+.Nm
+will only process the last
+.Ar path
+specified.
+.Pp
+The folder containing
+.Ar path
+must be writable.
+.Pp
+If an executable bundle contains a symlink at Contents/CodeResources, it must be manually deleted before
+.Sy staple
+will function.
+.Pp

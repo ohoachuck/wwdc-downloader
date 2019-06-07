@@ -1,0 +1,164 @@
+'\" t
+.\"     Title: git-http-push
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-HTTP\-PUSH" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-http-push \- Push objects over HTTP/DAV to another repository
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit http\-push\fR [\-\-all] [\-\-dry\-run] [\-\-force] [\-\-verbose] <url> <ref> [<ref>\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Sends missing objects to remote repository, and updates the remote branch\&.
+.sp
+\fBNOTE\fR: This command is temporarily disabled if your libcurl is older than 7\&.16, as the combination has been reported not to work and sometimes corrupts repository\&.
+.SH "OPTIONS"
+.PP
+\-\-all
+.RS 4
+Do not assume that the remote repository is complete in its current state, and verify all objects in the entire local ref\(cqs history exist in the remote repository\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Usually, the command refuses to update a remote ref that is not an ancestor of the local ref used to overwrite it\&. This flag disables the check\&. What this means is that the remote repository can lose commits; use it with care\&.
+.RE
+.PP
+\-\-dry\-run
+.RS 4
+Do everything except actually send the updates\&.
+.RE
+.PP
+\-\-verbose
+.RS 4
+Report the list of objects being walked locally and the list of objects successfully sent to the remote repository\&.
+.RE
+.PP
+\-d, \-D
+.RS 4
+Remove <ref> from remote repository\&. The specified branch cannot be the remote HEAD\&. If \-d is specified the following other conditions must also be met:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Remote HEAD must resolve to an object that exists locally
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Specified branch resolves to an object that exists locally
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Specified branch is an ancestor of the remote HEAD
+.RE
+.RE
+.PP
+<ref>\&...
+.RS 4
+The remote refs to update\&.
+.RE
+.SH "SPECIFYING THE REFS"
+.sp
+A \fI<ref>\fR specification can be either a single pattern, or a pair of such patterns separated by a colon ":" (this means that a ref name cannot have a colon in it)\&. A single pattern \fI<name>\fR is just a shorthand for \fI<name>:<name>\fR\&.
+.sp
+Each pattern pair consists of the source side (before the colon) and the destination side (after the colon)\&. The ref to be pushed is determined by finding a match that matches the source side, and where it is pushed is determined by using the destination side\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+It is an error if <src> does not match exactly one of the local refs\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If <dst> does not match any remote ref, either
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+it has to start with "refs/"; <dst> is used as the destination literally in this case\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+<src> == <dst> and the ref that matched the <src> must not exist in the set of remote refs; the ref matched <src> locally is used as the name of the destination\&.
+.RE
+.RE
+.sp
+Without \(oq\-\-force`, the <src> ref is stored at the remote only if <dst> does not exist, or <dst> is a proper subset (i\&.e\&. an ancestor) of <src>\&. This check, known as "fast\-forward check", is performed in order to avoid accidentally overwriting the remote ref and lose other peoples\(cq commits from there\&.
+.sp
+With \fB\-\-force\fR, the fast\-forward check is disabled for all refs\&.
+.sp
+Optionally, a <ref> parameter can be prefixed with a plus \fI+\fR sign to disable the fast\-forward check only on that ref\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

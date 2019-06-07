@@ -1,0 +1,326 @@
+'\" t
+.\"     Title: git-am
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-AM" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-am \- Apply a series of patches from a mailbox
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit am\fR [\-\-signoff] [\-\-keep] [\-\-[no\-]keep\-cr] [\-\-[no\-]utf8]
+         [\-\-[no\-]3way] [\-\-interactive] [\-\-committer\-date\-is\-author\-date]
+         [\-\-ignore\-date] [\-\-ignore\-space\-change | \-\-ignore\-whitespace]
+         [\-\-whitespace=<option>] [\-C<n>] [\-p<n>] [\-\-directory=<dir>]
+         [\-\-exclude=<path>] [\-\-include=<path>] [\-\-reject] [\-q | \-\-quiet]
+         [\-\-[no\-]scissors] [\-S[<keyid>]] [\-\-patch\-format=<format>]
+         [(<mbox> | <Maildir>)\&...]
+\fIgit am\fR (\-\-continue | \-\-skip | \-\-abort | \-\-quit | \-\-show\-current\-patch)
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Splits mail messages in a mailbox into commit log message, authorship information and patches, and applies them to the current branch\&.
+.SH "OPTIONS"
+.PP
+(<mbox>|<Maildir>)\&...
+.RS 4
+The list of mailbox files to read patches from\&. If you do not supply this argument, the command reads from the standard input\&. If you supply directories, they will be treated as Maildirs\&.
+.RE
+.PP
+\-s, \-\-signoff
+.RS 4
+Add a
+\fBSigned\-off\-by:\fR
+line to the commit message, using the committer identity of yourself\&. See the signoff option in
+\fBgit-commit\fR(1)
+for more information\&.
+.RE
+.PP
+\-k, \-\-keep
+.RS 4
+Pass
+\fB\-k\fR
+flag to
+\fIgit mailinfo\fR
+(see
+\fBgit-mailinfo\fR(1))\&.
+.RE
+.PP
+\-\-keep\-non\-patch
+.RS 4
+Pass
+\fB\-b\fR
+flag to
+\fIgit mailinfo\fR
+(see
+\fBgit-mailinfo\fR(1))\&.
+.RE
+.PP
+\-\-[no\-]keep\-cr
+.RS 4
+With
+\fB\-\-keep\-cr\fR, call
+\fIgit mailsplit\fR
+(see
+\fBgit-mailsplit\fR(1)) with the same option, to prevent it from stripping CR at the end of lines\&.
+\fBam\&.keepcr\fR
+configuration variable can be used to specify the default behaviour\&.
+\fB\-\-no\-keep\-cr\fR
+is useful to override
+\fBam\&.keepcr\fR\&.
+.RE
+.PP
+\-c, \-\-scissors
+.RS 4
+Remove everything in body before a scissors line (see
+\fBgit-mailinfo\fR(1))\&. Can be activated by default using the
+\fBmailinfo\&.scissors\fR
+configuration variable\&.
+.RE
+.PP
+\-\-no\-scissors
+.RS 4
+Ignore scissors lines (see
+\fBgit-mailinfo\fR(1))\&.
+.RE
+.PP
+\-m, \-\-message\-id
+.RS 4
+Pass the
+\fB\-m\fR
+flag to
+\fIgit mailinfo\fR
+(see
+\fBgit-mailinfo\fR(1)), so that the Message\-ID header is added to the commit message\&. The
+\fBam\&.messageid\fR
+configuration variable can be used to specify the default behaviour\&.
+.RE
+.PP
+\-\-no\-message\-id
+.RS 4
+Do not add the Message\-ID header to the commit message\&.
+\fBno\-message\-id\fR
+is useful to override
+\fBam\&.messageid\fR\&.
+.RE
+.PP
+\-q, \-\-quiet
+.RS 4
+Be quiet\&. Only print error messages\&.
+.RE
+.PP
+\-u, \-\-utf8
+.RS 4
+Pass
+\fB\-u\fR
+flag to
+\fIgit mailinfo\fR
+(see
+\fBgit-mailinfo\fR(1))\&. The proposed commit log message taken from the e\-mail is re\-coded into UTF\-8 encoding (configuration variable
+\fBi18n\&.commitencoding\fR
+can be used to specify project\(cqs preferred encoding if it is not UTF\-8)\&.
+.sp
+This was optional in prior versions of git, but now it is the default\&. You can use
+\fB\-\-no\-utf8\fR
+to override this\&.
+.RE
+.PP
+\-\-no\-utf8
+.RS 4
+Pass
+\fB\-n\fR
+flag to
+\fIgit mailinfo\fR
+(see
+\fBgit-mailinfo\fR(1))\&.
+.RE
+.PP
+\-3, \-\-3way, \-\-no\-3way
+.RS 4
+When the patch does not apply cleanly, fall back on 3\-way merge if the patch records the identity of blobs it is supposed to apply to and we have those blobs available locally\&.
+\fB\-\-no\-3way\fR
+can be used to override am\&.threeWay configuration variable\&. For more information, see am\&.threeWay in
+\fBgit-config\fR(1)\&.
+.RE
+.PP
+\-\-ignore\-space\-change, \-\-ignore\-whitespace, \-\-whitespace=<option>, \-C<n>, \-p<n>, \-\-directory=<dir>, \-\-exclude=<path>, \-\-include=<path>, \-\-reject
+.RS 4
+These flags are passed to the
+\fIgit apply\fR
+(see
+\fBgit-apply\fR(1)) program that applies the patch\&.
+.RE
+.PP
+\-\-patch\-format
+.RS 4
+By default the command will try to detect the patch format automatically\&. This option allows the user to bypass the automatic detection and specify the patch format that the patch(es) should be interpreted as\&. Valid formats are mbox, mboxrd, stgit, stgit\-series and hg\&.
+.RE
+.PP
+\-i, \-\-interactive
+.RS 4
+Run interactively\&.
+.RE
+.PP
+\-\-committer\-date\-is\-author\-date
+.RS 4
+By default the command records the date from the e\-mail message as the commit author date, and uses the time of commit creation as the committer date\&. This allows the user to lie about the committer date by using the same value as the author date\&.
+.RE
+.PP
+\-\-ignore\-date
+.RS 4
+By default the command records the date from the e\-mail message as the commit author date, and uses the time of commit creation as the committer date\&. This allows the user to lie about the author date by using the same value as the committer date\&.
+.RE
+.PP
+\-\-skip
+.RS 4
+Skip the current patch\&. This is only meaningful when restarting an aborted patch\&.
+.RE
+.PP
+\-S[<keyid>], \-\-gpg\-sign[=<keyid>]
+.RS 4
+GPG\-sign commits\&. The
+\fBkeyid\fR
+argument is optional and defaults to the committer identity; if specified, it must be stuck to the option without a space\&.
+.RE
+.PP
+\-\-continue, \-r, \-\-resolved
+.RS 4
+After a patch failure (e\&.g\&. attempting to apply conflicting patch), the user has applied it by hand and the index file stores the result of the application\&. Make a commit using the authorship and commit log extracted from the e\-mail message and the current index file, and continue\&.
+.RE
+.PP
+\-\-resolvemsg=<msg>
+.RS 4
+When a patch failure occurs, <msg> will be printed to the screen before exiting\&. This overrides the standard message informing you to use
+\fB\-\-continue\fR
+or
+\fB\-\-skip\fR
+to handle the failure\&. This is solely for internal use between
+\fIgit rebase\fR
+and
+\fIgit am\fR\&.
+.RE
+.PP
+\-\-abort
+.RS 4
+Restore the original branch and abort the patching operation\&.
+.RE
+.PP
+\-\-quit
+.RS 4
+Abort the patching operation but keep HEAD and the index untouched\&.
+.RE
+.PP
+\-\-show\-current\-patch
+.RS 4
+Show the patch being applied when "git am" is stopped because of conflicts\&.
+.RE
+.SH "DISCUSSION"
+.sp
+The commit author name is taken from the "From: " line of the message, and commit author date is taken from the "Date: " line of the message\&. The "Subject: " line is used as the title of the commit, after stripping common prefix "[PATCH <anything>]"\&. The "Subject: " line is supposed to concisely describe what the commit is about in one line of text\&.
+.sp
+"From: " and "Subject: " lines starting the body override the respective commit author name and title values taken from the headers\&.
+.sp
+The commit message is formed by the title taken from the "Subject: ", a blank line and the body of the message up to where the patch begins\&. Excess whitespace at the end of each line is automatically stripped\&.
+.sp
+The patch is expected to be inline, directly following the message\&. Any line that is of the form:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+three\-dashes and end\-of\-line, or
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a line that begins with "diff \-", or
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a line that begins with "Index: "
+.RE
+.sp
+is taken as the beginning of a patch, and the commit log message is terminated before the first occurrence of such a line\&.
+.sp
+When initially invoking \fBgit am\fR, you give it the names of the mailboxes to process\&. Upon seeing the first patch that does not apply, it aborts in the middle\&. You can recover from this in one of two ways:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+skip the current patch by re\-running the command with the
+\fB\-\-skip\fR
+option\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+hand resolve the conflict in the working directory, and update the index file to bring it into a state that the patch should have produced\&. Then run the command with the
+\fB\-\-continue\fR
+option\&.
+.RE
+.sp
+The command refuses to process new mailboxes until the current operation is finished, so if you decide to start over from scratch, run \fBgit am \-\-abort\fR before running the command with mailbox names\&.
+.sp
+Before any patches are applied, ORIG_HEAD is set to the tip of the current branch\&. This is useful if you have problems with multiple commits, like running \fIgit am\fR on the wrong branch or an error in the commits that is more easily fixed by changing the mailbox (e\&.g\&. errors in the "From:" lines)\&.
+.SH "HOOKS"
+.sp
+This command can run \fBapplypatch\-msg\fR, \fBpre\-applypatch\fR, and \fBpost\-applypatch\fR hooks\&. See \fBgithooks\fR(5) for more information\&.
+.SH "SEE ALSO"
+.sp
+\fBgit-apply\fR(1)\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

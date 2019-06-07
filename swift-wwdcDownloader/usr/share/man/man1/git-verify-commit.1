@@ -1,0 +1,59 @@
+'\" t
+.\"     Title: git-verify-commit
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-VERIFY\-COMMIT" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-verify-commit \- Check the GPG signature of commits
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit verify\-commit\fR <commit>\&...
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Validates the GPG signature created by \fIgit commit \-S\fR\&.
+.SH "OPTIONS"
+.PP
+\-\-raw
+.RS 4
+Print the raw gpg status output to standard error instead of the normal human\-readable output\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Print the contents of the commit object before validating it\&.
+.RE
+.PP
+<commit>\&...
+.RS 4
+SHA\-1 identifiers of Git commit objects\&.
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

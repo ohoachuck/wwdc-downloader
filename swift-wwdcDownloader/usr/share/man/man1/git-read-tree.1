@@ -1,0 +1,491 @@
+'\" t
+.\"     Title: git-read-tree
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-READ\-TREE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-read-tree \- Reads tree information into the index
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit read\-tree\fR [[\-m [\-\-trivial] [\-\-aggressive] | \-\-reset | \-\-prefix=<prefix>]
+                [\-u [\-\-exclude\-per\-directory=<gitignore>] | \-i]]
+                [\-\-index\-output=<file>] [\-\-no\-sparse\-checkout]
+                (\-\-empty | <tree\-ish1> [<tree\-ish2> [<tree\-ish3>]])
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Reads the tree information given by <tree\-ish> into the index, but does not actually \fBupdate\fR any of the files it "caches"\&. (see: \fBgit-checkout-index\fR(1))
+.sp
+Optionally, it can merge a tree into the index, perform a fast\-forward (i\&.e\&. 2\-way) merge, or a 3\-way merge, with the \fB\-m\fR flag\&. When used with \fB\-m\fR, the \fB\-u\fR flag causes it to also update the files in the work tree with the result of the merge\&.
+.sp
+Trivial merges are done by \fIgit read\-tree\fR itself\&. Only conflicting paths will be in unmerged state when \fIgit read\-tree\fR returns\&.
+.SH "OPTIONS"
+.PP
+\-m
+.RS 4
+Perform a merge, not just a read\&. The command will refuse to run if your index file has unmerged entries, indicating that you have not finished previous merge you started\&.
+.RE
+.PP
+\-\-reset
+.RS 4
+Same as \-m, except that unmerged entries are discarded instead of failing\&.
+.RE
+.PP
+\-u
+.RS 4
+After a successful merge, update the files in the work tree with the result of the merge\&.
+.RE
+.PP
+\-i
+.RS 4
+Usually a merge requires the index file as well as the files in the working tree to be up to date with the current head commit, in order not to lose local changes\&. This flag disables the check with the working tree and is meant to be used when creating a merge of trees that are not directly related to the current working tree status into a temporary index file\&.
+.RE
+.PP
+\-n, \-\-dry\-run
+.RS 4
+Check if the command would error out, without updating the index or the files in the working tree for real\&.
+.RE
+.PP
+\-v
+.RS 4
+Show the progress of checking files out\&.
+.RE
+.PP
+\-\-trivial
+.RS 4
+Restrict three\-way merge by
+\fIgit read\-tree\fR
+to happen only if there is no file\-level merging required, instead of resolving merge for trivial cases and leaving conflicting files unresolved in the index\&.
+.RE
+.PP
+\-\-aggressive
+.RS 4
+Usually a three\-way merge by
+\fIgit read\-tree\fR
+resolves the merge for really trivial cases and leaves other cases unresolved in the index, so that porcelains can implement different merge policies\&. This flag makes the command resolve a few more cases internally:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+when one side removes a path and the other side leaves the path unmodified\&. The resolution is to remove that path\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+when both sides remove a path\&. The resolution is to remove that path\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+when both sides add a path identically\&. The resolution is to add that path\&.
+.RE
+.RE
+.PP
+\-\-prefix=<prefix>
+.RS 4
+Keep the current index contents, and read the contents of the named tree\-ish under the directory at
+\fB<prefix>\fR\&. The command will refuse to overwrite entries that already existed in the original index file\&.
+.RE
+.PP
+\-\-exclude\-per\-directory=<gitignore>
+.RS 4
+When running the command with
+\fB\-u\fR
+and
+\fB\-m\fR
+options, the merge result may need to overwrite paths that are not tracked in the current branch\&. The command usually refuses to proceed with the merge to avoid losing such a path\&. However this safety valve sometimes gets in the way\&. For example, it often happens that the other branch added a file that used to be a generated file in your branch, and the safety valve triggers when you try to switch to that branch after you ran
+\fBmake\fR
+but before running
+\fBmake clean\fR
+to remove the generated file\&. This option tells the command to read per\-directory exclude file (usually
+\fI\&.gitignore\fR) and allows such an untracked but explicitly ignored file to be overwritten\&.
+.RE
+.PP
+\-\-index\-output=<file>
+.RS 4
+Instead of writing the results out to
+\fB$GIT_INDEX_FILE\fR, write the resulting index in the named file\&. While the command is operating, the original index file is locked with the same mechanism as usual\&. The file must allow to be rename(2)ed into from a temporary file that is created next to the usual index file; typically this means it needs to be on the same filesystem as the index file itself, and you need write permission to the directories the index file and index output file are located in\&.
+.RE
+.PP
+\-\-[no\-]recurse\-submodules
+.RS 4
+Using \-\-recurse\-submodules will update the content of all initialized submodules according to the commit recorded in the superproject by calling read\-tree recursively, also setting the submodules HEAD to be detached at that commit\&.
+.RE
+.PP
+\-\-no\-sparse\-checkout
+.RS 4
+Disable sparse checkout support even if
+\fBcore\&.sparseCheckout\fR
+is true\&.
+.RE
+.PP
+\-\-empty
+.RS 4
+Instead of reading tree object(s) into the index, just empty it\&.
+.RE
+.PP
+<tree\-ish#>
+.RS 4
+The id of the tree object(s) to be read/merged\&.
+.RE
+.SH "MERGING"
+.sp
+If \fB\-m\fR is specified, \fIgit read\-tree\fR can perform 3 kinds of merge, a single tree merge if only 1 tree is given, a fast\-forward merge with 2 trees, or a 3\-way merge if 3 or more trees are provided\&.
+.SS "Single Tree Merge"
+.sp
+If only 1 tree is specified, \fIgit read\-tree\fR operates as if the user did not specify \fB\-m\fR, except that if the original index has an entry for a given pathname, and the contents of the path match with the tree being read, the stat info from the index is used\&. (In other words, the index\(cqs stat()s take precedence over the merged tree\(cqs)\&.
+.sp
+That means that if you do a \fBgit read\-tree \-m <newtree>\fR followed by a \fBgit checkout\-index \-f \-u \-a\fR, the \fIgit checkout\-index\fR only checks out the stuff that really changed\&.
+.sp
+This is used to avoid unnecessary false hits when \fIgit diff\-files\fR is run after \fIgit read\-tree\fR\&.
+.SS "Two Tree Merge"
+.sp
+Typically, this is invoked as \fBgit read\-tree \-m $H $M\fR, where $H is the head commit of the current repository, and $M is the head of a foreign tree, which is simply ahead of $H (i\&.e\&. we are in a fast\-forward situation)\&.
+.sp
+When two trees are specified, the user is telling \fIgit read\-tree\fR the following:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+The current index and work tree is derived from $H, but the user may have local changes in them since $H\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+The user wants to fast\-forward to $M\&.
+.RE
+.sp
+In this case, the \fBgit read\-tree \-m $H $M\fR command makes sure that no local change is lost as the result of this "merge"\&. Here are the "carry forward" rules, where "I" denotes the index, "clean" means that index and work tree coincide, and "exists"/"nothing" refer to the presence of a path in the specified commit:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        I                   H        M        Result
+       \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+     0  nothing             nothing  nothing  (does not happen)
+     1  nothing             nothing  exists   use M
+     2  nothing             exists   nothing  remove path from index
+     3  nothing             exists   exists,  use M if "initial checkout",
+                                     H == M   keep index otherwise
+                                     exists,  fail
+                                     H != M
+
+        clean I==H  I==M
+       \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+     4  yes   N/A   N/A     nothing  nothing  keep index
+     5  no    N/A   N/A     nothing  nothing  keep index
+
+     6  yes   N/A   yes     nothing  exists   keep index
+     7  no    N/A   yes     nothing  exists   keep index
+     8  yes   N/A   no      nothing  exists   fail
+     9  no    N/A   no      nothing  exists   fail
+
+     10 yes   yes   N/A     exists   nothing  remove path from index
+     11 no    yes   N/A     exists   nothing  fail
+     12 yes   no    N/A     exists   nothing  fail
+     13 no    no    N/A     exists   nothing  fail
+
+        clean (H==M)
+       \-\-\-\-\-\-
+     14 yes                 exists   exists   keep index
+     15 no                  exists   exists   keep index
+
+        clean I==H  I==M (H!=M)
+       \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+     16 yes   no    no      exists   exists   fail
+     17 no    no    no      exists   exists   fail
+     18 yes   no    yes     exists   exists   keep index
+     19 no    no    yes     exists   exists   keep index
+     20 yes   yes   no      exists   exists   use M
+     21 no    yes   no      exists   exists   fail
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+In all "keep index" cases, the index entry stays as in the original index file\&. If the entry is not up to date, \fIgit read\-tree\fR keeps the copy in the work tree intact when operating under the \-u flag\&.
+.sp
+When this form of \fIgit read\-tree\fR returns successfully, you can see which of the "local changes" that you made were carried forward by running \fBgit diff\-index \-\-cached $M\fR\&. Note that this does not necessarily match what \fBgit diff\-index \-\-cached $H\fR would have produced before such a two tree merge\&. This is because of cases 18 and 19 \-\-\- if you already had the changes in $M (e\&.g\&. maybe you picked it up via e\-mail in a patch form), \fBgit diff\-index \-\-cached $H\fR would have told you about the change before this merge, but it would not show in \fBgit diff\-index \-\-cached $M\fR output after the two\-tree merge\&.
+.sp
+Case 3 is slightly tricky and needs explanation\&. The result from this rule logically should be to remove the path if the user staged the removal of the path and then switching to a new branch\&. That however will prevent the initial checkout from happening, so the rule is modified to use M (new tree) only when the content of the index is empty\&. Otherwise the removal of the path is kept as long as $H and $M are the same\&.
+.SS "3\-Way Merge"
+.sp
+Each "index" entry has two bits worth of "stage" state\&. stage 0 is the normal one, and is the only one you\(cqd see in any kind of normal use\&.
+.sp
+However, when you do \fIgit read\-tree\fR with three trees, the "stage" starts out at 1\&.
+.sp
+This means that you can do
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git read\-tree \-m <tree1> <tree2> <tree3>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+and you will end up with an index with all of the <tree1> entries in "stage1", all of the <tree2> entries in "stage2" and all of the <tree3> entries in "stage3"\&. When performing a merge of another branch into the current branch, we use the common ancestor tree as <tree1>, the current branch head as <tree2>, and the other branch head as <tree3>\&.
+.sp
+Furthermore, \fIgit read\-tree\fR has special\-case logic that says: if you see a file that matches in all respects in the following states, it "collapses" back to "stage0":
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+stage 2 and 3 are the same; take one or the other (it makes no difference \- the same work has been done on our branch in stage 2 and their branch in stage 3)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+stage 1 and stage 2 are the same and stage 3 is different; take stage 3 (our branch in stage 2 did not do anything since the ancestor in stage 1 while their branch in stage 3 worked on it)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+stage 1 and stage 3 are the same and stage 2 is different take stage 2 (we did something while they did nothing)
+.RE
+.sp
+The \fIgit write\-tree\fR command refuses to write a nonsensical tree, and it will complain about unmerged entries if it sees a single entry that is not stage 0\&.
+.sp
+OK, this all sounds like a collection of totally nonsensical rules, but it\(cqs actually exactly what you want in order to do a fast merge\&. The different stages represent the "result tree" (stage 0, aka "merged"), the original tree (stage 1, aka "orig"), and the two trees you are trying to merge (stage 2 and 3 respectively)\&.
+.sp
+The order of stages 1, 2 and 3 (hence the order of three <tree\-ish> command\-line arguments) are significant when you start a 3\-way merge with an index file that is already populated\&. Here is an outline of how the algorithm works:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+if a file exists in identical format in all three trees, it will automatically collapse to "merged" state by
+\fIgit read\-tree\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a file that has
+\fIany\fR
+difference what\-so\-ever in the three trees will stay as separate entries in the index\&. It\(cqs up to "porcelain policy" to determine how to remove the non\-0 stages, and insert a merged version\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the index file saves and restores with all this information, so you can merge things incrementally, but as long as it has entries in stages 1/2/3 (i\&.e\&., "unmerged entries") you can\(cqt write the result\&. So now the merge algorithm ends up being really simple:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+you walk the index in order, and ignore all entries of stage 0, since they\(cqve already been done\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+if you find a "stage1", but no matching "stage2" or "stage3", you know it\(cqs been removed from both trees (it only existed in the original tree), and you remove that entry\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+if you find a matching "stage2" and "stage3" tree, you remove one of them, and turn the other into a "stage0" entry\&. Remove any matching "stage1" entry if it exists too\&. \&.\&. all the normal trivial rules \&.\&.
+.RE
+.RE
+.sp
+You would normally use \fIgit merge\-index\fR with supplied \fIgit merge\-one\-file\fR to do this last step\&. The script updates the files in the working tree as it merges each path and at the end of a successful merge\&.
+.sp
+When you start a 3\-way merge with an index file that is already populated, it is assumed that it represents the state of the files in your work tree, and you can even have files with changes unrecorded in the index file\&. It is further assumed that this state is "derived" from the stage 2 tree\&. The 3\-way merge refuses to run if it finds an entry in the original index file that does not match stage 2\&.
+.sp
+This is done to prevent you from losing your work\-in\-progress changes, and mixing your random changes in an unrelated merge commit\&. To illustrate, suppose you start from what has been committed last to your repository:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ JC=`git rev\-parse \-\-verify "HEAD^0"`
+$ git checkout\-index \-f \-u \-a $JC
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+You do random edits, without running \fIgit update\-index\fR\&. And then you notice that the tip of your "upstream" tree has advanced since you pulled from him:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git fetch git://\&.\&.\&.\&. linus
+$ LT=`git rev\-parse FETCH_HEAD`
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Your work tree is still based on your HEAD ($JC), but you have some edits since\&. Three\-way merge makes sure that you have not added or modified index entries since $JC, and if you haven\(cqt, then does the right thing\&. So with the following sequence:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git read\-tree \-m \-u `git merge\-base $JC $LT` $JC $LT
+$ git merge\-index git\-merge\-one\-file \-a
+$ echo "Merge with Linus" | \e
+  git commit\-tree `git write\-tree` \-p $JC \-p $LT
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+what you would commit is a pure merge between $JC and $LT without your work\-in\-progress changes, and your work tree would be updated to the result of the merge\&.
+.sp
+However, if you have local changes in the working tree that would be overwritten by this merge, \fIgit read\-tree\fR will refuse to run to prevent your changes from being lost\&.
+.sp
+In other words, there is no need to worry about what exists only in the working tree\&. When you have local changes in a part of the project that is not involved in the merge, your changes do not interfere with the merge, and are kept intact\&. When they \fBdo\fR interfere, the merge does not even start (\fIgit read\-tree\fR complains loudly and fails without modifying anything)\&. In such a case, you can simply continue doing what you were in the middle of doing, and when your working tree is ready (i\&.e\&. you have finished your work\-in\-progress), attempt the merge again\&.
+.SH "SPARSE CHECKOUT"
+.sp
+"Sparse checkout" allows populating the working directory sparsely\&. It uses the skip\-worktree bit (see \fBgit-update-index\fR(1)) to tell Git whether a file in the working directory is worth looking at\&.
+.sp
+\fIgit read\-tree\fR and other merge\-based commands (\fIgit merge\fR, \fIgit checkout\fR\&...) can help maintaining the skip\-worktree bitmap and working directory update\&. \fB$GIT_DIR/info/sparse\-checkout\fR is used to define the skip\-worktree reference bitmap\&. When \fIgit read\-tree\fR needs to update the working directory, it resets the skip\-worktree bit in the index based on this file, which uses the same syntax as \&.gitignore files\&. If an entry matches a pattern in this file, skip\-worktree will not be set on that entry\&. Otherwise, skip\-worktree will be set\&.
+.sp
+Then it compares the new skip\-worktree value with the previous one\&. If skip\-worktree turns from set to unset, it will add the corresponding file back\&. If it turns from unset to set, that file will be removed\&.
+.sp
+While \fB$GIT_DIR/info/sparse\-checkout\fR is usually used to specify what files are in, you can also specify what files are \fInot\fR in, using negate patterns\&. For example, to remove the file \fBunwanted\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/*
+!unwanted
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Another tricky thing is fully repopulating the working directory when you no longer want sparse checkout\&. You cannot just disable "sparse checkout" because skip\-worktree bits are still in the index and your working directory is still sparsely populated\&. You should re\-populate the working directory with the \fB$GIT_DIR/info/sparse\-checkout\fR file content as follows:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Then you can disable sparse checkout\&. Sparse checkout support in \fIgit read\-tree\fR and similar commands is disabled by default\&. You need to turn \fBcore\&.sparseCheckout\fR on in order to have sparse checkout support\&.
+.SH "SEE ALSO"
+.sp
+\fBgit-write-tree\fR(1); \fBgit-ls-files\fR(1); \fBgitignore\fR(5)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

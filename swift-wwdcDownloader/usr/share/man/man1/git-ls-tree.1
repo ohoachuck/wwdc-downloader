@@ -1,0 +1,175 @@
+'\" t
+.\"     Title: git-ls-tree
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-LS\-TREE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-ls-tree \- List the contents of a tree object
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit ls\-tree\fR [\-d] [\-r] [\-t] [\-l] [\-z]
+            [\-\-name\-only] [\-\-name\-status] [\-\-full\-name] [\-\-full\-tree] [\-\-abbrev[=<n>]]
+            <tree\-ish> [<path>\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Lists the contents of a given tree object, like what "/bin/ls \-a" does in the current working directory\&. Note that:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the behaviour is slightly different from that of "/bin/ls" in that the
+\fI<path>\fR
+denotes just a list of patterns to match, e\&.g\&. so specifying directory name (without
+\fB\-r\fR) will behave differently, and order of the arguments does not matter\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the behaviour is similar to that of "/bin/ls" in that the
+\fI<path>\fR
+is taken as relative to the current working directory\&. E\&.g\&. when you are in a directory
+\fIsub\fR
+that has a directory
+\fIdir\fR, you can run
+\fIgit ls\-tree \-r HEAD dir\fR
+to list the contents of the tree (that is
+\fIsub/dir\fR
+in
+\fBHEAD\fR)\&. You don\(cqt want to give a tree that is not at the root level (e\&.g\&.
+\fBgit ls\-tree \-r HEAD:sub dir\fR) in this case, as that would result in asking for
+\fIsub/sub/dir\fR
+in the
+\fBHEAD\fR
+commit\&. However, the current working directory can be ignored by passing \-\-full\-tree option\&.
+.RE
+.SH "OPTIONS"
+.PP
+<tree\-ish>
+.RS 4
+Id of a tree\-ish\&.
+.RE
+.PP
+\-d
+.RS 4
+Show only the named tree entry itself, not its children\&.
+.RE
+.PP
+\-r
+.RS 4
+Recurse into sub\-trees\&.
+.RE
+.PP
+\-t
+.RS 4
+Show tree entries even when going to recurse them\&. Has no effect if
+\fB\-r\fR
+was not passed\&.
+\fB\-d\fR
+implies
+\fB\-t\fR\&.
+.RE
+.PP
+\-l, \-\-long
+.RS 4
+Show object size of blob (file) entries\&.
+.RE
+.PP
+\-z
+.RS 4
+\e0 line termination on output and do not quote filenames\&. See OUTPUT FORMAT below for more information\&.
+.RE
+.PP
+\-\-name\-only, \-\-name\-status
+.RS 4
+List only filenames (instead of the "long" output), one per line\&.
+.RE
+.PP
+\-\-abbrev[=<n>]
+.RS 4
+Instead of showing the full 40\-byte hexadecimal object lines, show only a partial prefix\&. Non default number of digits can be specified with \-\-abbrev=<n>\&.
+.RE
+.PP
+\-\-full\-name
+.RS 4
+Instead of showing the path names relative to the current working directory, show the full path names\&.
+.RE
+.PP
+\-\-full\-tree
+.RS 4
+Do not limit the listing to the current working directory\&. Implies \-\-full\-name\&.
+.RE
+.PP
+[<path>\&...]
+.RS 4
+When paths are given, show them (note that this isn\(cqt really raw pathnames, but rather a list of patterns to match)\&. Otherwise implicitly uses the root level of the tree as the sole path argument\&.
+.RE
+.SH "OUTPUT FORMAT"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<mode> SP <type> SP <object> TAB <file>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This output format is compatible with what \fB\-\-index\-info \-\-stdin\fR of \fIgit update\-index\fR expects\&.
+.sp
+When the \fB\-l\fR option is used, format changes to
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<mode> SP <type> SP <object> SP <object size> TAB <file>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Object size identified by <object> is given in bytes, and right\-justified with minimum width of 7 characters\&. Object size is given only for blobs (file) entries; for other entries \fB\-\fR character is used in place of size\&.
+.sp
+Without the \fB\-z\fR option, pathnames with "unusual" characters are quoted as explained for the configuration variable \fBcore\&.quotePath\fR (see \fBgit-config\fR(1))\&. Using \fB\-z\fR the filename is output verbatim and the line is terminated by a NUL byte\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

@@ -1,0 +1,124 @@
+'\" t
+.\"     Title: git-name-rev
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-NAME\-REV" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-name-rev \- Find symbolic names for given revs
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit name\-rev\fR [\-\-tags] [\-\-refs=<pattern>]
+               ( \-\-all | \-\-stdin | <commit\-ish>\&... )
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Finds symbolic names suitable for human digestion for revisions given in any format parsable by \fIgit rev\-parse\fR\&.
+.SH "OPTIONS"
+.PP
+\-\-tags
+.RS 4
+Do not use branch names, but only tags to name the commits
+.RE
+.PP
+\-\-refs=<pattern>
+.RS 4
+Only use refs whose names match a given shell pattern\&. The pattern can be one of branch name, tag name or fully qualified ref name\&. If given multiple times, use refs whose names match any of the given shell patterns\&. Use
+\fB\-\-no\-refs\fR
+to clear any previous ref patterns given\&.
+.RE
+.PP
+\-\-exclude=<pattern>
+.RS 4
+Do not use any ref whose name matches a given shell pattern\&. The pattern can be one of branch name, tag name or fully qualified ref name\&. If given multiple times, a ref will be excluded when it matches any of the given patterns\&. When used together with \-\-refs, a ref will be used as a match only when it matches at least one \-\-refs pattern and does not match any \-\-exclude patterns\&. Use
+\fB\-\-no\-exclude\fR
+to clear the list of exclude patterns\&.
+.RE
+.PP
+\-\-all
+.RS 4
+List all commits reachable from all refs
+.RE
+.PP
+\-\-stdin
+.RS 4
+Transform stdin by substituting all the 40\-character SHA\-1 hexes (say $hex) with "$hex ($rev_name)"\&. When used with \-\-name\-only, substitute with "$rev_name", omitting $hex altogether\&. Intended for the scripter\(cqs use\&.
+.RE
+.PP
+\-\-name\-only
+.RS 4
+Instead of printing both the SHA\-1 and the name, print only the name\&. If given with \-\-tags the usual tag prefix of "tags/" is also omitted from the name, matching the output of
+\fBgit\-describe\fR
+more closely\&.
+.RE
+.PP
+\-\-no\-undefined
+.RS 4
+Die with error code != 0 when a reference is undefined, instead of printing
+\fBundefined\fR\&.
+.RE
+.PP
+\-\-always
+.RS 4
+Show uniquely abbreviated commit object as fallback\&.
+.RE
+.SH "EXAMPLE"
+.sp
+Given a commit, find out where it is relative to the local refs\&. Say somebody wrote you about that fantastic commit 33db5f4d9027a10e477ccf054b2c1ab94f74c85a\&. Of course, you look into the commit, but that only tells you what happened, but not the context\&.
+.sp
+Enter \fIgit name\-rev\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+% git name\-rev 33db5f4d9027a10e477ccf054b2c1ab94f74c85a
+33db5f4d9027a10e477ccf054b2c1ab94f74c85a tags/v0\&.99~940
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Now you are wiser, because you know that it happened 940 revisions before v0\&.99\&.
+.sp
+Another nice thing you can do is:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+% git log | git name\-rev \-\-stdin
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

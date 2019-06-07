@@ -1,0 +1,3 @@
+*.m		diff=objc
+*.mm		diff=objc
+*.swift		diff=swift

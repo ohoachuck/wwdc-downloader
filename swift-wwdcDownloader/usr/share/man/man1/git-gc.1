@@ -1,0 +1,188 @@
+'\" t
+.\"     Title: git-gc
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-GC" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-gc \- Cleanup unnecessary files and optimize the local repository
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit gc\fR [\-\-aggressive] [\-\-auto] [\-\-quiet] [\-\-prune=<date> | \-\-no\-prune] [\-\-force]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Runs a number of housekeeping tasks within the current repository, such as compressing file revisions (to reduce disk space and increase performance) and removing unreachable objects which may have been created from prior invocations of \fIgit add\fR\&.
+.sp
+Users are encouraged to run this task on a regular basis within each repository to maintain good disk space utilization and good operating performance\&.
+.sp
+Some git commands may automatically run \fIgit gc\fR; see the \fB\-\-auto\fR flag below for details\&. If you know what you\(cqre doing and all you want is to disable this behavior permanently without further considerations, just do:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git config \-\-global gc\&.auto 0
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "OPTIONS"
+.PP
+\-\-aggressive
+.RS 4
+Usually
+\fIgit gc\fR
+runs very quickly while providing good disk space utilization and performance\&. This option will cause
+\fIgit gc\fR
+to more aggressively optimize the repository at the expense of taking much more time\&. The effects of this optimization are persistent, so this option only needs to be used occasionally; every few hundred changesets or so\&.
+.RE
+.PP
+\-\-auto
+.RS 4
+With this option,
+\fIgit gc\fR
+checks whether any housekeeping is required; if not, it exits without performing any work\&. Some git commands run
+\fBgit gc \-\-auto\fR
+after performing operations that could create many loose objects\&.
+.sp
+Housekeeping is required if there are too many loose objects or too many packs in the repository\&. If the number of loose objects exceeds the value of the
+\fBgc\&.auto\fR
+configuration variable, then all loose objects are combined into a single pack using
+\fBgit repack \-d \-l\fR\&. Setting the value of
+\fBgc\&.auto\fR
+to 0 disables automatic packing of loose objects\&.
+.sp
+If the number of packs exceeds the value of
+\fBgc\&.autoPackLimit\fR, then existing packs (except those marked with a
+\fB\&.keep\fR
+file) are consolidated into a single pack by using the
+\fB\-A\fR
+option of
+\fIgit repack\fR\&. Setting
+\fBgc\&.autoPackLimit\fR
+to 0 disables automatic consolidation of packs\&.
+.RE
+.PP
+\-\-prune=<date>
+.RS 4
+Prune loose objects older than date (default is 2 weeks ago, overridable by the config variable
+\fBgc\&.pruneExpire\fR)\&. \-\-prune=all prunes loose objects regardless of their age and increases the risk of corruption if another process is writing to the repository concurrently; see "NOTES" below\&. \-\-prune is on by default\&.
+.RE
+.PP
+\-\-no\-prune
+.RS 4
+Do not prune any loose objects\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Suppress all progress reports\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Force
+\fBgit gc\fR
+to run even if there may be another
+\fBgit gc\fR
+instance running on this repository\&.
+.RE
+.SH "CONFIGURATION"
+.sp
+The optional configuration variable \fBgc\&.reflogExpire\fR can be set to indicate how long historical entries within each branch\(cqs reflog should remain available in this repository\&. The setting is expressed as a length of time, for example \fI90 days\fR or \fI3 months\fR\&. It defaults to \fI90 days\fR\&.
+.sp
+The optional configuration variable \fBgc\&.reflogExpireUnreachable\fR can be set to indicate how long historical reflog entries which are not part of the current branch should remain available in this repository\&. These types of entries are generally created as a result of using \fBgit commit \-\-amend\fR or \fBgit rebase\fR and are the commits prior to the amend or rebase occurring\&. Since these changes are not part of the current project most users will want to expire them sooner\&. This option defaults to \fI30 days\fR\&.
+.sp
+The above two configuration variables can be given to a pattern\&. For example, this sets non\-default expiry values only to remote\-tracking branches:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[gc "refs/remotes/*"]
+        reflogExpire = never
+        reflogExpireUnreachable = 3 days
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The optional configuration variable \fBgc\&.rerereResolved\fR indicates how long records of conflicted merge you resolved earlier are kept\&. This defaults to 60 days\&.
+.sp
+The optional configuration variable \fBgc\&.rerereUnresolved\fR indicates how long records of conflicted merge you have not resolved are kept\&. This defaults to 15 days\&.
+.sp
+The optional configuration variable \fBgc\&.packRefs\fR determines if \fIgit gc\fR runs \fIgit pack\-refs\fR\&. This can be set to "notbare" to enable it within all non\-bare repos or it can be set to a boolean value\&. This defaults to true\&.
+.sp
+The optional configuration variable \(oqgc\&.aggressiveWindow` controls how much time is spent optimizing the delta compression of the objects in the repository when the \-\-aggressive option is specified\&. The larger the value, the more time is spent optimizing the delta compression\&. See the documentation for the \-\-window\(cq option in \fBgit-repack\fR(1) for more details\&. This defaults to 250\&.
+.sp
+Similarly, the optional configuration variable \fBgc\&.aggressiveDepth\fR controls \-\-depth option in \fBgit-repack\fR(1)\&. This defaults to 50\&.
+.sp
+The optional configuration variable \fBgc\&.pruneExpire\fR controls how old the unreferenced loose objects have to be before they are pruned\&. The default is "2 weeks ago"\&.
+.SH "NOTES"
+.sp
+\fIgit gc\fR tries very hard not to delete objects that are referenced anywhere in your repository\&. In particular, it will keep not only objects referenced by your current set of branches and tags, but also objects referenced by the index, remote\-tracking branches, refs saved by \fIgit filter\-branch\fR in refs/original/, or reflogs (which may reference commits in branches that were later amended or rewound)\&. If you are expecting some objects to be deleted and they aren\(cqt, check all of those locations and decide whether it makes sense in your case to remove those references\&.
+.sp
+On the other hand, when \fIgit gc\fR runs concurrently with another process, there is a risk of it deleting an object that the other process is using but hasn\(cqt created a reference to\&. This may just cause the other process to fail or may corrupt the repository if the other process later adds a reference to the deleted object\&. Git has two features that significantly mitigate this problem:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Any object with modification time newer than the
+\fB\-\-prune\fR
+date is kept, along with everything reachable from it\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Most operations that add an object to the database update the modification time of the object if it is already present so that #1 applies\&.
+.RE
+.sp
+However, these features fall short of a complete solution, so users who run commands concurrently have to live with some risk of corruption (which seems to be low in practice) unless they turn off automatic garbage collection with \fIgit config gc\&.auto 0\fR\&.
+.SH "HOOKS"
+.sp
+The \fIgit gc \-\-auto\fR command will run the \fIpre\-auto\-gc\fR hook\&. See \fBgithooks\fR(5) for more information\&.
+.SH "SEE ALSO"
+.sp
+\fBgit-prune\fR(1) \fBgit-reflog\fR(1) \fBgit-repack\fR(1) \fBgit-rerere\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

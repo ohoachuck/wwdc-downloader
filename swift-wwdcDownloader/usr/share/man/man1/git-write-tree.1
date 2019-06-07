@@ -1,0 +1,61 @@
+'\" t
+.\"     Title: git-write-tree
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-WRITE\-TREE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-write-tree \- Create a tree object from the current index
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit write\-tree\fR [\-\-missing\-ok] [\-\-prefix=<prefix>/]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Creates a tree object using the current index\&. The name of the new tree object is printed to standard output\&.
+.sp
+The index must be in a fully merged state\&.
+.sp
+Conceptually, \fIgit write\-tree\fR sync()s the current index contents into a set of tree files\&. In order to have that match what is actually in your directory right now, you need to have done a \fIgit update\-index\fR phase before you did the \fIgit write\-tree\fR\&.
+.SH "OPTIONS"
+.PP
+\-\-missing\-ok
+.RS 4
+Normally
+\fIgit write\-tree\fR
+ensures that the objects referenced by the directory exist in the object database\&. This option disables this check\&.
+.RE
+.PP
+\-\-prefix=<prefix>/
+.RS 4
+Writes a tree object that represents a subdirectory
+\fB<prefix>\fR\&. This can be used to write the tree object for a subproject that is in the named subdirectory\&.
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

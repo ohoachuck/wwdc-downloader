@@ -1,0 +1,45 @@
+'\" t
+.\"     Title: git-merge-tree
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-MERGE\-TREE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-merge-tree \- Show three\-way merge without touching index
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit merge\-tree\fR <base\-tree> <branch1> <branch2>
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Reads three tree\-ish, and output trivial merge results and conflicting stages to the standard output\&. This is similar to what three\-way \fIgit read\-tree \-m\fR does, but instead of storing the results in the index, the command outputs the entries to the standard output\&.
+.sp
+This is meant to be used by higher level scripts to compute merge results outside of the index, and stuff the results back into the index\&. For this reason, the output from the command omits entries that match the <branch1> tree\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

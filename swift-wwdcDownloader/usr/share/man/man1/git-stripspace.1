@@ -1,0 +1,171 @@
+'\" t
+.\"     Title: git-stripspace
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-STRIPSPACE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-stripspace \- Remove unnecessary whitespace
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit stripspace\fR [\-s | \-\-strip\-comments]
+\fIgit stripspace\fR [\-c | \-\-comment\-lines]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Read text, such as commit messages, notes, tags and branch descriptions, from the standard input and clean it in the manner used by Git\&.
+.sp
+With no arguments, this will:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+remove trailing whitespace from all lines
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+collapse multiple consecutive empty lines into one empty line
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+remove empty lines from the beginning and end of the input
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+add a missing
+\fI\en\fR
+to the last line if necessary\&.
+.RE
+.sp
+In the case where the input consists entirely of whitespace characters, no output will be produced\&.
+.sp
+\fBNOTE\fR: This is intended for cleaning metadata, prefer the \fB\-\-whitespace=fix\fR mode of \fBgit-apply\fR(1) for correcting whitespace of patches or files in the repository\&.
+.SH "OPTIONS"
+.PP
+\-s, \-\-strip\-comments
+.RS 4
+Skip and remove all lines starting with comment character (default
+\fI#\fR)\&.
+.RE
+.PP
+\-c, \-\-comment\-lines
+.RS 4
+Prepend comment character and blank to each line\&. Lines will automatically be terminated with a newline\&. On empty lines, only the comment character will be prepended\&.
+.RE
+.SH "EXAMPLES"
+.sp
+Given the following noisy input with \fI$\fR indicating the end of a line:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+|A brief introduction   $
+|   $
+|$
+|A new paragraph$
+|# with a commented\-out line    $
+|explaining lots of stuff\&.$
+|$
+|# An old paragraph, also commented\-out\&. $
+|      $
+|The end\&.$
+|  $
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Use \fIgit stripspace\fR with no arguments to obtain:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+|A brief introduction$
+|$
+|A new paragraph$
+|# with a commented\-out line$
+|explaining lots of stuff\&.$
+|$
+|# An old paragraph, also commented\-out\&.$
+|$
+|The end\&.$
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Use \fIgit stripspace \-\-strip\-comments\fR to obtain:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+|A brief introduction$
+|$
+|A new paragraph$
+|explaining lots of stuff\&.$
+|$
+|The end\&.$
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

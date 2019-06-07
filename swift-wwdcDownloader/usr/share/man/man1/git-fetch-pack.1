@@ -1,0 +1,157 @@
+'\" t
+.\"     Title: git-fetch-pack
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-FETCH\-PACK" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-fetch-pack \- Receive missing objects from another repository
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit fetch\-pack\fR [\-\-all] [\-\-quiet|\-q] [\-\-keep|\-k] [\-\-thin] [\-\-include\-tag]
+        [\-\-upload\-pack=<git\-upload\-pack>]
+        [\-\-depth=<n>] [\-\-no\-progress]
+        [\-v] <repository> [<refs>\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Usually you would want to use \fIgit fetch\fR, which is a higher level wrapper of this command, instead\&.
+.sp
+Invokes \fIgit\-upload\-pack\fR on a possibly remote repository and asks it to send objects missing from this repository, to update the named heads\&. The list of commits available locally is found out by scanning the local refs/ hierarchy and sent to \fIgit\-upload\-pack\fR running on the other end\&.
+.sp
+This command degenerates to download everything to complete the asked refs from the remote side when the local side does not have a common ancestor commit\&.
+.SH "OPTIONS"
+.PP
+\-\-all
+.RS 4
+Fetch all remote refs\&.
+.RE
+.PP
+\-\-stdin
+.RS 4
+Take the list of refs from stdin, one per line\&. If there are refs specified on the command line in addition to this option, then the refs from stdin are processed after those on the command line\&.
+.sp
+If
+\fB\-\-stateless\-rpc\fR
+is specified together with this option then the list of refs must be in packet format (pkt\-line)\&. Each ref must be in a separate packet, and the list must end with a flush packet\&.
+.RE
+.PP
+\-q, \-\-quiet
+.RS 4
+Pass
+\fB\-q\fR
+flag to
+\fIgit unpack\-objects\fR; this makes the cloning process less verbose\&.
+.RE
+.PP
+\-k, \-\-keep
+.RS 4
+Do not invoke
+\fIgit unpack\-objects\fR
+on received data, but create a single packfile out of it instead, and store it in the object database\&. If provided twice then the pack is locked against repacking\&.
+.RE
+.PP
+\-\-thin
+.RS 4
+Fetch a "thin" pack, which records objects in deltified form based on objects not included in the pack to reduce network traffic\&.
+.RE
+.PP
+\-\-include\-tag
+.RS 4
+If the remote side supports it, annotated tags objects will be downloaded on the same connection as the other objects if the object the tag references is downloaded\&. The caller must otherwise determine the tags this option made available\&.
+.RE
+.PP
+\-\-upload\-pack=<git\-upload\-pack>
+.RS 4
+Use this to specify the path to
+\fIgit\-upload\-pack\fR
+on the remote side, if is not found on your $PATH\&. Installations of sshd ignores the user\(cqs environment setup scripts for login shells (e\&.g\&. \&.bash_profile) and your privately installed git may not be found on the system default $PATH\&. Another workaround suggested is to set up your $PATH in "\&.bashrc", but this flag is for people who do not want to pay the overhead for non\-interactive shells by having a lean \&.bashrc file (they set most of the things up in \&.bash_profile)\&.
+.RE
+.PP
+\-\-exec=<git\-upload\-pack>
+.RS 4
+Same as \-\-upload\-pack=<git\-upload\-pack>\&.
+.RE
+.PP
+\-\-depth=<n>
+.RS 4
+Limit fetching to ancestor\-chains not longer than n\&.
+\fIgit\-upload\-pack\fR
+treats the special depth 2147483647 as infinite even if there is an ancestor\-chain that long\&.
+.RE
+.PP
+\-\-shallow\-since=<date>
+.RS 4
+Deepen or shorten the history of a shallow\(cqrepository to include all reachable commits after <date>\&.
+.RE
+.PP
+\-\-shallow\-exclude=<revision>
+.RS 4
+Deepen or shorten the history of a shallow repository to exclude commits reachable from a specified remote branch or tag\&. This option can be specified multiple times\&.
+.RE
+.PP
+\-\-deepen\-relative
+.RS 4
+Argument \-\-depth specifies the number of commits from the current shallow boundary instead of from the tip of each remote branch history\&.
+.RE
+.PP
+\-\-no\-progress
+.RS 4
+Do not show the progress\&.
+.RE
+.PP
+\-\-check\-self\-contained\-and\-connected
+.RS 4
+Output "connectivity\-ok" if the received pack is self\-contained and connected\&.
+.RE
+.PP
+\-v
+.RS 4
+Run verbosely\&.
+.RE
+.PP
+<repository>
+.RS 4
+The URL to the remote repository\&.
+.RE
+.PP
+<refs>\&...
+.RS 4
+The remote heads to update from\&. This is relative to $GIT_DIR (e\&.g\&. "HEAD", "refs/heads/master")\&. When unspecified, update from all heads the remote side has\&.
+.sp
+If the remote has enabled the options
+\fBuploadpack\&.allowTipSHA1InWant\fR,
+\fBuploadpack\&.allowReachableSHA1InWant\fR, or
+\fBuploadpack\&.allowAnySHA1InWant\fR, they may alternatively be 40\-hex sha1s present on the remote\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgit-fetch\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

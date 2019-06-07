@@ -1,0 +1,41 @@
+.\" Copyright (c) 2004 Apple Computer, Inc. All Rights Reserved.
+.Dd April 12, 2004
+.Dt SPLITFORKS 1
+.Os "Mac OS X"
+.Sh NAME
+.Nm /usr/bin/SplitForks
+.Nd Divide a two-fork HFS file into AppleDouble format resource and data files. (DEPRECATED)
+.Sh SYNOPSIS
+.Nm
+.Op Fl s
+.Op Fl v
+.Ar file
+.Sh DESCRIPTION
+Tools supporting Carbon development, including
+.Nm ,
+were deprecated with Xcode 6.
+.Pp
+SplitForks takes a Macintosh HFS or HFS Extended ("HFS+") two-fork file and converts it into AppleDouble format, with the data fork in one file and the resource fork and file system metadata in another.
+.Pp
+.Nm
+takes the following flags and arguments:
+.Bl -tag -width -indent
+.It Op s
+Strip the resource fork from the original file.  The default is to leave the resource file in place after copying it to its AppleDouble metadata file.
+.It Op v
+Produce verbose diagnostics to standard output.
+.It Ar file
+The file to split.  
+.El
+.Pp
+.Sh FILES
+foo     Data fork of file 'foo'
+._foo   File system metadata and resource fork data of file 'foo'
+.Sh NOTES
+SplitForks will fail with error 2 if the designated file is not on an HFS or Extended HFS file system volume.
+.Sh SEE ALSO 
+.Xr FixupResourceForks 1 , 
+.Xr MvMac 1 ,
+.Xr CpMac 1
+.Sh STANDARDS
+Consult RFC 1740 for details on AppleSingle/AppleDouble formats.

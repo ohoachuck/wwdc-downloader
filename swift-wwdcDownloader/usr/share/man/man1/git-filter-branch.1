@@ -1,0 +1,579 @@
+'\" t
+.\"     Title: git-filter-branch
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-FILTER\-BRANCH" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-filter-branch \- Rewrite branches
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit filter\-branch\fR [\-\-setup <command>] [\-\-subdirectory\-filter <directory>]
+        [\-\-env\-filter <command>] [\-\-tree\-filter <command>]
+        [\-\-index\-filter <command>] [\-\-parent\-filter <command>]
+        [\-\-msg\-filter <command>] [\-\-commit\-filter <command>]
+        [\-\-tag\-name\-filter <command>] [\-\-prune\-empty]
+        [\-\-original <namespace>] [\-d <directory>] [\-f | \-\-force]
+        [\-\-state\-branch <branch>] [\-\-] [<rev\-list options>\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Lets you rewrite Git revision history by rewriting the branches mentioned in the <rev\-list options>, applying custom filters on each revision\&. Those filters can modify each tree (e\&.g\&. removing a file or running a perl rewrite on all files) or information about each commit\&. Otherwise, all information (including original commit times or merge information) will be preserved\&.
+.sp
+The command will only rewrite the \fIpositive\fR refs mentioned in the command line (e\&.g\&. if you pass \fIa\&.\&.b\fR, only \fIb\fR will be rewritten)\&. If you specify no filters, the commits will be recommitted without any changes, which would normally have no effect\&. Nevertheless, this may be useful in the future for compensating for some Git bugs or such, therefore such a usage is permitted\&.
+.sp
+\fBNOTE\fR: This command honors \fB\&.git/info/grafts\fR file and refs in the \fBrefs/replace/\fR namespace\&. If you have any grafts or replacement refs defined, running this command will make them permanent\&.
+.sp
+\fBWARNING\fR! The rewritten history will have different object names for all the objects and will not converge with the original branch\&. You will not be able to easily push and distribute the rewritten branch on top of the original branch\&. Please do not use this command if you do not know the full implications, and avoid using it anyway, if a simple single commit would suffice to fix your problem\&. (See the "RECOVERING FROM UPSTREAM REBASE" section in \fBgit-rebase\fR(1) for further information about rewriting published history\&.)
+.sp
+Always verify that the rewritten version is correct: The original refs, if different from the rewritten ones, will be stored in the namespace \fIrefs/original/\fR\&.
+.sp
+Note that since this operation is very I/O expensive, it might be a good idea to redirect the temporary directory off\-disk with the \fB\-d\fR option, e\&.g\&. on tmpfs\&. Reportedly the speedup is very noticeable\&.
+.SS "Filters"
+.sp
+The filters are applied in the order as listed below\&. The <command> argument is always evaluated in the shell context using the \fIeval\fR command (with the notable exception of the commit filter, for technical reasons)\&. Prior to that, the \fB$GIT_COMMIT\fR environment variable will be set to contain the id of the commit being rewritten\&. Also, GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL, GIT_AUTHOR_DATE, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL, and GIT_COMMITTER_DATE are taken from the current commit and exported to the environment, in order to affect the author and committer identities of the replacement commit created by \fBgit-commit-tree\fR(1) after the filters have run\&.
+.sp
+If any evaluation of <command> returns a non\-zero exit status, the whole operation will be aborted\&.
+.sp
+A \fImap\fR function is available that takes an "original sha1 id" argument and outputs a "rewritten sha1 id" if the commit has been already rewritten, and "original sha1 id" otherwise; the \fImap\fR function can return several ids on separate lines if your commit filter emitted multiple commits\&.
+.SH "OPTIONS"
+.PP
+\-\-setup <command>
+.RS 4
+This is not a real filter executed for each commit but a one time setup just before the loop\&. Therefore no commit\-specific variables are defined yet\&. Functions or variables defined here can be used or modified in the following filter steps except the commit filter, for technical reasons\&.
+.RE
+.PP
+\-\-subdirectory\-filter <directory>
+.RS 4
+Only look at the history which touches the given subdirectory\&. The result will contain that directory (and only that) as its project root\&. Implies
+the section called \(lqRemap to ancestor\(rq\&.
+.RE
+.PP
+\-\-env\-filter <command>
+.RS 4
+This filter may be used if you only need to modify the environment in which the commit will be performed\&. Specifically, you might want to rewrite the author/committer name/email/time environment variables (see
+\fBgit-commit-tree\fR(1)
+for details)\&.
+.RE
+.PP
+\-\-tree\-filter <command>
+.RS 4
+This is the filter for rewriting the tree and its contents\&. The argument is evaluated in shell with the working directory set to the root of the checked out tree\&. The new tree is then used as\-is (new files are auto\-added, disappeared files are auto\-removed \- neither \&.gitignore files nor any other ignore rules
+\fBHAVE ANY EFFECT\fR!)\&.
+.RE
+.PP
+\-\-index\-filter <command>
+.RS 4
+This is the filter for rewriting the index\&. It is similar to the tree filter but does not check out the tree, which makes it much faster\&. Frequently used with
+\fBgit rm \-\-cached \-\-ignore\-unmatch \&.\&.\&.\fR, see EXAMPLES below\&. For hairy cases, see
+\fBgit-update-index\fR(1)\&.
+.RE
+.PP
+\-\-parent\-filter <command>
+.RS 4
+This is the filter for rewriting the commit\(cqs parent list\&. It will receive the parent string on stdin and shall output the new parent string on stdout\&. The parent string is in the format described in
+\fBgit-commit-tree\fR(1): empty for the initial commit, "\-p parent" for a normal commit and "\-p parent1 \-p parent2 \-p parent3 \&..." for a merge commit\&.
+.RE
+.PP
+\-\-msg\-filter <command>
+.RS 4
+This is the filter for rewriting the commit messages\&. The argument is evaluated in the shell with the original commit message on standard input; its standard output is used as the new commit message\&.
+.RE
+.PP
+\-\-commit\-filter <command>
+.RS 4
+This is the filter for performing the commit\&. If this filter is specified, it will be called instead of the
+\fIgit commit\-tree\fR
+command, with arguments of the form "<TREE_ID> [(\-p <PARENT_COMMIT_ID>)\&...]" and the log message on stdin\&. The commit id is expected on stdout\&.
+.sp
+As a special extension, the commit filter may emit multiple commit ids; in that case, the rewritten children of the original commit will have all of them as parents\&.
+.sp
+You can use the
+\fImap\fR
+convenience function in this filter, and other convenience functions, too\&. For example, calling
+\fIskip_commit "$@"\fR
+will leave out the current commit (but not its changes! If you want that, use
+\fIgit rebase\fR
+instead)\&.
+.sp
+You can also use the
+\fBgit_commit_non_empty_tree "$@"\fR
+instead of
+\fBgit commit\-tree "$@"\fR
+if you don\(cqt wish to keep commits with a single parent and that makes no change to the tree\&.
+.RE
+.PP
+\-\-tag\-name\-filter <command>
+.RS 4
+This is the filter for rewriting tag names\&. When passed, it will be called for every tag ref that points to a rewritten object (or to a tag object which points to a rewritten object)\&. The original tag name is passed via standard input, and the new tag name is expected on standard output\&.
+.sp
+The original tags are not deleted, but can be overwritten; use "\-\-tag\-name\-filter cat" to simply update the tags\&. In this case, be very careful and make sure you have the old tags backed up in case the conversion has run afoul\&.
+.sp
+Nearly proper rewriting of tag objects is supported\&. If the tag has a message attached, a new tag object will be created with the same message, author, and timestamp\&. If the tag has a signature attached, the signature will be stripped\&. It is by definition impossible to preserve signatures\&. The reason this is "nearly" proper, is because ideally if the tag did not change (points to the same object, has the same name, etc\&.) it should retain any signature\&. That is not the case, signatures will always be removed, buyer beware\&. There is also no support for changing the author or timestamp (or the tag message for that matter)\&. Tags which point to other tags will be rewritten to point to the underlying commit\&.
+.RE
+.PP
+\-\-prune\-empty
+.RS 4
+Some filters will generate empty commits that leave the tree untouched\&. This option instructs git\-filter\-branch to remove such commits if they have exactly one or zero non\-pruned parents; merge commits will therefore remain intact\&. This option cannot be used together with
+\fB\-\-commit\-filter\fR, though the same effect can be achieved by using the provided
+\fBgit_commit_non_empty_tree\fR
+function in a commit filter\&.
+.RE
+.PP
+\-\-original <namespace>
+.RS 4
+Use this option to set the namespace where the original commits will be stored\&. The default value is
+\fIrefs/original\fR\&.
+.RE
+.PP
+\-d <directory>
+.RS 4
+Use this option to set the path to the temporary directory used for rewriting\&. When applying a tree filter, the command needs to temporarily check out the tree to some directory, which may consume considerable space in case of large projects\&. By default it does this in the
+\fI\&.git\-rewrite/\fR
+directory but you can override that choice by this parameter\&.
+.RE
+.PP
+\-f, \-\-force
+.RS 4
+\fIgit filter\-branch\fR
+refuses to start with an existing temporary directory or when there are already refs starting with
+\fIrefs/original/\fR, unless forced\&.
+.RE
+.PP
+\-\-state\-branch <branch>
+.RS 4
+This option will cause the mapping from old to new objects to be loaded from named branch upon startup and saved as a new commit to that branch upon exit, enabling incremental of large trees\&. If
+\fI<branch>\fR
+does not exist it will be created\&.
+.RE
+.PP
+<rev\-list options>\&...
+.RS 4
+Arguments for
+\fIgit rev\-list\fR\&. All positive refs included by these options are rewritten\&. You may also specify options such as
+\fB\-\-all\fR, but you must use
+\fB\-\-\fR
+to separate them from the
+\fIgit filter\-branch\fR
+options\&. Implies
+the section called \(lqRemap to ancestor\(rq\&.
+.RE
+.SS "Remap to ancestor"
+.sp
+By using \fBgit-rev-list\fR(1) arguments, e\&.g\&., path limiters, you can limit the set of revisions which get rewritten\&. However, positive refs on the command line are distinguished: we don\(cqt let them be excluded by such limiters\&. For this purpose, they are instead rewritten to point at the nearest ancestor that was not excluded\&.
+.SH "EXAMPLES"
+.sp
+Suppose you want to remove a file (containing confidential information or copyright violation) from all commits:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-tree\-filter \(aqrm filename\(aq HEAD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+However, if the file is absent from the tree of some commit, a simple \fBrm filename\fR will fail for that tree and commit\&. Thus you may instead want to use \fBrm \-f filename\fR as the script\&.
+.sp
+Using \fB\-\-index\-filter\fR with \fIgit rm\fR yields a significantly faster version\&. Like with using \fBrm filename\fR, \fBgit rm \-\-cached filename\fR will fail if the file is absent from the tree of a commit\&. If you want to "completely forget" a file, it does not matter when it entered history, so we also add \fB\-\-ignore\-unmatch\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-index\-filter \(aqgit rm \-\-cached \-\-ignore\-unmatch filename\(aq HEAD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Now, you will get the rewritten history saved in HEAD\&.
+.sp
+To rewrite the repository to look as if \fBfoodir/\fR had been its project root, and discard all other history:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-subdirectory\-filter foodir \-\- \-\-all
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Thus you can, e\&.g\&., turn a library subdirectory into a repository of its own\&. Note the \fB\-\-\fR that separates \fIfilter\-branch\fR options from revision options, and the \fB\-\-all\fR to rewrite all branches and tags\&.
+.sp
+To set a commit (which typically is at the tip of another history) to be the parent of the current initial commit, in order to paste the other history behind the current history:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-parent\-filter \(aqsed "s/^\e$/\-p <graft\-id>/"\(aq HEAD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+(if the parent string is empty \- which happens when we are dealing with the initial commit \- add graftcommit as a parent)\&. Note that this assumes history with a single root (that is, no merge without common ancestors happened)\&. If this is not the case, use:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-parent\-filter \e
+        \(aqtest $GIT_COMMIT = <commit\-id> && echo "\-p <graft\-id>" || cat\(aq HEAD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+or even simpler:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+echo "$commit\-id $graft\-id" >> \&.git/info/grafts
+git filter\-branch $graft\-id\&.\&.HEAD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+To remove commits authored by "Darl McBribe" from the history:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-commit\-filter \(aq
+        if [ "$GIT_AUTHOR_NAME" = "Darl McBribe" ];
+        then
+                skip_commit "$@";
+        else
+                git commit\-tree "$@";
+        fi\(aq HEAD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The function \fIskip_commit\fR is defined as follows:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+skip_commit()
+{
+        shift;
+        while [ \-n "$1" ];
+        do
+                shift;
+                map "$1";
+                shift;
+        done;
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The shift magic first throws away the tree id and then the \-p parameters\&. Note that this handles merges properly! In case Darl committed a merge between P1 and P2, it will be propagated properly and all children of the merge will become merge commits with P1,P2 as their parents instead of the merge commit\&.
+.sp
+\fBNOTE\fR the changes introduced by the commits, and which are not reverted by subsequent commits, will still be in the rewritten branch\&. If you want to throw out \fIchanges\fR together with the commits, you should use the interactive mode of \fIgit rebase\fR\&.
+.sp
+You can rewrite the commit log messages using \fB\-\-msg\-filter\fR\&. For example, \fIgit svn\-id\fR strings in a repository created by \fIgit svn\fR can be removed this way:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-msg\-filter \(aq
+        sed \-e "/^git\-svn\-id:/d"
+\(aq
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If you need to add \fIAcked\-by\fR lines to, say, the last 10 commits (none of which is a merge), use this command:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-msg\-filter \(aq
+        cat &&
+        echo "Acked\-by: Bugs Bunny <bunny@bugzilla\&.org>"
+\(aq HEAD~10\&.\&.HEAD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The \fB\-\-env\-filter\fR option can be used to modify committer and/or author identity\&. For example, if you found out that your commits have the wrong identity due to a misconfigured user\&.email, you can make a correction, before publishing the project, like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-env\-filter \(aq
+        if test "$GIT_AUTHOR_EMAIL" = "root@localhost"
+        then
+                GIT_AUTHOR_EMAIL=john@example\&.com
+        fi
+        if test "$GIT_COMMITTER_EMAIL" = "root@localhost"
+        then
+                GIT_COMMITTER_EMAIL=john@example\&.com
+        fi
+\(aq \-\- \-\-all
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+To restrict rewriting to only part of the history, specify a revision range in addition to the new branch name\&. The new branch name will point to the top\-most revision that a \fIgit rev\-list\fR of this range will print\&.
+.sp
+Consider this history:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+     D\-\-E\-\-F\-\-G\-\-H
+    /     /
+A\-\-B\-\-\-\-\-C
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+To rewrite only commits D,E,F,G,H, but leave A, B and C alone, use:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \&.\&.\&. C\&.\&.H
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+To rewrite commits E,F,G,H, use one of these:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \&.\&.\&. C\&.\&.H \-\-not D
+git filter\-branch \&.\&.\&. D\&.\&.H \-\-not C
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+To move the whole tree into a subdirectory, or remove it from there:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git filter\-branch \-\-index\-filter \e
+        \(aqgit ls\-files \-s | sed "s\-\et\e"*\-&newsubdir/\-" |
+                GIT_INDEX_FILE=$GIT_INDEX_FILE\&.new \e
+                        git update\-index \-\-index\-info &&
+         mv "$GIT_INDEX_FILE\&.new" "$GIT_INDEX_FILE"\(aq HEAD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "CHECKLIST FOR SHRINKING A REPOSITORY"
+.sp
+git\-filter\-branch can be used to get rid of a subset of files, usually with some combination of \fB\-\-index\-filter\fR and \fB\-\-subdirectory\-filter\fR\&. People expect the resulting repository to be smaller than the original, but you need a few more steps to actually make it smaller, because Git tries hard not to lose your objects until you tell it to\&. First make sure that:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+You really removed all variants of a filename, if a blob was moved over its lifetime\&.
+\fBgit log \-\-name\-only \-\-follow \-\-all \-\- filename\fR
+can help you find renames\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+You really filtered all refs: use
+\fB\-\-tag\-name\-filter cat \-\- \-\-all\fR
+when calling git\-filter\-branch\&.
+.RE
+.sp
+Then there are two ways to get a smaller repository\&. A safer way is to clone, that keeps your original intact\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Clone it with
+\fBgit clone file:///path/to/repo\fR\&. The clone will not have the removed objects\&. See
+\fBgit-clone\fR(1)\&. (Note that cloning with a plain path just hardlinks everything!)
+.RE
+.sp
+If you really don\(cqt want to clone it, for whatever reasons, check the following points instead (in this order)\&. This is a very destructive approach, so \fBmake a backup\fR or go back to cloning it\&. You have been warned\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Remove the original refs backed up by git\-filter\-branch: say
+\fBgit for\-each\-ref \-\-format="%(refname)" refs/original/ | xargs \-n 1 git update\-ref \-d\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Expire all reflogs with
+\fBgit reflog expire \-\-expire=now \-\-all\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Garbage collect all unreferenced objects with
+\fBgit gc \-\-prune=now\fR
+(or if your git\-gc is not new enough to support arguments to
+\fB\-\-prune\fR, use
+\fBgit repack \-ad; git prune\fR
+instead)\&.
+.RE
+.SH "NOTES"
+.sp
+git\-filter\-branch allows you to make complex shell\-scripted rewrites of your Git history, but you probably don\(cqt need this flexibility if you\(cqre simply \fIremoving unwanted data\fR like large files or passwords\&. For those operations you may want to consider \m[blue]\fBThe BFG Repo\-Cleaner\fR\m[]\&\s-2\u[1]\d\s+2, a JVM\-based alternative to git\-filter\-branch, typically at least 10\-50x faster for those use\-cases, and with quite different characteristics:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Any particular version of a file is cleaned exactly
+\fIonce\fR\&. The BFG, unlike git\-filter\-branch, does not give you the opportunity to handle a file differently based on where or when it was committed within your history\&. This constraint gives the core performance benefit of The BFG, and is well\-suited to the task of cleansing bad data \- you don\(cqt care
+\fIwhere\fR
+the bad data is, you just want it
+\fIgone\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+By default The BFG takes full advantage of multi\-core machines, cleansing commit file\-trees in parallel\&. git\-filter\-branch cleans commits sequentially (i\&.e\&. in a single\-threaded manner), though it
+\fIis\fR
+possible to write filters that include their own parallelism, in the scripts executed against each commit\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The
+\m[blue]\fBcommand options\fR\m[]\&\s-2\u[2]\d\s+2
+are much more restrictive than git\-filter branch, and dedicated just to the tasks of removing unwanted data\- e\&.g:
+\fB\-\-strip\-blobs\-bigger\-than 1M\fR\&.
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite
+.SH "NOTES"
+.IP " 1." 4
+The BFG Repo-Cleaner
+.RS 4
+\%http://rtyley.github.io/bfg-repo-cleaner/
+.RE
+.IP " 2." 4
+command options
+.RS 4
+\%http://rtyley.github.io/bfg-repo-cleaner/#examples
+.RE

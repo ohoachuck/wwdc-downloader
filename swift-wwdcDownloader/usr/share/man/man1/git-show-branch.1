@@ -1,0 +1,226 @@
+'\" t
+.\"     Title: git-show-branch
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-SHOW\-BRANCH" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-show-branch \- Show branches and their commits
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit show\-branch\fR [\-a|\-\-all] [\-r|\-\-remotes] [\-\-topo\-order | \-\-date\-order]
+                [\-\-current] [\-\-color[=<when>] | \-\-no\-color] [\-\-sparse]
+                [\-\-more=<n> | \-\-list | \-\-independent | \-\-merge\-base]
+                [\-\-no\-name | \-\-sha1\-name] [\-\-topics]
+                [(<rev> | <glob>)\&...]
+\fIgit show\-branch\fR (\-g|\-\-reflog)[=<n>[,<base>]] [\-\-list] [<ref>]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Shows the commit ancestry graph starting from the commits named with <rev>s or <globs>s (or all refs under refs/heads and/or refs/tags) semi\-visually\&.
+.sp
+It cannot show more than 29 branches and commits at a time\&.
+.sp
+It uses \fBshowbranch\&.default\fR multi\-valued configuration items if no <rev> or <glob> is given on the command line\&.
+.SH "OPTIONS"
+.PP
+<rev>
+.RS 4
+Arbitrary extended SHA\-1 expression (see
+\fBgitrevisions\fR(7)) that typically names a branch head or a tag\&.
+.RE
+.PP
+<glob>
+.RS 4
+A glob pattern that matches branch or tag names under refs/\&. For example, if you have many topic branches under refs/heads/topic, giving
+\fBtopic/*\fR
+would show all of them\&.
+.RE
+.PP
+\-r, \-\-remotes
+.RS 4
+Show the remote\-tracking branches\&.
+.RE
+.PP
+\-a, \-\-all
+.RS 4
+Show both remote\-tracking branches and local branches\&.
+.RE
+.PP
+\-\-current
+.RS 4
+With this option, the command includes the current branch to the list of revs to be shown when it is not given on the command line\&.
+.RE
+.PP
+\-\-topo\-order
+.RS 4
+By default, the branches and their commits are shown in reverse chronological order\&. This option makes them appear in topological order (i\&.e\&., descendant commits are shown before their parents)\&.
+.RE
+.PP
+\-\-date\-order
+.RS 4
+This option is similar to
+\fB\-\-topo\-order\fR
+in the sense that no parent comes before all of its children, but otherwise commits are ordered according to their commit date\&.
+.RE
+.PP
+\-\-sparse
+.RS 4
+By default, the output omits merges that are reachable from only one tip being shown\&. This option makes them visible\&.
+.RE
+.PP
+\-\-more=<n>
+.RS 4
+Usually the command stops output upon showing the commit that is the common ancestor of all the branches\&. This flag tells the command to go <n> more common commits beyond that\&. When <n> is negative, display only the <reference>s given, without showing the commit ancestry tree\&.
+.RE
+.PP
+\-\-list
+.RS 4
+Synonym to
+\fB\-\-more=\-1\fR
+.RE
+.PP
+\-\-merge\-base
+.RS 4
+Instead of showing the commit list, determine possible merge bases for the specified commits\&. All merge bases will be contained in all specified commits\&. This is different from how
+\fBgit-merge-base\fR(1)
+handles the case of three or more commits\&.
+.RE
+.PP
+\-\-independent
+.RS 4
+Among the <reference>s given, display only the ones that cannot be reached from any other <reference>\&.
+.RE
+.PP
+\-\-no\-name
+.RS 4
+Do not show naming strings for each commit\&.
+.RE
+.PP
+\-\-sha1\-name
+.RS 4
+Instead of naming the commits using the path to reach them from heads (e\&.g\&. "master~2" to mean the grandparent of "master"), name them with the unique prefix of their object names\&.
+.RE
+.PP
+\-\-topics
+.RS 4
+Shows only commits that are NOT on the first branch given\&. This helps track topic branches by hiding any commit that is already in the main line of development\&. When given "git show\-branch \-\-topics master topic1 topic2", this will show the revisions given by "git rev\-list ^master topic1 topic2"
+.RE
+.PP
+\-g, \-\-reflog[=<n>[,<base>]] [<ref>]
+.RS 4
+Shows <n> most recent ref\-log entries for the given ref\&. If <base> is given, <n> entries going back from that entry\&. <base> can be specified as count or date\&. When no explicit <ref> parameter is given, it defaults to the current branch (or
+\fBHEAD\fR
+if it is detached)\&.
+.RE
+.PP
+\-\-color[=<when>]
+.RS 4
+Color the status sign (one of these:
+\fB*\fR
+\fB!\fR
+\fB+\fR
+\fB\-\fR) of each commit corresponding to the branch it\(cqs in\&. The value must be always (the default), never, or auto\&.
+.RE
+.PP
+\-\-no\-color
+.RS 4
+Turn off colored output, even when the configuration file gives the default to color output\&. Same as
+\fB\-\-color=never\fR\&.
+.RE
+.sp
+Note that \-\-more, \-\-list, \-\-independent and \-\-merge\-base options are mutually exclusive\&.
+.SH "OUTPUT"
+.sp
+Given N <references>, the first N lines are the one\-line description from their commit message\&. The branch head that is pointed at by $GIT_DIR/HEAD is prefixed with an asterisk \fB*\fR character while other heads are prefixed with a \fB!\fR character\&.
+.sp
+Following these N lines, one\-line log for each commit is displayed, indented N places\&. If a commit is on the I\-th branch, the I\-th indentation character shows a \fB+\fR sign; otherwise it shows a space\&. Merge commits are denoted by a \fB\-\fR sign\&. Each commit shows a short name that can be used as an extended SHA\-1 to name that commit\&.
+.sp
+The following example shows three branches, "master", "fixes" and "mhf":
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git show\-branch master fixes mhf
+* [master] Add \(aqgit show\-branch\(aq\&.
+ ! [fixes] Introduce "reset type" flag to "git reset"
+  ! [mhf] Allow "+remote:local" refspec to cause \-\-force when fetching\&.
+\-\-\-
+  + [mhf] Allow "+remote:local" refspec to cause \-\-force when fetching\&.
+  + [mhf~1] Use git\-octopus when pulling more than one heads\&.
+ +  [fixes] Introduce "reset type" flag to "git reset"
+  + [mhf~2] "git fetch \-\-force"\&.
+  + [mhf~3] Use \&.git/remote/origin, not \&.git/branches/origin\&.
+  + [mhf~4] Make "git pull" and "git fetch" default to origin
+  + [mhf~5] Infamous \(aqoctopus merge\(aq
+  + [mhf~6] Retire git\-parse\-remote\&.
+  + [mhf~7] Multi\-head fetch\&.
+  + [mhf~8] Start adding the $GIT_DIR/remotes/ support\&.
+*++ [master] Add \(aqgit show\-branch\(aq\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+These three branches all forked from a common commit, [master], whose commit message is "Add \(aqgit show\-branch\(aq"\&. The "fixes" branch adds one commit "Introduce "reset type" flag to "git reset""\&. The "mhf" branch adds many other commits\&. The current branch is "master"\&.
+.SH "EXAMPLE"
+.sp
+If you keep your primary branches immediately under \fBrefs/heads\fR, and topic branches in subdirectories of it, having the following in the configuration file may help:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[showbranch]
+        default = \-\-topo\-order
+        default = heads/*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+With this, \fBgit show\-branch\fR without extra parameters would show only the primary branches\&. In addition, if you happen to be on your topic branch, it is shown as well\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git show\-branch \-\-reflog="10,1 hour ago" \-\-list master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+shows 10 reflog entries going back from the tip as of 1 hour ago\&. Without \fB\-\-list\fR, the output also shows how these tips are topologically related with each other\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

@@ -1,0 +1,1577 @@
+'\" t
+.\"     Title: gitattributes
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GITATTRIBUTES" "5" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+gitattributes \- defining attributes per path
+.SH "SYNOPSIS"
+.sp
+$GIT_DIR/info/attributes, \&.gitattributes
+.SH "DESCRIPTION"
+.sp
+A \fBgitattributes\fR file is a simple text file that gives \fBattributes\fR to pathnames\&.
+.sp
+Each line in \fBgitattributes\fR file is of form:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+pattern attr1 attr2 \&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+That is, a pattern followed by an attributes list, separated by whitespaces\&. Leading and trailing whitespaces are ignored\&. Lines that begin with \fI#\fR are ignored\&. Patterns that begin with a double quote are quoted in C style\&. When the pattern matches the path in question, the attributes listed on the line are given to the path\&.
+.sp
+Each attribute can be in one of these states for a given path:
+.PP
+Set
+.RS 4
+The path has the attribute with special value "true"; this is specified by listing only the name of the attribute in the attribute list\&.
+.RE
+.PP
+Unset
+.RS 4
+The path has the attribute with special value "false"; this is specified by listing the name of the attribute prefixed with a dash
+\fB\-\fR
+in the attribute list\&.
+.RE
+.PP
+Set to a value
+.RS 4
+The path has the attribute with specified string value; this is specified by listing the name of the attribute followed by an equal sign
+\fB=\fR
+and its value in the attribute list\&.
+.RE
+.PP
+Unspecified
+.RS 4
+No pattern matches the path, and nothing says if the path has or does not have the attribute, the attribute for the path is said to be Unspecified\&.
+.RE
+.sp
+When more than one pattern matches the path, a later line overrides an earlier line\&. This overriding is done per attribute\&.
+.sp
+The rules by which the pattern matches paths are the same as in \fB\&.gitignore\fR files (see \fBgitignore\fR(5)), with a few exceptions:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+negative patterns are forbidden
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+patterns that match a directory do not recursively match paths inside that directory (so using the trailing\-slash
+\fBpath/\fR
+syntax is pointless in an attributes file; use
+\fBpath/**\fR
+instead)
+.RE
+.sp
+When deciding what attributes are assigned to a path, Git consults \fB$GIT_DIR/info/attributes\fR file (which has the highest precedence), \fB\&.gitattributes\fR file in the same directory as the path in question, and its parent directories up to the toplevel of the work tree (the further the directory that contains \fB\&.gitattributes\fR is from the path in question, the lower its precedence)\&. Finally global and system\-wide files are considered (they have the lowest precedence)\&.
+.sp
+When the \fB\&.gitattributes\fR file is missing from the work tree, the path in the index is used as a fall\-back\&. During checkout process, \fB\&.gitattributes\fR in the index is used and then the file in the working tree is used as a fall\-back\&.
+.sp
+If you wish to affect only a single repository (i\&.e\&., to assign attributes to files that are particular to one user\(cqs workflow for that repository), then attributes should be placed in the \fB$GIT_DIR/info/attributes\fR file\&. Attributes which should be version\-controlled and distributed to other repositories (i\&.e\&., attributes of interest to all users) should go into \fB\&.gitattributes\fR files\&. Attributes that should affect all repositories for a single user should be placed in a file specified by the \fBcore\&.attributesFile\fR configuration option (see \fBgit-config\fR(1))\&. Its default value is $XDG_CONFIG_HOME/git/attributes\&. If $XDG_CONFIG_HOME is either not set or empty, $HOME/\&.config/git/attributes is used instead\&. Attributes for all users on a system should be placed in the \fB$(prefix)/etc/gitattributes\fR file\&.
+.sp
+Sometimes you would need to override a setting of an attribute for a path to \fBUnspecified\fR state\&. This can be done by listing the name of the attribute prefixed with an exclamation point \fB!\fR\&.
+.SH "EFFECTS"
+.sp
+Certain operations by Git can be influenced by assigning particular attributes to a path\&. Currently, the following operations are attributes\-aware\&.
+.SS "Checking\-out and checking\-in"
+.sp
+These attributes affect how the contents stored in the repository are copied to the working tree files when commands such as \fIgit checkout\fR and \fIgit merge\fR run\&. They also affect how Git stores the contents you prepare in the working tree in the repository upon \fIgit add\fR and \fIgit commit\fR\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBtext\fR
+.RS 4
+.sp
+This attribute enables and controls end\-of\-line normalization\&. When a text file is normalized, its line endings are converted to LF in the repository\&. To control what line ending style is used in the working directory, use the \fBeol\fR attribute for a single file and the \fBcore\&.eol\fR configuration variable for all text files\&. Note that \fBcore\&.autocrlf\fR overrides \fBcore\&.eol\fR
+.PP
+Set
+.RS 4
+Setting the
+\fBtext\fR
+attribute on a path enables end\-of\-line normalization and marks the path as a text file\&. End\-of\-line conversion takes place without guessing the content type\&.
+.RE
+.PP
+Unset
+.RS 4
+Unsetting the
+\fBtext\fR
+attribute on a path tells Git not to attempt any end\-of\-line conversion upon checkin or checkout\&.
+.RE
+.PP
+Set to string value "auto"
+.RS 4
+When
+\fBtext\fR
+is set to "auto", the path is marked for automatic end\-of\-line conversion\&. If Git decides that the content is text, its line endings are converted to LF on checkin\&. When the file has been committed with CRLF, no conversion is done\&.
+.RE
+.PP
+Unspecified
+.RS 4
+If the
+\fBtext\fR
+attribute is unspecified, Git uses the
+\fBcore\&.autocrlf\fR
+configuration variable to determine if the file should be converted\&.
+.RE
+.sp
+Any other value causes Git to act as if \fBtext\fR has been left unspecified\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBeol\fR
+.RS 4
+.sp
+This attribute sets a specific line\-ending style to be used in the working directory\&. It enables end\-of\-line conversion without any content checks, effectively setting the \fBtext\fR attribute\&. Note that setting this attribute on paths which are in the index with CRLF line endings may make the paths to be considered dirty\&. Adding the path to the index again will normalize the line endings in the index\&.
+.PP
+Set to string value "crlf"
+.RS 4
+This setting forces Git to normalize line endings for this file on checkin and convert them to CRLF when the file is checked out\&.
+.RE
+.PP
+Set to string value "lf"
+.RS 4
+This setting forces Git to normalize line endings to LF on checkin and prevents conversion to CRLF when the file is checked out\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBackwards compatibility with crlf attribute\fR
+.RS 4
+.sp
+For backwards compatibility, the \fBcrlf\fR attribute is interpreted as follows:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+crlf            text
+\-crlf           \-text
+crlf=input      eol=lf
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBEnd-of-line conversion\fR
+.RS 4
+.sp
+While Git normally leaves file contents alone, it can be configured to normalize line endings to LF in the repository and, optionally, to convert them to CRLF when files are checked out\&.
+.sp
+If you simply want to have CRLF line endings in your working directory regardless of the repository you are working with, you can set the config variable "core\&.autocrlf" without using any attributes\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[core]
+        autocrlf = true
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+This does not force normalization of text files, but does ensure that text files that you introduce to the repository have their line endings normalized to LF when they are added, and that files that are already normalized in the repository stay normalized\&.
+.sp
+If you want to ensure that text files that any contributor introduces to the repository have their line endings normalized, you can set the \fBtext\fR attribute to "auto" for \fIall\fR files\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+*       text=auto
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The attributes allow a fine\-grained control, how the line endings are converted\&. Here is an example that will make Git normalize \&.txt, \&.vcproj and \&.sh files, ensure that \&.vcproj files have CRLF and \&.sh files have LF in the working directory, and prevent \&.jpg files from being normalized regardless of their content\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+*               text=auto
+*\&.txt           text
+*\&.vcproj        text eol=crlf
+*\&.sh            text eol=lf
+*\&.jpg           \-text
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+When \fBtext=auto\fR conversion is enabled in a cross\-platform project using push and pull to a central repository the text files containing CRLFs should be normalized\&.
+.sp .5v
+.RE
+.sp
+From a clean working directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ echo "* text=auto" >\&.gitattributes
+$ git add \-\-renormalize \&.
+$ git status        # Show files that will be normalized
+$ git commit \-m "Introduce end\-of\-line normalization"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If any files that should not be normalized show up in \fIgit status\fR, unset their \fBtext\fR attribute before running \fIgit add \-u\fR\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+manual\&.pdf      \-text
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Conversely, text files that Git does not detect can have normalization enabled manually\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+weirdchars\&.txt  text
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If \fBcore\&.safecrlf\fR is set to "true" or "warn", Git verifies if the conversion is reversible for the current setting of \fBcore\&.autocrlf\fR\&. For "true", Git rejects irreversible conversions; for "warn", Git only prints a warning but accepts an irreversible conversion\&. The safety triggers to prevent such a conversion done to the files in the work tree, but there are a few exceptions\&. Even though\&...
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIgit add\fR
+itself does not touch the files in the work tree, the next checkout would, so the safety triggers;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIgit apply\fR
+to update a text file with a patch does touch the files in the work tree, but the operation is about text files and CRLF conversion is about fixing the line ending inconsistencies, so the safety does not trigger;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIgit diff\fR
+itself does not touch the files in the work tree, it is often run to inspect the changes you intend to next
+\fIgit add\fR\&. To catch potential problems early, safety triggers\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBident\fR
+.RS 4
+.sp
+When the attribute \fBident\fR is set for a path, Git replaces \fB$Id$\fR in the blob object with \fB$Id:\fR, followed by the 40\-character hexadecimal blob object name, followed by a dollar sign \fB$\fR upon checkout\&. Any byte sequence that begins with \fB$Id:\fR and ends with \fB$\fR in the worktree file is replaced with \fB$Id$\fR upon check\-in\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBfilter\fR
+.RS 4
+.sp
+A \fBfilter\fR attribute can be set to a string value that names a filter driver specified in the configuration\&.
+.sp
+A filter driver consists of a \fBclean\fR command and a \fBsmudge\fR command, either of which can be left unspecified\&. Upon checkout, when the \fBsmudge\fR command is specified, the command is fed the blob object from its standard input, and its standard output is used to update the worktree file\&. Similarly, the \fBclean\fR command is used to convert the contents of worktree file upon checkin\&. By default these commands process only a single blob and terminate\&. If a long running \fBprocess\fR filter is used in place of \fBclean\fR and/or \fBsmudge\fR filters, then Git can process all blobs with a single filter command invocation for the entire life of a single Git command, for example \fBgit add \-\-all\fR\&. If a long running \fBprocess\fR filter is configured then it always takes precedence over a configured single blob filter\&. See section below for the description of the protocol used to communicate with a \fBprocess\fR filter\&.
+.sp
+One use of the content filtering is to massage the content into a shape that is more convenient for the platform, filesystem, and the user to use\&. For this mode of operation, the key phrase here is "more convenient" and not "turning something unusable into usable"\&. In other words, the intent is that if someone unsets the filter driver definition, or does not have the appropriate filter program, the project should still be usable\&.
+.sp
+Another use of the content filtering is to store the content that cannot be directly used in the repository (e\&.g\&. a UUID that refers to the true content stored outside Git, or an encrypted content) and turn it into a usable form upon checkout (e\&.g\&. download the external content, or decrypt the encrypted content)\&.
+.sp
+These two filters behave differently, and by default, a filter is taken as the former, massaging the contents into more convenient shape\&. A missing filter driver definition in the config, or a filter driver that exits with a non\-zero status, is not an error but makes the filter a no\-op passthru\&.
+.sp
+You can declare that a filter turns a content that by itself is unusable into a usable content by setting the filter\&.<driver>\&.required configuration variable to \fBtrue\fR\&.
+.sp
+Note: Whenever the clean filter is changed, the repo should be renormalized: $ git add \-\-renormalize \&.
+.sp
+For example, in \&.gitattributes, you would assign the \fBfilter\fR attribute for paths\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+*\&.c     filter=indent
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Then you would define a "filter\&.indent\&.clean" and "filter\&.indent\&.smudge" configuration in your \&.git/config to specify a pair of commands to modify the contents of C programs when the source files are checked in ("clean" is run) and checked out (no change is made because the command is "cat")\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[filter "indent"]
+        clean = indent
+        smudge = cat
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+For best results, \fBclean\fR should not alter its output further if it is run twice ("clean\(->clean" should be equivalent to "clean"), and multiple \fBsmudge\fR commands should not alter \fBclean\fR\(aqs output ("smudge\(->smudge\(->clean" should be equivalent to "clean")\&. See the section on merging below\&.
+.sp
+The "indent" filter is well\-behaved in this regard: it will not modify input that is already correctly indented\&. In this case, the lack of a smudge filter means that the clean filter \fImust\fR accept its own output without modifying it\&.
+.sp
+If a filter \fImust\fR succeed in order to make the stored contents usable, you can declare that the filter is \fBrequired\fR, in the configuration:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[filter "crypt"]
+        clean = openssl enc \&.\&.\&.
+        smudge = openssl enc \-d \&.\&.\&.
+        required
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Sequence "%f" on the filter command line is replaced with the name of the file the filter is working on\&. A filter might use this in keyword substitution\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[filter "p4"]
+        clean = git\-p4\-filter \-\-clean %f
+        smudge = git\-p4\-filter \-\-smudge %f
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Note that "%f" is the name of the path that is being worked on\&. Depending on the version that is being filtered, the corresponding file on disk may not exist, or may have different contents\&. So, smudge and clean commands should not try to access the file on disk, but only act as filters on the content provided to them on standard input\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBLong Running Filter Process\fR
+.RS 4
+.sp
+If the filter command (a string value) is defined via \fBfilter\&.<driver>\&.process\fR then Git can process all blobs with a single filter invocation for the entire life of a single Git command\&. This is achieved by using the long\-running process protocol (described in technical/long\-running\-process\-protocol\&.txt)\&.
+.sp
+When Git encounters the first file that needs to be cleaned or smudged, it starts the filter and performs the handshake\&. In the handshake, the welcome message sent by Git is "git\-filter\-client", only version 2 is suppported, and the supported capabilities are "clean", "smudge", and "delay"\&.
+.sp
+Afterwards Git sends a list of "key=value" pairs terminated with a flush packet\&. The list will contain at least the filter command (based on the supported capabilities) and the pathname of the file to filter relative to the repository root\&. Right after the flush packet Git sends the content split in zero or more pkt\-line packets and a flush packet to terminate content\&. Please note, that the filter must not send any response before it received the content and the final flush packet\&. Also note that the "value" of a "key=value" pair can contain the "=" character whereas the key would never contain that character\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+packet:          git> command=smudge
+packet:          git> pathname=path/testfile\&.dat
+packet:          git> 0000
+packet:          git> CONTENT
+packet:          git> 0000
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The filter is expected to respond with a list of "key=value" pairs terminated with a flush packet\&. If the filter does not experience problems then the list must contain a "success" status\&. Right after these packets the filter is expected to send the content in zero or more pkt\-line packets and a flush packet at the end\&. Finally, a second list of "key=value" pairs terminated with a flush packet is expected\&. The filter can change the status in the second list or keep the status as is with an empty list\&. Please note that the empty list must be terminated with a flush packet regardless\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+packet:          git< status=success
+packet:          git< 0000
+packet:          git< SMUDGED_CONTENT
+packet:          git< 0000
+packet:          git< 0000  # empty list, keep "status=success" unchanged!
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If the result content is empty then the filter is expected to respond with a "success" status and a flush packet to signal the empty content\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+packet:          git< status=success
+packet:          git< 0000
+packet:          git< 0000  # empty content!
+packet:          git< 0000  # empty list, keep "status=success" unchanged!
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+In case the filter cannot or does not want to process the content, it is expected to respond with an "error" status\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+packet:          git< status=error
+packet:          git< 0000
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If the filter experiences an error during processing, then it can send the status "error" after the content was (partially or completely) sent\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+packet:          git< status=success
+packet:          git< 0000
+packet:          git< HALF_WRITTEN_ERRONEOUS_CONTENT
+packet:          git< 0000
+packet:          git< status=error
+packet:          git< 0000
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+In case the filter cannot or does not want to process the content as well as any future content for the lifetime of the Git process, then it is expected to respond with an "abort" status at any point in the protocol\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+packet:          git< status=abort
+packet:          git< 0000
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Git neither stops nor restarts the filter process in case the "error"/"abort" status is set\&. However, Git sets its exit code according to the \fBfilter\&.<driver>\&.required\fR flag, mimicking the behavior of the \fBfilter\&.<driver>\&.clean\fR / \fBfilter\&.<driver>\&.smudge\fR mechanism\&.
+.sp
+If the filter dies during the communication or does not adhere to the protocol then Git will stop the filter process and restart it with the next file that needs to be processed\&. Depending on the \fBfilter\&.<driver>\&.required\fR flag Git will interpret that as error\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBDelay\fR
+.RS 4
+.sp
+If the filter supports the "delay" capability, then Git can send the flag "can\-delay" after the filter command and pathname\&. This flag denotes that the filter can delay filtering the current blob (e\&.g\&. to compensate network latencies) by responding with no content but with the status "delayed" and a flush packet\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+packet:          git> command=smudge
+packet:          git> pathname=path/testfile\&.dat
+packet:          git> can\-delay=1
+packet:          git> 0000
+packet:          git> CONTENT
+packet:          git> 0000
+packet:          git< status=delayed
+packet:          git< 0000
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If the filter supports the "delay" capability then it must support the "list_available_blobs" command\&. If Git sends this command, then the filter is expected to return a list of pathnames representing blobs that have been delayed earlier and are now available\&. The list must be terminated with a flush packet followed by a "success" status that is also terminated with a flush packet\&. If no blobs for the delayed paths are available, yet, then the filter is expected to block the response until at least one blob becomes available\&. The filter can tell Git that it has no more delayed blobs by sending an empty list\&. As soon as the filter responds with an empty list, Git stops asking\&. All blobs that Git has not received at this point are considered missing and will result in an error\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+packet:          git> command=list_available_blobs
+packet:          git> 0000
+packet:          git< pathname=path/testfile\&.dat
+packet:          git< pathname=path/otherfile\&.dat
+packet:          git< 0000
+packet:          git< status=success
+packet:          git< 0000
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+After Git received the pathnames, it will request the corresponding blobs again\&. These requests contain a pathname and an empty content section\&. The filter is expected to respond with the smudged content in the usual way as explained above\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+packet:          git> command=smudge
+packet:          git> pathname=path/testfile\&.dat
+packet:          git> 0000
+packet:          git> 0000  # empty content!
+packet:          git< status=success
+packet:          git< 0000
+packet:          git< SMUDGED_CONTENT
+packet:          git< 0000
+packet:          git< 0000  # empty list, keep "status=success" unchanged!
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBExample\fR
+.RS 4
+.sp
+A long running filter demo implementation can be found in \fBcontrib/long\-running\-filter/example\&.pl\fR located in the Git core repository\&. If you develop your own long running filter process then the \fBGIT_TRACE_PACKET\fR environment variables can be very helpful for debugging (see \fBgit\fR(1))\&.
+.sp
+Please note that you cannot use an existing \fBfilter\&.<driver>\&.clean\fR or \fBfilter\&.<driver>\&.smudge\fR command with \fBfilter\&.<driver>\&.process\fR because the former two use a different inter process communication protocol than the latter one\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBInteraction between checkin/checkout attributes\fR
+.RS 4
+.sp
+In the check\-in codepath, the worktree file is first converted with \fBfilter\fR driver (if specified and corresponding driver defined), then the result is processed with \fBident\fR (if specified), and then finally with \fBtext\fR (again, if specified and applicable)\&.
+.sp
+In the check\-out codepath, the blob content is first converted with \fBtext\fR, and then \fBident\fR and fed to \fBfilter\fR\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBMerging branches with differing checkin/checkout attributes\fR
+.RS 4
+.sp
+If you have added attributes to a file that cause the canonical repository format for that file to change, such as adding a clean/smudge filter or text/eol/ident attributes, merging anything where the attribute is not in place would normally cause merge conflicts\&.
+.sp
+To prevent these unnecessary merge conflicts, Git can be told to run a virtual check\-out and check\-in of all three stages of a file when resolving a three\-way merge by setting the \fBmerge\&.renormalize\fR configuration variable\&. This prevents changes caused by check\-in conversion from causing spurious merge conflicts when a converted file is merged with an unconverted file\&.
+.sp
+As long as a "smudge\(->clean" results in the same output as a "clean" even on files that are already smudged, this strategy will automatically resolve all filter\-related conflicts\&. Filters that do not act in this way may cause additional merge conflicts that must be resolved manually\&.
+.RE
+.SS "Generating diff text"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBdiff\fR
+.RS 4
+.sp
+The attribute \fBdiff\fR affects how Git generates diffs for particular files\&. It can tell Git whether to generate a textual patch for the path or to treat the path as a binary file\&. It can also affect what line is shown on the hunk header \fB@@ \-k,l +n,m @@\fR line, tell Git to use an external command to generate the diff, or ask Git to convert binary files to a text format before generating the diff\&.
+.PP
+Set
+.RS 4
+A path to which the
+\fBdiff\fR
+attribute is set is treated as text, even when they contain byte values that normally never appear in text files, such as NUL\&.
+.RE
+.PP
+Unset
+.RS 4
+A path to which the
+\fBdiff\fR
+attribute is unset will generate
+\fBBinary files differ\fR
+(or a binary patch, if binary patches are enabled)\&.
+.RE
+.PP
+Unspecified
+.RS 4
+A path to which the
+\fBdiff\fR
+attribute is unspecified first gets its contents inspected, and if it looks like text and is smaller than core\&.bigFileThreshold, it is treated as text\&. Otherwise it would generate
+\fBBinary files differ\fR\&.
+.RE
+.PP
+String
+.RS 4
+Diff is shown using the specified diff driver\&. Each driver may specify one or more options, as described in the following section\&. The options for the diff driver "foo" are defined by the configuration variables in the "diff\&.foo" section of the Git config file\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBDefining an external diff driver\fR
+.RS 4
+.sp
+The definition of a diff driver is done in \fBgitconfig\fR, not \fBgitattributes\fR file, so strictly speaking this manual page is a wrong place to talk about it\&. However\&...
+.sp
+To define an external diff driver \fBjcdiff\fR, add a section to your \fB$GIT_DIR/config\fR file (or \fB$HOME/\&.gitconfig\fR file) like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[diff "jcdiff"]
+        command = j\-c\-diff
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+When Git needs to show you a diff for the path with \fBdiff\fR attribute set to \fBjcdiff\fR, it calls the command you specified with the above configuration, i\&.e\&. \fBj\-c\-diff\fR, with 7 parameters, just like \fBGIT_EXTERNAL_DIFF\fR program is called\&. See \fBgit\fR(1) for details\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBDefining a custom hunk-header\fR
+.RS 4
+.sp
+Each group of changes (called a "hunk") in the textual diff output is prefixed with a line of the form:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+@@ \-k,l +n,m @@ TEXT
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This is called a \fIhunk header\fR\&. The "TEXT" portion is by default a line that begins with an alphabet, an underscore or a dollar sign; this matches what GNU \fIdiff \-p\fR output uses\&. This default selection however is not suited for some contents, and you can use a customized pattern to make a selection\&.
+.sp
+First, in \&.gitattributes, you would assign the \fBdiff\fR attribute for paths\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+*\&.tex   diff=tex
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Then, you would define a "diff\&.tex\&.xfuncname" configuration to specify a regular expression that matches a line that you would want to appear as the hunk header "TEXT"\&. Add a section to your \fB$GIT_DIR/config\fR file (or \fB$HOME/\&.gitconfig\fR file) like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[diff "tex"]
+        xfuncname = "^(\e\e\e\e(sub)*section\e\e{\&.*)$"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Note\&. A single level of backslashes are eaten by the configuration file parser, so you would need to double the backslashes; the pattern above picks a line that begins with a backslash, and zero or more occurrences of \fBsub\fR followed by \fBsection\fR followed by open brace, to the end of line\&.
+.sp
+There are a few built\-in patterns to make this easier, and \fBtex\fR is one of them, so you do not have to write the above in your configuration file (you still need to enable this with the attribute mechanism, via \fB\&.gitattributes\fR)\&. The following built in patterns are available:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBada\fR
+suitable for source code in the Ada language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBbibtex\fR
+suitable for files with BibTeX coded references\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBcpp\fR
+suitable for source code in the C and C++ languages\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBcsharp\fR
+suitable for source code in the C# language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBcss\fR
+suitable for cascading style sheets\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBfortran\fR
+suitable for source code in the Fortran language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBfountain\fR
+suitable for Fountain documents\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBgolang\fR
+suitable for source code in the Go language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBhtml\fR
+suitable for HTML/XHTML documents\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBjava\fR
+suitable for source code in the Java language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBmatlab\fR
+suitable for source code in the MATLAB language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBobjc\fR
+suitable for source code in the Objective\-C language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBpascal\fR
+suitable for source code in the Pascal/Delphi language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBperl\fR
+suitable for source code in the Perl language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBphp\fR
+suitable for source code in the PHP language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBpython\fR
+suitable for source code in the Python language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBruby\fR
+suitable for source code in the Ruby language\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBtex\fR
+suitable for source code for LaTeX documents\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBCustomizing word diff\fR
+.RS 4
+.sp
+You can customize the rules that \fBgit diff \-\-word\-diff\fR uses to split words in a line, by specifying an appropriate regular expression in the "diff\&.*\&.wordRegex" configuration variable\&. For example, in TeX a backslash followed by a sequence of letters forms a command, but several such commands can be run together without intervening whitespace\&. To separate them, use a regular expression in your \fB$GIT_DIR/config\fR file (or \fB$HOME/\&.gitconfig\fR file) like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[diff "tex"]
+        wordRegex = "\e\e\e\e[a\-zA\-Z]+|[{}]|\e\e\e\e\&.|[^\e\e{}[:space:]]+"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+A built\-in pattern is provided for all languages listed in the previous section\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBPerforming text diffs of binary files\fR
+.RS 4
+.sp
+Sometimes it is desirable to see the diff of a text\-converted version of some binary files\&. For example, a word processor document can be converted to an ASCII text representation, and the diff of the text shown\&. Even though this conversion loses some information, the resulting diff is useful for human viewing (but cannot be applied directly)\&.
+.sp
+The \fBtextconv\fR config option is used to define a program for performing such a conversion\&. The program should take a single argument, the name of a file to convert, and produce the resulting text on stdout\&.
+.sp
+For example, to show the diff of the exif information of a file instead of the binary information (assuming you have the exif tool installed), add the following section to your \fB$GIT_DIR/config\fR file (or \fB$HOME/\&.gitconfig\fR file):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[diff "jpg"]
+        textconv = exif
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+The text conversion is generally a one\-way conversion; in this example, we lose the actual image contents and focus just on the text data\&. This means that diffs generated by textconv are \fInot\fR suitable for applying\&. For this reason, only \fBgit diff\fR and the \fBgit log\fR family of commands (i\&.e\&., log, whatchanged, show) will perform text conversion\&. \fBgit format\-patch\fR will never generate this output\&. If you want to send somebody a text\-converted diff of a binary file (e\&.g\&., because it quickly conveys the changes you have made), you should generate it separately and send it as a comment \fIin addition to\fR the usual binary diff that you might send\&.
+.sp .5v
+.RE
+.sp
+Because text conversion can be slow, especially when doing a large number of them with \fBgit log \-p\fR, Git provides a mechanism to cache the output and use it in future diffs\&. To enable caching, set the "cachetextconv" variable in your diff driver\(cqs config\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[diff "jpg"]
+        textconv = exif
+        cachetextconv = true
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+This will cache the result of running "exif" on each blob indefinitely\&. If you change the textconv config variable for a diff driver, Git will automatically invalidate the cache entries and re\-run the textconv filter\&. If you want to invalidate the cache manually (e\&.g\&., because your version of "exif" was updated and now produces better output), you can remove the cache manually with \fBgit update\-ref \-d refs/notes/textconv/jpg\fR (where "jpg" is the name of the diff driver, as in the example above)\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBChoosing textconv versus external diff\fR
+.RS 4
+.sp
+If you want to show differences between binary or specially\-formatted blobs in your repository, you can choose to use either an external diff command, or to use textconv to convert them to a diff\-able text format\&. Which method you choose depends on your exact situation\&.
+.sp
+The advantage of using an external diff command is flexibility\&. You are not bound to find line\-oriented changes, nor is it necessary for the output to resemble unified diff\&. You are free to locate and report changes in the most appropriate way for your data format\&.
+.sp
+A textconv, by comparison, is much more limiting\&. You provide a transformation of the data into a line\-oriented text format, and Git uses its regular diff tools to generate the output\&. There are several advantages to choosing this method:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Ease of use\&. It is often much simpler to write a binary to text transformation than it is to perform your own diff\&. In many cases, existing programs can be used as textconv filters (e\&.g\&., exif, odt2txt)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Git diff features\&. By performing only the transformation step yourself, you can still utilize many of Git\(cqs diff features, including colorization, word\-diff, and combined diffs for merges\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+Caching\&. Textconv caching can speed up repeated diffs, such as those you might trigger by running
+\fBgit log \-p\fR\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBMarking files as binary\fR
+.RS 4
+.sp
+Git usually guesses correctly whether a blob contains text or binary data by examining the beginning of the contents\&. However, sometimes you may want to override its decision, either because a blob contains binary data later in the file, or because the content, while technically composed of text characters, is opaque to a human reader\&. For example, many postscript files contain only ASCII characters, but produce noisy and meaningless diffs\&.
+.sp
+The simplest way to mark a file as binary is to unset the diff attribute in the \fB\&.gitattributes\fR file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+*\&.ps \-diff
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+This will cause Git to generate \fBBinary files differ\fR (or a binary patch, if binary patches are enabled) instead of a regular diff\&.
+.sp
+However, one may also want to specify other diff driver attributes\&. For example, you might want to use \fBtextconv\fR to convert postscript files to an ASCII representation for human viewing, but otherwise treat them as binary files\&. You cannot specify both \fB\-diff\fR and \fBdiff=ps\fR attributes\&. The solution is to use the \fBdiff\&.*\&.binary\fR config option:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[diff "ps"]
+  textconv = ps2ascii
+  binary = true
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.SS "Performing a three\-way merge"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBmerge\fR
+.RS 4
+.sp
+The attribute \fBmerge\fR affects how three versions of a file are merged when a file\-level merge is necessary during \fBgit merge\fR, and other commands such as \fBgit revert\fR and \fBgit cherry\-pick\fR\&.
+.PP
+Set
+.RS 4
+Built\-in 3\-way merge driver is used to merge the contents in a way similar to
+\fImerge\fR
+command of
+\fBRCS\fR
+suite\&. This is suitable for ordinary text files\&.
+.RE
+.PP
+Unset
+.RS 4
+Take the version from the current branch as the tentative merge result, and declare that the merge has conflicts\&. This is suitable for binary files that do not have a well\-defined merge semantics\&.
+.RE
+.PP
+Unspecified
+.RS 4
+By default, this uses the same built\-in 3\-way merge driver as is the case when the
+\fBmerge\fR
+attribute is set\&. However, the
+\fBmerge\&.default\fR
+configuration variable can name different merge driver to be used with paths for which the
+\fBmerge\fR
+attribute is unspecified\&.
+.RE
+.PP
+String
+.RS 4
+3\-way merge is performed using the specified custom merge driver\&. The built\-in 3\-way merge driver can be explicitly specified by asking for "text" driver; the built\-in "take the current branch" driver can be requested with "binary"\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBuilt-in merge drivers\fR
+.RS 4
+.sp
+There are a few built\-in low\-level merge drivers defined that can be asked for via the \fBmerge\fR attribute\&.
+.PP
+text
+.RS 4
+Usual 3\-way file level merge for text files\&. Conflicted regions are marked with conflict markers
+\fB<<<<<<<\fR,
+\fB=======\fR
+and
+\fB>>>>>>>\fR\&. The version from your branch appears before the
+\fB=======\fR
+marker, and the version from the merged branch appears after the
+\fB=======\fR
+marker\&.
+.RE
+.PP
+binary
+.RS 4
+Keep the version from your branch in the work tree, but leave the path in the conflicted state for the user to sort out\&.
+.RE
+.PP
+union
+.RS 4
+Run 3\-way file level merge for text files, but take lines from both versions, instead of leaving conflict markers\&. This tends to leave the added lines in the resulting file in random order and the user should verify the result\&. Do not use this if you do not understand the implications\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBDefining a custom merge driver\fR
+.RS 4
+.sp
+The definition of a merge driver is done in the \fB\&.git/config\fR file, not in the \fBgitattributes\fR file, so strictly speaking this manual page is a wrong place to talk about it\&. However\&...
+.sp
+To define a custom merge driver \fBfilfre\fR, add a section to your \fB$GIT_DIR/config\fR file (or \fB$HOME/\&.gitconfig\fR file) like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[merge "filfre"]
+        name = feel\-free merge driver
+        driver = filfre %O %A %B %L %P
+        recursive = binary
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The \fBmerge\&.*\&.name\fR variable gives the driver a human\-readable name\&.
+.sp
+The \(oqmerge\&.*\&.driver` variable\(cqs value is used to construct a command to run to merge ancestor\(cqs version (\fB%O\fR), current version (\fB%A\fR) and the other branches\(cq version (\fB%B\fR)\&. These three tokens are replaced with the names of temporary files that hold the contents of these versions when the command line is built\&. Additionally, %L will be replaced with the conflict marker size (see below)\&.
+.sp
+The merge driver is expected to leave the result of the merge in the file named with \fB%A\fR by overwriting it, and exit with zero status if it managed to merge them cleanly, or non\-zero if there were conflicts\&.
+.sp
+The \fBmerge\&.*\&.recursive\fR variable specifies what other merge driver to use when the merge driver is called for an internal merge between common ancestors, when there are more than one\&. When left unspecified, the driver itself is used for both internal merge and the final merge\&.
+.sp
+The merge driver can learn the pathname in which the merged result will be stored via placeholder \fB%P\fR\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBconflict-marker-size\fR
+.RS 4
+.sp
+This attribute controls the length of conflict markers left in the work tree file during a conflicted merge\&. Only setting to the value to a positive integer has any meaningful effect\&.
+.sp
+For example, this line in \fB\&.gitattributes\fR can be used to tell the merge machinery to leave much longer (instead of the usual 7\-character\-long) conflict markers when merging the file \fBDocumentation/git\-merge\&.txt\fR results in a conflict\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Documentation/git\-merge\&.txt     conflict\-marker\-size=32
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.SS "Checking whitespace errors"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBwhitespace\fR
+.RS 4
+.sp
+The \fBcore\&.whitespace\fR configuration variable allows you to define what \fIdiff\fR and \fIapply\fR should consider whitespace errors for all paths in the project (See \fBgit-config\fR(1))\&. This attribute gives you finer control per path\&.
+.PP
+Set
+.RS 4
+Notice all types of potential whitespace errors known to Git\&. The tab width is taken from the value of the
+\fBcore\&.whitespace\fR
+configuration variable\&.
+.RE
+.PP
+Unset
+.RS 4
+Do not notice anything as error\&.
+.RE
+.PP
+Unspecified
+.RS 4
+Use the value of the
+\fBcore\&.whitespace\fR
+configuration variable to decide what to notice as error\&.
+.RE
+.PP
+String
+.RS 4
+Specify a comma separate list of common whitespace problems to notice in the same format as the
+\fBcore\&.whitespace\fR
+configuration variable\&.
+.RE
+.RE
+.SS "Creating an archive"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBexport-ignore\fR
+.RS 4
+.sp
+Files and directories with the attribute \fBexport\-ignore\fR won\(cqt be added to archive files\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBexport-subst\fR
+.RS 4
+.sp
+If the attribute \fBexport\-subst\fR is set for a file then Git will expand several placeholders when adding this file to an archive\&. The expansion depends on the availability of a commit ID, i\&.e\&., if \fBgit-archive\fR(1) has been given a tree instead of a commit or a tag then no replacement will be done\&. The placeholders are the same as those for the option \fB\-\-pretty=format:\fR of \fBgit-log\fR(1), except that they need to be wrapped like this: \fB$Format:PLACEHOLDERS$\fR in the file\&. E\&.g\&. the string \fB$Format:%H$\fR will be replaced by the commit hash\&.
+.RE
+.SS "Packing objects"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBdelta\fR
+.RS 4
+.sp
+Delta compression will not be attempted for blobs for paths with the attribute \fBdelta\fR set to false\&.
+.RE
+.SS "Viewing files in GUI tools"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBencoding\fR
+.RS 4
+.sp
+The value of this attribute specifies the character encoding that should be used by GUI tools (e\&.g\&. \fBgitk\fR(1) and \fBgit-gui\fR(1)) to display the contents of the relevant file\&. Note that due to performance considerations \fBgitk\fR(1) does not use this attribute unless you manually enable per\-file encodings in its options\&.
+.sp
+If this attribute is not set or has an invalid value, the value of the \fBgui\&.encoding\fR configuration variable is used instead (See \fBgit-config\fR(1))\&.
+.RE
+.SH "USING MACRO ATTRIBUTES"
+.sp
+You do not want any end\-of\-line conversions applied to, nor textual diffs produced for, any binary file you track\&. You would need to specify e\&.g\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+*\&.jpg \-text \-diff
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+but that may become cumbersome, when you have many attributes\&. Using macro attributes, you can define an attribute that, when set, also sets or unsets a number of other attributes at the same time\&. The system knows a built\-in macro attribute, \fBbinary\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+*\&.jpg binary
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Setting the "binary" attribute also unsets the "text" and "diff" attributes as above\&. Note that macro attributes can only be "Set", though setting one might have the effect of setting or unsetting other attributes or even returning other attributes to the "Unspecified" state\&.
+.SH "DEFINING MACRO ATTRIBUTES"
+.sp
+Custom macro attributes can be defined only in top\-level gitattributes files (\fB$GIT_DIR/info/attributes\fR, the \fB\&.gitattributes\fR file at the top level of the working tree, or the global or system\-wide gitattributes files), not in \fB\&.gitattributes\fR files in working tree subdirectories\&. The built\-in macro attribute "binary" is equivalent to:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[attr]binary \-diff \-merge \-text
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "EXAMPLE"
+.sp
+If you have these three \fBgitattributes\fR file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+(in $GIT_DIR/info/attributes)
+
+a*      foo !bar \-baz
+
+(in \&.gitattributes)
+abc     foo bar baz
+
+(in t/\&.gitattributes)
+ab*     merge=filfre
+abc     \-foo \-bar
+*\&.c     frotz
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+the attributes given to path \fBt/abc\fR are computed as follows:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+By examining
+\fBt/\&.gitattributes\fR
+(which is in the same directory as the path in question), Git finds that the first line matches\&.
+\fBmerge\fR
+attribute is set\&. It also finds that the second line matches, and attributes
+\fBfoo\fR
+and
+\fBbar\fR
+are unset\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Then it examines
+\fB\&.gitattributes\fR
+(which is in the parent directory), and finds that the first line matches, but
+\fBt/\&.gitattributes\fR
+file already decided how
+\fBmerge\fR,
+\fBfoo\fR
+and
+\fBbar\fR
+attributes should be given to this path, so it leaves
+\fBfoo\fR
+and
+\fBbar\fR
+unset\&. Attribute
+\fBbaz\fR
+is set\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+Finally it examines
+\fB$GIT_DIR/info/attributes\fR\&. This file is used to override the in\-tree settings\&. The first line is a match, and
+\fBfoo\fR
+is set,
+\fBbar\fR
+is reverted to unspecified state, and
+\fBbaz\fR
+is unset\&.
+.RE
+.sp
+As the result, the attributes assignment to \fBt/abc\fR becomes:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+foo     set to true
+bar     unspecified
+baz     set to false
+merge   set to string value "filfre"
+frotz   unspecified
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "SEE ALSO"
+.sp
+\fBgit-check-attr\fR(1)\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

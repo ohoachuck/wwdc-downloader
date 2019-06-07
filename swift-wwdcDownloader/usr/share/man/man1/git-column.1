@@ -1,0 +1,82 @@
+'\" t
+.\"     Title: git-column
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-COLUMN" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-column \- Display data in columns
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit column\fR [\-\-command=<name>] [\-\-[raw\-]mode=<mode>] [\-\-width=<width>]
+             [\-\-indent=<string>] [\-\-nl=<string>] [\-\-padding=<n>]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This command formats its input into multiple columns\&.
+.SH "OPTIONS"
+.PP
+\-\-command=<name>
+.RS 4
+Look up layout mode using configuration variable column\&.<name> and column\&.ui\&.
+.RE
+.PP
+\-\-mode=<mode>
+.RS 4
+Specify layout mode\&. See configuration variable column\&.ui for option syntax\&.
+.RE
+.PP
+\-\-raw\-mode=<n>
+.RS 4
+Same as \-\-mode but take mode encoded as a number\&. This is mainly used by other commands that have already parsed layout mode\&.
+.RE
+.PP
+\-\-width=<width>
+.RS 4
+Specify the terminal width\&. By default
+\fIgit column\fR
+will detect the terminal width, or fall back to 80 if it is unable to do so\&.
+.RE
+.PP
+\-\-indent=<string>
+.RS 4
+String to be printed at the beginning of each line\&.
+.RE
+.PP
+\-\-nl=<N>
+.RS 4
+String to be printed at the end of each line, including newline character\&.
+.RE
+.PP
+\-\-padding=<N>
+.RS 4
+The number of spaces between columns\&. One space by default\&.
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

@@ -1,0 +1,175 @@
+'\" t
+.\"     Title: git-check-mailmap
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-CHECK\-MAILMAP" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-check-mailmap \- Show canonical names and email addresses of contacts
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit check\-mailmap\fR [options] <contact>\&...
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+For each \(lqName <user@host>\(rq or \(lq<user@host>\(rq from the command\-line or standard input (when using \fB\-\-stdin\fR), look up the person\(cqs canonical name and email address (see "Mapping Authors" below)\&. If found, print them; otherwise print the input as\-is\&.
+.SH "OPTIONS"
+.PP
+\-\-stdin
+.RS 4
+Read contacts, one per line, from the standard input after exhausting contacts provided on the command\-line\&.
+.RE
+.SH "OUTPUT"
+.sp
+For each contact, a single line is output, terminated by a newline\&. If the name is provided or known to the \fImailmap\fR, \(lqName <user@host>\(rq is printed; otherwise only \(lq<user@host>\(rq is printed\&.
+.SH "MAPPING AUTHORS"
+.sp
+If the file \fB\&.mailmap\fR exists at the toplevel of the repository, or at the location pointed to by the mailmap\&.file or mailmap\&.blob configuration options, it is used to map author and committer names and email addresses to canonical real names and email addresses\&.
+.sp
+In the simple form, each line in the file consists of the canonical real name of an author, whitespace, and an email address used in the commit (enclosed by \fI<\fR and \fI>\fR) to map to the name\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Proper Name <commit@email\&.xx>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The more complex forms are:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<proper@email\&.xx> <commit@email\&.xx>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+which allows mailmap to replace only the email part of a commit, and:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Proper Name <proper@email\&.xx> <commit@email\&.xx>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+which allows mailmap to replace both the name and the email of a commit matching the specified commit email address, and:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Proper Name <proper@email\&.xx> Commit Name <commit@email\&.xx>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+which allows mailmap to replace both the name and the email of a commit matching both the specified commit name and email address\&.
+.sp
+Example 1: Your history contains commits by two authors, Jane and Joe, whose names appear in the repository under several forms:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Joe Developer <joe@example\&.com>
+Joe R\&. Developer <joe@example\&.com>
+Jane Doe <jane@example\&.com>
+Jane Doe <jane@laptop\&.(none)>
+Jane D\&. <jane@desktop\&.(none)>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Now suppose that Joe wants his middle name initial used, and Jane prefers her family name fully spelled out\&. A proper \fB\&.mailmap\fR file would look like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Jane Doe         <jane@desktop\&.(none)>
+Joe R\&. Developer <joe@example\&.com>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Note how there is no need for an entry for \fB<jane@laptop\&.(none)>\fR, because the real name of that author is already correct\&.
+.sp
+Example 2: Your repository contains commits from the following authors:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+nick1 <bugs@company\&.xx>
+nick2 <bugs@company\&.xx>
+nick2 <nick2@company\&.xx>
+santa <me@company\&.xx>
+claus <me@company\&.xx>
+CTO <cto@coompany\&.xx>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Then you might want a \fB\&.mailmap\fR file that looks like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<cto@company\&.xx>                       <cto@coompany\&.xx>
+Some Dude <some@dude\&.xx>         nick1 <bugs@company\&.xx>
+Other Author <other@author\&.xx>   nick2 <bugs@company\&.xx>
+Other Author <other@author\&.xx>         <nick2@company\&.xx>
+Santa Claus <santa\&.claus@northpole\&.xx> <me@company\&.xx>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Use hash \fI#\fR for comments that are either on their own line, or after the email address\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

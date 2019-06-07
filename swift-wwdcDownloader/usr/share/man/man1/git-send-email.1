@@ -1,0 +1,827 @@
+'\" t
+.\"     Title: git-send-email
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-SEND\-EMAIL" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-send-email \- Send a collection of patches as emails
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit send\-email\fR [options] <file|directory|rev\-list options>\&...
+\fIgit send\-email\fR \-\-dump\-aliases
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Takes the patches given on the command line and emails them out\&. Patches can be specified as files, directories (which will send all files in the directory), or directly as a revision list\&. In the last case, any format accepted by \fBgit-format-patch\fR(1) can be passed to git send\-email\&.
+.sp
+The header of the email is configurable via command\-line options\&. If not specified on the command line, the user will be prompted with a ReadLine enabled interface to provide the necessary information\&.
+.sp
+There are two formats accepted for patch files:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+mbox format files
+.sp
+This is what
+\fBgit-format-patch\fR(1)
+generates\&. Most headers and MIME formatting are ignored\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+The original format used by Greg Kroah\-Hartman\(cqs
+\fIsend_lots_of_email\&.pl\fR
+script
+.sp
+This format expects the first line of the file to contain the "Cc:" value and the "Subject:" of the message as the second line\&.
+.RE
+.SH "OPTIONS"
+.SS "Composing"
+.PP
+\-\-annotate
+.RS 4
+Review and edit each patch you\(cqre about to send\&. Default is the value of
+\fBsendemail\&.annotate\fR\&. See the CONFIGURATION section for
+\fBsendemail\&.multiEdit\fR\&.
+.RE
+.PP
+\-\-bcc=<address>,\&...
+.RS 4
+Specify a "Bcc:" value for each email\&. Default is the value of
+\fBsendemail\&.bcc\fR\&.
+.sp
+This option may be specified multiple times\&.
+.RE
+.PP
+\-\-cc=<address>,\&...
+.RS 4
+Specify a starting "Cc:" value for each email\&. Default is the value of
+\fBsendemail\&.cc\fR\&.
+.sp
+This option may be specified multiple times\&.
+.RE
+.PP
+\-\-compose
+.RS 4
+Invoke a text editor (see GIT_EDITOR in
+\fBgit-var\fR(1)) to edit an introductory message for the patch series\&.
+.sp
+When
+\fB\-\-compose\fR
+is used, git send\-email will use the From, Subject, and In\-Reply\-To headers specified in the message\&. If the body of the message (what you type after the headers and a blank line) only contains blank (or Git: prefixed) lines, the summary won\(cqt be sent, but From, Subject, and In\-Reply\-To headers will be used unless they are removed\&.
+.sp
+Missing From or In\-Reply\-To headers will be prompted for\&.
+.sp
+See the CONFIGURATION section for
+\fBsendemail\&.multiEdit\fR\&.
+.RE
+.PP
+\-\-from=<address>
+.RS 4
+Specify the sender of the emails\&. If not specified on the command line, the value of the
+\fBsendemail\&.from\fR
+configuration option is used\&. If neither the command\-line option nor
+\fBsendemail\&.from\fR
+are set, then the user will be prompted for the value\&. The default for the prompt will be the value of GIT_AUTHOR_IDENT, or GIT_COMMITTER_IDENT if that is not set, as returned by "git var \-l"\&.
+.RE
+.PP
+\-\-reply\-to=<address>
+.RS 4
+Specify the address where replies from recipients should go to\&. Use this if replies to messages should go to another address than what is specified with the \-\-from parameter\&.
+.RE
+.PP
+\-\-in\-reply\-to=<identifier>
+.RS 4
+Make the first mail (or all the mails with
+\fB\-\-no\-thread\fR) appear as a reply to the given Message\-Id, which avoids breaking threads to provide a new patch series\&. The second and subsequent emails will be sent as replies according to the
+\fB\-\-[no\-]chain\-reply\-to\fR
+setting\&.
+.sp
+So for example when
+\fB\-\-thread\fR
+and
+\fB\-\-no\-chain\-reply\-to\fR
+are specified, the second and subsequent patches will be replies to the first one like in the illustration below where
+\fB[PATCH v2 0/3]\fR
+is in reply to
+\fB[PATCH 0/2]\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[PATCH 0/2] Here is what I did\&.\&.\&.
+  [PATCH 1/2] Clean up and tests
+  [PATCH 2/2] Implementation
+  [PATCH v2 0/3] Here is a reroll
+    [PATCH v2 1/3] Clean up
+    [PATCH v2 2/3] New tests
+    [PATCH v2 3/3] Implementation
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Only necessary if \-\-compose is also set\&. If \-\-compose is not set, this will be prompted for\&.
+.RE
+.PP
+\-\-subject=<string>
+.RS 4
+Specify the initial subject of the email thread\&. Only necessary if \-\-compose is also set\&. If \-\-compose is not set, this will be prompted for\&.
+.RE
+.PP
+\-\-to=<address>,\&...
+.RS 4
+Specify the primary recipient of the emails generated\&. Generally, this will be the upstream maintainer of the project involved\&. Default is the value of the
+\fBsendemail\&.to\fR
+configuration value; if that is unspecified, and \-\-to\-cmd is not specified, this will be prompted for\&.
+.sp
+This option may be specified multiple times\&.
+.RE
+.PP
+\-\-8bit\-encoding=<encoding>
+.RS 4
+When encountering a non\-ASCII message or subject that does not declare its encoding, add headers/quoting to indicate it is encoded in <encoding>\&. Default is the value of the
+\fIsendemail\&.assume8bitEncoding\fR; if that is unspecified, this will be prompted for if any non\-ASCII files are encountered\&.
+.sp
+Note that no attempts whatsoever are made to validate the encoding\&.
+.RE
+.PP
+\-\-compose\-encoding=<encoding>
+.RS 4
+Specify encoding of compose message\&. Default is the value of the
+\fIsendemail\&.composeencoding\fR; if that is unspecified, UTF\-8 is assumed\&.
+.RE
+.PP
+\-\-transfer\-encoding=(7bit|8bit|quoted\-printable|base64)
+.RS 4
+Specify the transfer encoding to be used to send the message over SMTP\&. 7bit will fail upon encountering a non\-ASCII message\&. quoted\-printable can be useful when the repository contains files that contain carriage returns, but makes the raw patch email file (as saved from a MUA) much harder to inspect manually\&. base64 is even more fool proof, but also even more opaque\&. Default is the value of the
+\fBsendemail\&.transferEncoding\fR
+configuration value; if that is unspecified, git will use 8bit and not add a Content\-Transfer\-Encoding header\&.
+.RE
+.PP
+\-\-xmailer, \-\-no\-xmailer
+.RS 4
+Add (or prevent adding) the "X\-Mailer:" header\&. By default, the header is added, but it can be turned off by setting the
+\fBsendemail\&.xmailer\fR
+configuration variable to
+\fBfalse\fR\&.
+.RE
+.SS "Sending"
+.PP
+\-\-envelope\-sender=<address>
+.RS 4
+Specify the envelope sender used to send the emails\&. This is useful if your default address is not the address that is subscribed to a list\&. In order to use the
+\fIFrom\fR
+address, set the value to "auto"\&. If you use the sendmail binary, you must have suitable privileges for the \-f parameter\&. Default is the value of the
+\fBsendemail\&.envelopeSender\fR
+configuration variable; if that is unspecified, choosing the envelope sender is left to your MTA\&.
+.RE
+.PP
+\-\-smtp\-encryption=<encryption>
+.RS 4
+Specify the encryption to use, either
+\fIssl\fR
+or
+\fItls\fR\&. Any other value reverts to plain SMTP\&. Default is the value of
+\fBsendemail\&.smtpEncryption\fR\&.
+.RE
+.PP
+\-\-smtp\-domain=<FQDN>
+.RS 4
+Specifies the Fully Qualified Domain Name (FQDN) used in the HELO/EHLO command to the SMTP server\&. Some servers require the FQDN to match your IP address\&. If not set, git send\-email attempts to determine your FQDN automatically\&. Default is the value of
+\fBsendemail\&.smtpDomain\fR\&.
+.RE
+.PP
+\-\-smtp\-auth=<mechanisms>
+.RS 4
+Whitespace\-separated list of allowed SMTP\-AUTH mechanisms\&. This setting forces using only the listed mechanisms\&. Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git send\-email \-\-smtp\-auth="PLAIN LOGIN GSSAPI" \&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+If at least one of the specified mechanisms matches the ones advertised by the SMTP server and if it is supported by the utilized SASL library, the mechanism is used for authentication\&. If neither
+\fIsendemail\&.smtpAuth\fR
+nor
+\fB\-\-smtp\-auth\fR
+is specified, all mechanisms supported by the SASL library can be used\&.
+.RE
+.PP
+\-\-smtp\-pass[=<password>]
+.RS 4
+Password for SMTP\-AUTH\&. The argument is optional: If no argument is specified, then the empty string is used as the password\&. Default is the value of
+\fBsendemail\&.smtpPass\fR, however
+\fB\-\-smtp\-pass\fR
+always overrides this value\&.
+.sp
+Furthermore, passwords need not be specified in configuration files or on the command line\&. If a username has been specified (with
+\fB\-\-smtp\-user\fR
+or a
+\fBsendemail\&.smtpUser\fR), but no password has been specified (with
+\fB\-\-smtp\-pass\fR
+or
+\fBsendemail\&.smtpPass\fR), then a password is obtained using
+\fIgit\-credential\fR\&.
+.RE
+.PP
+\-\-smtp\-server=<host>
+.RS 4
+If set, specifies the outgoing SMTP server to use (e\&.g\&.
+\fBsmtp\&.example\&.com\fR
+or a raw IP address)\&. Alternatively it can specify a full pathname of a sendmail\-like program instead; the program must support the
+\fB\-i\fR
+option\&. Default value can be specified by the
+\fBsendemail\&.smtpServer\fR
+configuration option; the built\-in default is to search for
+\fBsendmail\fR
+in
+\fB/usr/sbin\fR,
+\fB/usr/lib\fR
+and $PATH if such program is available, falling back to
+\fBlocalhost\fR
+otherwise\&.
+.RE
+.PP
+\-\-smtp\-server\-port=<port>
+.RS 4
+Specifies a port different from the default port (SMTP servers typically listen to smtp port 25, but may also listen to submission port 587, or the common SSL smtp port 465); symbolic port names (e\&.g\&. "submission" instead of 587) are also accepted\&. The port can also be set with the
+\fBsendemail\&.smtpServerPort\fR
+configuration variable\&.
+.RE
+.PP
+\-\-smtp\-server\-option=<option>
+.RS 4
+If set, specifies the outgoing SMTP server option to use\&. Default value can be specified by the
+\fBsendemail\&.smtpServerOption\fR
+configuration option\&.
+.sp
+The \-\-smtp\-server\-option option must be repeated for each option you want to pass to the server\&. Likewise, different lines in the configuration files must be used for each option\&.
+.RE
+.PP
+\-\-smtp\-ssl
+.RS 4
+Legacy alias for
+\fI\-\-smtp\-encryption ssl\fR\&.
+.RE
+.PP
+\-\-smtp\-ssl\-cert\-path
+.RS 4
+Path to a store of trusted CA certificates for SMTP SSL/TLS certificate validation (either a directory that has been processed by
+\fIc_rehash\fR, or a single file containing one or more PEM format certificates concatenated together: see verify(1) \-CAfile and \-CApath for more information on these)\&. Set it to an empty string to disable certificate verification\&. Defaults to the value of the
+\fBsendemail\&.smtpsslcertpath\fR
+configuration variable, if set, or the backing SSL library\(cqs compiled\-in default otherwise (which should be the best choice on most platforms)\&.
+.RE
+.PP
+\-\-smtp\-user=<user>
+.RS 4
+Username for SMTP\-AUTH\&. Default is the value of
+\fBsendemail\&.smtpUser\fR; if a username is not specified (with
+\fB\-\-smtp\-user\fR
+or
+\fBsendemail\&.smtpUser\fR), then authentication is not attempted\&.
+.RE
+.PP
+\-\-smtp\-debug=0|1
+.RS 4
+Enable (1) or disable (0) debug output\&. If enabled, SMTP commands and replies will be printed\&. Useful to debug TLS connection and authentication problems\&.
+.RE
+.PP
+\-\-batch\-size=<num>
+.RS 4
+Some email servers (e\&.g\&. smtp\&.163\&.com) limit the number emails to be sent per session (connection) and this will lead to a faliure when sending many messages\&. With this option, send\-email will disconnect after sending $<num> messages and wait for a few seconds (see \-\-relogin\-delay) and reconnect, to work around such a limit\&. You may want to use some form of credential helper to avoid having to retype your password every time this happens\&. Defaults to the
+\fBsendemail\&.smtpBatchSize\fR
+configuration variable\&.
+.RE
+.PP
+\-\-relogin\-delay=<int>
+.RS 4
+Waiting $<int> seconds before reconnecting to SMTP server\&. Used together with \-\-batch\-size option\&. Defaults to the
+\fBsendemail\&.smtpReloginDelay\fR
+configuration variable\&.
+.RE
+.SS "Automating"
+.PP
+\-\-to\-cmd=<command>
+.RS 4
+Specify a command to execute once per patch file which should generate patch file specific "To:" entries\&. Output of this command must be single email address per line\&. Default is the value of
+\fIsendemail\&.tocmd\fR
+configuration value\&.
+.RE
+.PP
+\-\-cc\-cmd=<command>
+.RS 4
+Specify a command to execute once per patch file which should generate patch file specific "Cc:" entries\&. Output of this command must be single email address per line\&. Default is the value of
+\fBsendemail\&.ccCmd\fR
+configuration value\&.
+.RE
+.PP
+\-\-[no\-]chain\-reply\-to
+.RS 4
+If this is set, each email will be sent as a reply to the previous email sent\&. If disabled with "\-\-no\-chain\-reply\-to", all emails after the first will be sent as replies to the first email sent\&. When using this, it is recommended that the first file given be an overview of the entire patch series\&. Disabled by default, but the
+\fBsendemail\&.chainReplyTo\fR
+configuration variable can be used to enable it\&.
+.RE
+.PP
+\-\-identity=<identity>
+.RS 4
+A configuration identity\&. When given, causes values in the
+\fIsendemail\&.<identity>\fR
+subsection to take precedence over values in the
+\fIsendemail\fR
+section\&. The default identity is the value of
+\fBsendemail\&.identity\fR\&.
+.RE
+.PP
+\-\-[no\-]signed\-off\-by\-cc
+.RS 4
+If this is set, add emails found in Signed\-off\-by: or Cc: lines to the cc list\&. Default is the value of
+\fBsendemail\&.signedoffbycc\fR
+configuration value; if that is unspecified, default to \-\-signed\-off\-by\-cc\&.
+.RE
+.PP
+\-\-[no\-]cc\-cover
+.RS 4
+If this is set, emails found in Cc: headers in the first patch of the series (typically the cover letter) are added to the cc list for each email set\&. Default is the value of
+\fIsendemail\&.cccover\fR
+configuration value; if that is unspecified, default to \-\-no\-cc\-cover\&.
+.RE
+.PP
+\-\-[no\-]to\-cover
+.RS 4
+If this is set, emails found in To: headers in the first patch of the series (typically the cover letter) are added to the to list for each email set\&. Default is the value of
+\fIsendemail\&.tocover\fR
+configuration value; if that is unspecified, default to \-\-no\-to\-cover\&.
+.RE
+.PP
+\-\-suppress\-cc=<category>
+.RS 4
+Specify an additional category of recipients to suppress the auto\-cc of:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIauthor\fR
+will avoid including the patch author
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIself\fR
+will avoid including the sender
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIcc\fR
+will avoid including anyone mentioned in Cc lines in the patch header except for self (use
+\fIself\fR
+for that)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIbodycc\fR
+will avoid including anyone mentioned in Cc lines in the patch body (commit message) except for self (use
+\fIself\fR
+for that)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIsob\fR
+will avoid including anyone mentioned in Signed\-off\-by lines except for self (use
+\fIself\fR
+for that)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIcccmd\fR
+will avoid running the \-\-cc\-cmd\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIbody\fR
+is equivalent to
+\fIsob\fR
++
+\fIbodycc\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIall\fR
+will suppress all auto cc values\&.
+.RE
+.sp
+Default is the value of
+\fBsendemail\&.suppresscc\fR
+configuration value; if that is unspecified, default to
+\fIself\fR
+if \-\-suppress\-from is specified, as well as
+\fIbody\fR
+if \-\-no\-signed\-off\-cc is specified\&.
+.RE
+.PP
+\-\-[no\-]suppress\-from
+.RS 4
+If this is set, do not add the From: address to the cc: list\&. Default is the value of
+\fBsendemail\&.suppressFrom\fR
+configuration value; if that is unspecified, default to \-\-no\-suppress\-from\&.
+.RE
+.PP
+\-\-[no\-]thread
+.RS 4
+If this is set, the In\-Reply\-To and References headers will be added to each email sent\&. Whether each mail refers to the previous email (\fBdeep\fR
+threading per
+\fIgit format\-patch\fR
+wording) or to the first email (\fBshallow\fR
+threading) is governed by "\-\-[no\-]chain\-reply\-to"\&.
+.sp
+If disabled with "\-\-no\-thread", those headers will not be added (unless specified with \-\-in\-reply\-to)\&. Default is the value of the
+\fBsendemail\&.thread\fR
+configuration value; if that is unspecified, default to \-\-thread\&.
+.sp
+It is up to the user to ensure that no In\-Reply\-To header already exists when
+\fIgit send\-email\fR
+is asked to add it (especially note that
+\fIgit format\-patch\fR
+can be configured to do the threading itself)\&. Failure to do so may not produce the expected result in the recipient\(cqs MUA\&.
+.RE
+.SS "Administering"
+.PP
+\-\-confirm=<mode>
+.RS 4
+Confirm just before sending:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIalways\fR
+will always confirm before sending
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fInever\fR
+will never confirm before sending
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIcc\fR
+will confirm before sending when send\-email has automatically added addresses from the patch to the Cc list
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIcompose\fR
+will confirm before sending the first message when using \-\-compose\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIauto\fR
+is equivalent to
+\fIcc\fR
++
+\fIcompose\fR
+.RE
+.sp
+Default is the value of
+\fBsendemail\&.confirm\fR
+configuration value; if that is unspecified, default to
+\fIauto\fR
+unless any of the suppress options have been specified, in which case default to
+\fIcompose\fR\&.
+.RE
+.PP
+\-\-dry\-run
+.RS 4
+Do everything except actually send the emails\&.
+.RE
+.PP
+\-\-[no\-]format\-patch
+.RS 4
+When an argument may be understood either as a reference or as a file name, choose to understand it as a format\-patch argument (\fB\-\-format\-patch\fR) or as a file name (\fB\-\-no\-format\-patch\fR)\&. By default, when such a conflict occurs, git send\-email will fail\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Make git\-send\-email less verbose\&. One line per email should be all that is output\&.
+.RE
+.PP
+\-\-[no\-]validate
+.RS 4
+Perform sanity checks on patches\&. Currently, validation means the following:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Invoke the sendemail\-validate hook if present (see
+\fBgithooks\fR(5))\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Warn of patches that contain lines longer than 998 characters; this is due to SMTP limits as described by
+\m[blue]\fBhttp://www\&.ietf\&.org/rfc/rfc2821\&.txt\fR\m[]\&.
+.RE
+.sp
+Default is the value of
+\fBsendemail\&.validate\fR; if this is not set, default to
+\fB\-\-validate\fR\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Send emails even if safety checks would prevent it\&.
+.RE
+.SS "Information"
+.PP
+\-\-dump\-aliases
+.RS 4
+Instead of the normal operation, dump the shorthand alias names from the configured alias file(s), one per line in alphabetical order\&. Note, this only includes the alias name and not its expanded email addresses\&. See
+\fIsendemail\&.aliasesfile\fR
+for more information about aliases\&.
+.RE
+.SH "CONFIGURATION"
+.PP
+sendemail\&.aliasesFile
+.RS 4
+To avoid typing long email addresses, point this to one or more email aliases files\&. You must also supply
+\fBsendemail\&.aliasFileType\fR\&.
+.RE
+.PP
+sendemail\&.aliasFileType
+.RS 4
+Format of the file(s) specified in sendemail\&.aliasesFile\&. Must be one of
+\fImutt\fR,
+\fImailrc\fR,
+\fIpine\fR,
+\fIelm\fR, or
+\fIgnus\fR, or
+\fIsendmail\fR\&.
+.sp
+What an alias file in each format looks like can be found in the documentation of the email program of the same name\&. The differences and limitations from the standard formats are described below:
+.PP
+sendmail
+.RS 4
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Quoted aliases and quoted addresses are not supported: lines that contain a
+\fB"\fR
+symbol are ignored\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Redirection to a file (\fB/path/name\fR) or pipe (\fB|command\fR) is not supported\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+File inclusion (\fB:include: /path/name\fR) is not supported\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Warnings are printed on the standard error output for any explicitly unsupported constructs, and any other lines that are not recognized by the parser\&.
+.RE
+.RE
+.RE
+.PP
+sendemail\&.multiEdit
+.RS 4
+If true (default), a single editor instance will be spawned to edit files you have to edit (patches when
+\fB\-\-annotate\fR
+is used, and the summary when
+\fB\-\-compose\fR
+is used)\&. If false, files will be edited one after the other, spawning a new editor each time\&.
+.RE
+.PP
+sendemail\&.confirm
+.RS 4
+Sets the default for whether to confirm before sending\&. Must be one of
+\fIalways\fR,
+\fInever\fR,
+\fIcc\fR,
+\fIcompose\fR, or
+\fIauto\fR\&. See
+\fB\-\-confirm\fR
+in the previous section for the meaning of these values\&.
+.RE
+.SH "EXAMPLE"
+.SS "Use gmail as the smtp server"
+.sp
+To use \fIgit send\-email\fR to send your patches through the GMail SMTP server, edit ~/\&.gitconfig to specify your account settings:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[sendemail]
+        smtpEncryption = tls
+        smtpServer = smtp\&.gmail\&.com
+        smtpUser = yourname@gmail\&.com
+        smtpServerPort = 587
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+If you have multifactor authentication setup on your gmail account, you will need to generate an app\-specific password for use with \fIgit send\-email\fR\&. Visit \m[blue]\fBhttps://security\&.google\&.com/settings/security/apppasswords\fR\m[] to setup an app\-specific password\&. Once setup, you can store it with the credentials helper:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git credential fill
+protocol=smtp
+host=smtp\&.gmail\&.com
+username=youname@gmail\&.com
+password=app\-password
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Once your commits are ready to be sent to the mailing list, run the following commands:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git format\-patch \-\-cover\-letter \-M origin/master \-o outgoing/
+$ edit outgoing/0000\-*
+$ git send\-email outgoing/*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Note: the following perl modules are required Net::SMTP::SSL, MIME::Base64 and Authen::SASL
+.SH "SEE ALSO"
+.sp
+\fBgit-format-patch\fR(1), \fBgit-imap-send\fR(1), mbox(5)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

@@ -1,0 +1,84 @@
+'\" t
+.\"     Title: git-hash-object
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-HASH\-OBJECT" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-hash-object \- Compute object ID and optionally creates a blob from a file
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit hash\-object\fR [\-t <type>] [\-w] [\-\-path=<file>|\-\-no\-filters] [\-\-stdin [\-\-literally]] [\-\-] <file>\&...
+\fIgit hash\-object\fR [\-t <type>] [\-w] \-\-stdin\-paths [\-\-no\-filters]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Computes the object ID value for an object with specified type with the contents of the named file (which can be outside of the work tree), and optionally writes the resulting object into the object database\&. Reports its object ID to its standard output\&. This is used by \fIgit cvsimport\fR to update the index without modifying files in the work tree\&. When <type> is not specified, it defaults to "blob"\&.
+.SH "OPTIONS"
+.PP
+\-t <type>
+.RS 4
+Specify the type (default: "blob")\&.
+.RE
+.PP
+\-w
+.RS 4
+Actually write the object into the object database\&.
+.RE
+.PP
+\-\-stdin
+.RS 4
+Read the object from standard input instead of from a file\&.
+.RE
+.PP
+\-\-stdin\-paths
+.RS 4
+Read file names from the standard input, one per line, instead of from the command\-line\&.
+.RE
+.PP
+\-\-path
+.RS 4
+Hash object as it were located at the given path\&. The location of file does not directly influence on the hash value, but path is used to determine what Git filters should be applied to the object before it can be placed to the object database, and, as result of applying filters, the actual blob put into the object database may differ from the given file\&. This option is mainly useful for hashing temporary files located outside of the working directory or files read from stdin\&.
+.RE
+.PP
+\-\-no\-filters
+.RS 4
+Hash the contents as is, ignoring any input filter that would have been chosen by the attributes mechanism, including the end\-of\-line conversion\&. If the file is read from standard input then this is always implied, unless the
+\fB\-\-path\fR
+option is given\&.
+.RE
+.PP
+\-\-literally
+.RS 4
+Allow
+\fB\-\-stdin\fR
+to hash any garbage into a loose object which might not otherwise pass standard object parsing or git\-fsck checks\&. Useful for stress\-testing Git itself or reproducing characteristics of corrupt or bogus objects encountered in the wild\&.
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

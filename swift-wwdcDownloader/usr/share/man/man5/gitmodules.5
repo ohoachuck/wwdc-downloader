@@ -1,0 +1,169 @@
+'\" t
+.\"     Title: gitmodules
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GITMODULES" "5" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+gitmodules \- defining submodule properties
+.SH "SYNOPSIS"
+.sp
+$GIT_WORK_DIR/\&.gitmodules
+.SH "DESCRIPTION"
+.sp
+The \fB\&.gitmodules\fR file, located in the top\-level directory of a Git working tree, is a text file with a syntax matching the requirements of \fBgit-config\fR(1)\&.
+.sp
+The file contains one subsection per submodule, and the subsection value is the name of the submodule\&. The name is set to the path where the submodule has been added unless it was customized with the \fB\-\-name\fR option of \fIgit submodule add\fR\&. Each submodule section also contains the following required keys:
+.PP
+submodule\&.<name>\&.path
+.RS 4
+Defines the path, relative to the top\-level directory of the Git working tree, where the submodule is expected to be checked out\&. The path name must not end with a
+\fB/\fR\&. All submodule paths must be unique within the \&.gitmodules file\&.
+.RE
+.PP
+submodule\&.<name>\&.url
+.RS 4
+Defines a URL from which the submodule repository can be cloned\&. This may be either an absolute URL ready to be passed to
+\fBgit-clone\fR(1)
+or (if it begins with \&./ or \&.\&./) a location relative to the superproject\(cqs origin repository\&.
+.RE
+.sp
+In addition, there are a number of optional keys:
+.PP
+submodule\&.<name>\&.update
+.RS 4
+Defines the default update procedure for the named submodule, i\&.e\&. how the submodule is updated by "git submodule update" command in the superproject\&. This is only used by
+\fBgit submodule init\fR
+to initialize the configuration variable of the same name\&. Allowed values here are
+\fIcheckout\fR,
+\fIrebase\fR,
+\fImerge\fR
+or
+\fInone\fR\&. See description of
+\fIupdate\fR
+command in
+\fBgit-submodule\fR(1)
+for their meaning\&. Note that the
+\fI!command\fR
+form is intentionally ignored here for security reasons\&.
+.RE
+.PP
+submodule\&.<name>\&.branch
+.RS 4
+A remote branch name for tracking updates in the upstream submodule\&. If the option is not specified, it defaults to
+\fImaster\fR\&. A special value of
+\fB\&.\fR
+is used to indicate that the name of the branch in the submodule should be the same name as the current branch in the current repository\&. See the
+\fB\-\-remote\fR
+documentation in
+\fBgit-submodule\fR(1)
+for details\&.
+.RE
+.PP
+submodule\&.<name>\&.fetchRecurseSubmodules
+.RS 4
+This option can be used to control recursive fetching of this submodule\&. If this option is also present in the submodules entry in \&.git/config of the superproject, the setting there will override the one found in \&.gitmodules\&. Both settings can be overridden on the command line by using the "\-\-[no\-]recurse\-submodules" option to "git fetch" and "git pull"\&.
+.RE
+.PP
+submodule\&.<name>\&.ignore
+.RS 4
+Defines under what circumstances "git status" and the diff family show a submodule as modified\&. The following values are supported:
+.PP
+all
+.RS 4
+The submodule will never be considered modified (but will nonetheless show up in the output of status and commit when it has been staged)\&.
+.RE
+.PP
+dirty
+.RS 4
+All changes to the submodule\(cqs work tree will be ignored, only committed differences between the HEAD of the submodule and its recorded state in the superproject are taken into account\&.
+.RE
+.PP
+untracked
+.RS 4
+Only untracked files in submodules will be ignored\&. Committed differences and modifications to tracked files will show up\&.
+.RE
+.PP
+none
+.RS 4
+No modifiations to submodules are ignored, all of committed differences, and modifications to tracked and untracked files are shown\&. This is the default option\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+If this option is also present in the submodules entry in \&.git/config
+of the superproject, the setting there will override the one found in
+\&.gitmodules\&.
+Both settings can be overridden on the command line by using the
+"\-\-ignore\-submodule" option\&. The \(aqgit submodule\(aq commands are not
+affected by this setting\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.RE
+.PP
+submodule\&.<name>\&.shallow
+.RS 4
+When set to true, a clone of this submodule will be performed as a shallow clone (with a history depth of 1) unless the user explicitly asks for a non\-shallow clone\&.
+.RE
+.SH "EXAMPLES"
+.sp
+Consider the following \&.gitmodules file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[submodule "libfoo"]
+        path = include/foo
+        url = git://foo\&.com/git/lib\&.git
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[submodule "libbar"]
+        path = include/bar
+        url = git://bar\&.com/git/lib\&.git
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This defines two submodules, \fBlibfoo\fR and \fBlibbar\fR\&. These are expected to be checked out in the paths \fIinclude/foo\fR and \fIinclude/bar\fR, and for both submodules a URL is specified which can be used for cloning the submodules\&.
+.SH "SEE ALSO"
+.sp
+\fBgit-submodule\fR(1) \fBgit-config\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

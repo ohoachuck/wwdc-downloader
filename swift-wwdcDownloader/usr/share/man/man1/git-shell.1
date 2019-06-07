@@ -1,0 +1,120 @@
+'\" t
+.\"     Title: git-shell
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-SHELL" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-shell \- Restricted login shell for Git\-only SSH access
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIchsh\fR \-s $(command \-v git\-shell) <user>
+\fIgit clone\fR <user>\fB@localhost:/path/to/repo\&.git\fR
+\fIssh\fR <user>\fB@localhost\fR
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This is a login shell for SSH accounts to provide restricted Git access\&. It permits execution only of server\-side Git commands implementing the pull/push functionality, plus custom commands present in a subdirectory named \fBgit\-shell\-commands\fR in the user\(cqs home directory\&.
+.SH "COMMANDS"
+.sp
+\fIgit shell\fR accepts the following commands after the \fB\-c\fR option:
+.PP
+\fIgit receive\-pack <argument>\fR, \fIgit upload\-pack <argument>\fR, \fIgit upload\-archive <argument>\fR
+.RS 4
+Call the corresponding server\-side command to support the client\(cqs
+\fIgit push\fR,
+\fIgit fetch\fR, or
+\fIgit archive \-\-remote\fR
+request\&.
+.RE
+.PP
+\fIcvs server\fR
+.RS 4
+Imitate a CVS server\&. See
+\fBgit-cvsserver\fR(1)\&.
+.RE
+.sp
+If a \fB~/git\-shell\-commands\fR directory is present, \fIgit shell\fR will also handle other, custom commands by running "\fBgit\-shell\-commands/<command> <arguments>\fR" from the user\(cqs home directory\&.
+.SH "INTERACTIVE USE"
+.sp
+By default, the commands above can be executed only with the \fB\-c\fR option; the shell is not interactive\&.
+.sp
+If a \fB~/git\-shell\-commands\fR directory is present, \fIgit shell\fR can also be run interactively (with no arguments)\&. If a \fBhelp\fR command is present in the \fBgit\-shell\-commands\fR directory, it is run to provide the user with an overview of allowed actions\&. Then a "git> " prompt is presented at which one can enter any of the commands from the \fBgit\-shell\-commands\fR directory, or \fBexit\fR to close the connection\&.
+.sp
+Generally this mode is used as an administrative interface to allow users to list repositories they have access to, create, delete, or rename repositories, or change repository descriptions and permissions\&.
+.sp
+If a \fBno\-interactive\-login\fR command exists, then it is run and the interactive shell is aborted\&.
+.SH "EXAMPLE"
+.sp
+To disable interactive logins, displaying a greeting instead:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ chsh \-s /usr/bin/git\-shell
+$ mkdir $HOME/git\-shell\-commands
+$ cat >$HOME/git\-shell\-commands/no\-interactive\-login <<\eEOF
+#!/bin/sh
+printf \(aq%s\en\(aq "Hi $USER! You\(aqve successfully authenticated, but I do not"
+printf \(aq%s\en\(aq "provide interactive shell access\&."
+exit 128
+EOF
+$ chmod +x $HOME/git\-shell\-commands/no\-interactive\-login
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+To enable git\-cvsserver access (which should generally have the \fBno\-interactive\-login\fR example above as a prerequisite, as creating the git\-shell\-commands directory allows interactive logins):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ cat >$HOME/git\-shell\-commands/cvs <<\eEOF
+if ! test $# = 1 && test "$1" = "server"
+then
+        echo >&2 "git\-cvsserver only handles \e"server\e""
+        exit 1
+fi
+exec git cvsserver server
+EOF
+$ chmod +x $HOME/git\-shell\-commands/cvs
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "SEE ALSO"
+.sp
+ssh(1), \fBgit-daemon\fR(1), contrib/git\-shell\-commands/README
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

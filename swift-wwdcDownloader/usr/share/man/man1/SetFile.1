@@ -1,0 +1,103 @@
+.\" Copyright (c) 2009 Apple Computer, Inc. All Rights Reserved.
+.Dd January 4, 2009
+.Dt SETFILE 1
+.Os "Mac OS X"
+.Sh NAME
+.Nm /usr/bin/SetFile
+.Nd set attributes of files and directories (DEPRECATED)
+.Sh SYNOPSIS
+.Nm
+.Op Fl P
+.Op Fl a Ar attributes 
+.Op Fl c Ar creator 
+.Op Fl d Ar date 
+.Op Fl m Ar date 
+.Op Fl t Ar type 
+file ...
+.Sh DESCRIPTION
+Tools supporting Carbon development, including
+.Nm ,
+were deprecated with Xcode 6.
+.Pp
+.Nm
+is a tool to set the file attributes on files in an HFS+ directory. It attempts to be similar to the
+.Nm setfile
+command in MPW. It can apply rules to more than one file with the options applying to all files listed.
+.Pp
+Flags:
+.Bl -tag -width "-P"
+.It Fl P
+Acts on a symlink file instead on the file the symlink resolves to.
+.El
+.Bl -tag -width "-a attributes"
+.It Fl a Ar attributes
+Sets the file attributes bits where
+.Ar attributes 
+is a string of case sensitive letters. Each letter corresponds to a file attribute: an uppercase letter indicates that the attribute bit is set (1), a lowercase letter indicates that it is not (0).
+.Nm Note:
+.Ar attributes 
+not specified remain unchanged.
+.Bl -tag -width -indent
+.It A | a 
+Alias file
+.It B | b 
+Has bundle
+.It C | c 
+Custom icon (allowed on folders)
+.It D | d 
+Located on the desktop (allowed on folders)
+.It E | e 
+Extension is hidden (allowed on folders)
+.It I | i
+Inited - Finder is aware of this file and has given it a location in a window. (allowed on folders)
+.It L | l 
+Locked
+.It M | m 
+Shared (can run multiple times)
+.It N | n
+File has no INIT resource
+.It S | s 
+System file (name locked)
+.It T | t 
+"Stationery Pad" file
+.It V | v 
+Invisible (allowed on folders)
+.It Z | z 
+Busy (allowed on folders)
+.El
+.It Fl c Ar creator 
+Specifies the file's creator, where
+.Ar creator
+can be a string of four MacRoman characters, an empty string ('') designating a null creator, or a binary, decimal, octal, or hexadecimal number in standard notation (e.g. 0x52486368).
+.It Fl d Ar date 
+Sets the creation date, where
+.Ar date
+is a string of the form: "mm/dd/[yy]yy [hh:mm:[:ss] [AM | PM]]"
+.Nm Notes:
+Enclose the string in quotation marks if it contains spaces. The date must be in the Unix epoch, that is, between 1/1/1970 and 1/18/2038. If the year is provided as a two-digit year, it is assumed to be in the 21st century and must be from 00 (2000) through 38 (2038).
+.It Fl m Ar date 
+Sets the modification date where
+.Ar date
+is a string of the form in 
+.Fl d 
+above. (mm/dd/[yy]yy [hh:mm:[:ss] [AM | PM]])
+.It Fl t Ar type 
+Sets the file type, where 
+.Ar type
+can be a string of four MacRoman characters, an empty string ('') designating a null type, or a binary, decimal, octal, or hexadecimal number in standard notation (e.g. 0x55455955).
+.El
+.Sh RETURN VALUES
+.Bl -tag -compact -width -indent
+.It Nm 0 
+attributes set
+.It Nm 1
+syntax error
+.It Nm 2 
+any other error
+.El
+.Sh SEE ALSO
+.Xr GetFileInfo 1
+.Sh EXAMPLES 
+This command line sets the modification date of "myFile":
+.Pp
+SetFile -m "8/4/2001 16:13" myFile

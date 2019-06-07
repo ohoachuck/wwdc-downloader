@@ -1,0 +1,71 @@
+'\" t
+.\"     Title: git-count-objects
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-COUNT\-OBJECTS" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-count-objects \- Count unpacked number of objects and their disk consumption
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit count\-objects\fR [\-v] [\-H | \-\-human\-readable]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This counts the number of unpacked object files and disk space consumed by them, to help you decide when it is a good time to repack\&.
+.SH "OPTIONS"
+.PP
+\-v, \-\-verbose
+.RS 4
+Report in more detail:
+.sp
+count: the number of loose objects
+.sp
+size: disk space consumed by loose objects, in KiB (unless \-H is specified)
+.sp
+in\-pack: the number of in\-pack objects
+.sp
+size\-pack: disk space consumed by the packs, in KiB (unless \-H is specified)
+.sp
+prune\-packable: the number of loose objects that are also present in the packs\&. These objects could be pruned using
+\fBgit prune\-packed\fR\&.
+.sp
+garbage: the number of files in object database that are neither valid loose objects nor valid packs
+.sp
+size\-garbage: disk space consumed by garbage files, in KiB (unless \-H is specified)
+.sp
+alternate: absolute path of alternate object databases; may appear multiple times, one line per path\&. Note that if the path contains non\-printable characters, it may be surrounded by double\-quotes and contain C\-style backslashed escape sequences\&.
+.RE
+.PP
+\-H, \-\-human\-readable
+.RS 4
+Print sizes in human readable format
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

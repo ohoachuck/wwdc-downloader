@@ -1,0 +1,114 @@
+'\" t
+.\"     Title: git-prune
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-PRUNE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-prune \- Prune all unreachable objects from the object database
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit prune\fR [\-n] [\-v] [\-\-progress] [\-\-expire <time>] [\-\-] [<head>\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+In most cases, users should run \fIgit gc\fR, which calls \fIgit prune\fR\&. See the section "NOTES", below\&.
+.sp .5v
+.RE
+.sp
+This runs \fIgit fsck \-\-unreachable\fR using all the refs available in \fBrefs/\fR, optionally with additional set of objects specified on the command line, and prunes all unpacked objects unreachable from any of these head objects from the object database\&. In addition, it prunes the unpacked objects that are also found in packs by running \fIgit prune\-packed\fR\&. It also removes entries from \&.git/shallow that are not reachable by any ref\&.
+.sp
+Note that unreachable, packed objects will remain\&. If this is not desired, see \fBgit-repack\fR(1)\&.
+.SH "OPTIONS"
+.PP
+\-n, \-\-dry\-run
+.RS 4
+Do not remove anything; just report what it would remove\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Report all removed objects\&.
+.RE
+.PP
+\-\-progress
+.RS 4
+Show progress\&.
+.RE
+.PP
+\-\-expire <time>
+.RS 4
+Only expire loose objects older than <time>\&.
+.RE
+.PP
+\-\-
+.RS 4
+Do not interpret any more arguments as options\&.
+.RE
+.PP
+<head>\&...
+.RS 4
+In addition to objects reachable from any of our references, keep objects reachable from listed <head>s\&.
+.RE
+.SH "EXAMPLE"
+.sp
+To prune objects not used by your repository or another that borrows from your repository via its \fB\&.git/objects/info/alternates\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git prune $(cd \&.\&./another && git rev\-parse \-\-all)
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "NOTES"
+.sp
+In most cases, users will not need to call \fIgit prune\fR directly, but should instead call \fIgit gc\fR, which handles pruning along with many other housekeeping tasks\&.
+.sp
+For a description of which objects are considered for pruning, see \fIgit fsck\fR\(aqs \-\-unreachable option\&.
+.SH "SEE ALSO"
+.sp
+\fBgit-fsck\fR(1), \fBgit-gc\fR(1), \fBgit-reflog\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

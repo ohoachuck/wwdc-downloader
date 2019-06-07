@@ -1,0 +1,43 @@
+'\" t
+.\"     Title: git-parse-remote
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-PARSE\-REMOTE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-parse-remote \- Routines to help parsing remote repository access parameters
+.SH "SYNOPSIS"
+.sp
+.nf
+\fI\&. "$(git \-\-exec\-path)/git\-parse\-remote"\fR
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This script is included in various scripts to supply routines to parse files under $GIT_DIR/remotes/ and $GIT_DIR/branches/ and configuration variables that are related to fetching, pulling and pushing\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

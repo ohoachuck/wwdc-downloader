@@ -1,0 +1,63 @@
+'\" t
+.\"     Title: git-prune-packed
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-PRUNE\-PACKED" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-prune-packed \- Remove extra objects that are already in pack files
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit prune\-packed\fR [\-n|\-\-dry\-run] [\-q|\-\-quiet]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This program searches the \fB$GIT_OBJECT_DIRECTORY\fR for all objects that currently exist in a pack file as well as the independent object directories\&.
+.sp
+All such extra objects are removed\&.
+.sp
+A pack is a collection of objects, individually compressed, with delta compression applied, stored in a single file, with an associated index file\&.
+.sp
+Packs are used to reduce the load on mirror systems, backup engines, disk storage, etc\&.
+.SH "OPTIONS"
+.PP
+\-n, \-\-dry\-run
+.RS 4
+Don\(cqt actually remove any objects, only show those that would have been removed\&.
+.RE
+.PP
+\-q, \-\-quiet
+.RS 4
+Squelch the progress indicator\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgit-pack-objects\fR(1) \fBgit-repack\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

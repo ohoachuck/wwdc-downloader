@@ -1,0 +1,220 @@
+'\" t
+.\"     Title: git-annotate
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-ANNOTATE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-annotate \- Annotate file lines with commit information
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit annotate\fR [options] file [revision]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Annotates each line in the given file with information from the commit which introduced the line\&. Optionally annotates from a given revision\&.
+.sp
+The only difference between this command and \fBgit-blame\fR(1) is that they use slightly different output formats, and this command exists only for backward compatibility to support existing scripts, and provide a more familiar command name for people coming from other SCM systems\&.
+.SH "OPTIONS"
+.PP
+\-b
+.RS 4
+Show blank SHA\-1 for boundary commits\&. This can also be controlled via the
+\fBblame\&.blankboundary\fR
+config option\&.
+.RE
+.PP
+\-\-root
+.RS 4
+Do not treat root commits as boundaries\&. This can also be controlled via the
+\fBblame\&.showRoot\fR
+config option\&.
+.RE
+.PP
+\-\-show\-stats
+.RS 4
+Include additional statistics at the end of blame output\&.
+.RE
+.PP
+\-L <start>,<end>, \-L :<funcname>
+.RS 4
+Annotate only the given line range\&. May be specified multiple times\&. Overlapping ranges are allowed\&.
+.sp
+<start> and <end> are optional\&. \(lq\-L <start>\(rq or \(lq\-L <start>,\(rq spans from <start> to end of file\&. \(lq\-L ,<end>\(rq spans from start of file to <end>\&.
+.sp
+<start> and <end> can take one of these forms:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+number
+.sp
+If <start> or <end> is a number, it specifies an absolute line number (lines count from 1)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+/regex/
+.sp
+This form will use the first line matching the given POSIX regex\&. If <start> is a regex, it will search from the end of the previous
+\fB\-L\fR
+range, if any, otherwise from the start of file\&. If <start> is \(lq^/regex/\(rq, it will search from the start of file\&. If <end> is a regex, it will search starting at the line given by <start>\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
++offset or \-offset
+.sp
+This is only valid for <end> and will specify a number of lines before or after the line given by <start>\&.
+.RE
+.sp
+If \(lq:<funcname>\(rq is given in place of <start> and <end>, it is a regular expression that denotes the range from the first funcname line that matches <funcname>, up to the next funcname line\&. \(lq:<funcname>\(rq searches from the end of the previous
+\fB\-L\fR
+range, if any, otherwise from the start of file\&. \(lq^:<funcname>\(rq searches from the start of file\&.
+.RE
+.PP
+\-l
+.RS 4
+Show long rev (Default: off)\&.
+.RE
+.PP
+\-t
+.RS 4
+Show raw timestamp (Default: off)\&.
+.RE
+.PP
+\-S <revs\-file>
+.RS 4
+Use revisions from revs\-file instead of calling
+\fBgit-rev-list\fR(1)\&.
+.RE
+.PP
+\-\-reverse <rev>\&.\&.<rev>
+.RS 4
+Walk history forward instead of backward\&. Instead of showing the revision in which a line appeared, this shows the last revision in which a line has existed\&. This requires a range of revision like START\&.\&.END where the path to blame exists in START\&.
+\fBgit blame \-\-reverse START\fR
+is taken as
+\fBgit blame \-\-reverse START\&.\&.HEAD\fR
+for convenience\&.
+.RE
+.PP
+\-p, \-\-porcelain
+.RS 4
+Show in a format designed for machine consumption\&.
+.RE
+.PP
+\-\-line\-porcelain
+.RS 4
+Show the porcelain format, but output commit information for each line, not just the first time a commit is referenced\&. Implies \-\-porcelain\&.
+.RE
+.PP
+\-\-incremental
+.RS 4
+Show the result incrementally in a format designed for machine consumption\&.
+.RE
+.PP
+\-\-encoding=<encoding>
+.RS 4
+Specifies the encoding used to output author names and commit summaries\&. Setting it to
+\fBnone\fR
+makes blame output unconverted data\&. For more information see the discussion about encoding in the
+\fBgit-log\fR(1)
+manual page\&.
+.RE
+.PP
+\-\-contents <file>
+.RS 4
+When <rev> is not specified, the command annotates the changes starting backwards from the working tree copy\&. This flag makes the command pretend as if the working tree copy has the contents of the named file (specify
+\fB\-\fR
+to make the command read from the standard input)\&.
+.RE
+.PP
+\-\-date <format>
+.RS 4
+Specifies the format used to output dates\&. If \-\-date is not provided, the value of the blame\&.date config variable is used\&. If the blame\&.date config variable is also not set, the iso format is used\&. For supported values, see the discussion of the \-\-date option at
+\fBgit-log\fR(1)\&.
+.RE
+.PP
+\-\-[no\-]progress
+.RS 4
+Progress status is reported on the standard error stream by default when it is attached to a terminal\&. This flag enables progress reporting even if not attached to a terminal\&. Can\(cqt use
+\fB\-\-progress\fR
+together with
+\fB\-\-porcelain\fR
+or
+\fB\-\-incremental\fR\&.
+.RE
+.PP
+\-M[<num>]
+.RS 4
+Detect moved or copied lines within a file\&. When a commit moves or copies a block of lines (e\&.g\&. the original file has A and then B, and the commit changes it to B and then A), the traditional
+\fIblame\fR
+algorithm notices only half of the movement and typically blames the lines that were moved up (i\&.e\&. B) to the parent and assigns blame to the lines that were moved down (i\&.e\&. A) to the child commit\&. With this option, both groups of lines are blamed on the parent by running extra passes of inspection\&.
+.sp
+<num> is optional but it is the lower bound on the number of alphanumeric characters that Git must detect as moving/copying within a file for it to associate those lines with the parent commit\&. The default value is 20\&.
+.RE
+.PP
+\-C[<num>]
+.RS 4
+In addition to
+\fB\-M\fR, detect lines moved or copied from other files that were modified in the same commit\&. This is useful when you reorganize your program and move code around across files\&. When this option is given twice, the command additionally looks for copies from other files in the commit that creates the file\&. When this option is given three times, the command additionally looks for copies from other files in any commit\&.
+.sp
+<num> is optional but it is the lower bound on the number of alphanumeric characters that Git must detect as moving/copying between files for it to associate those lines with the parent commit\&. And the default value is 40\&. If there are more than one
+\fB\-C\fR
+options given, the <num> argument of the last
+\fB\-C\fR
+will take effect\&.
+.RE
+.PP
+\-h
+.RS 4
+Show help message\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgit-blame\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

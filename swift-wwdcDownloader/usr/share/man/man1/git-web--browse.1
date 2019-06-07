@@ -1,0 +1,300 @@
+'\" t
+.\"     Title: git-web--browse
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-WEB\-\-BROWSE" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-web--browse \- Git helper script to launch a web browser
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit web\-\-browse\fR [OPTIONS] URL/FILE \&...
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This script tries, as much as possible, to display the URLs and FILEs that are passed as arguments, as HTML pages in new tabs on an already opened web browser\&.
+.sp
+The following browsers (or commands) are currently supported:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+firefox (this is the default under X Window when not using KDE)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+iceweasel
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+seamonkey
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+iceape
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+chromium (also supported as chromium\-browser)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+google\-chrome (also supported as chrome)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+konqueror (this is the default under KDE, see
+\fINote about konqueror\fR
+below)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+opera
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+w3m (this is the default outside graphical environments)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+elinks
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+links
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+lynx
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+dillo
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+open (this is the default under Mac OS X GUI)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+start (this is the default under MinGW)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+cygstart (this is the default under Cygwin)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+xdg\-open
+.RE
+.sp
+Custom commands may also be specified\&.
+.SH "OPTIONS"
+.PP
+\-b <browser>, \-\-browser=<browser>
+.RS 4
+Use the specified browser\&. It must be in the list of supported browsers\&.
+.RE
+.PP
+\-t <browser>, \-\-tool=<browser>
+.RS 4
+Same as above\&.
+.RE
+.PP
+\-c <conf\&.var>, \-\-config=<conf\&.var>
+.RS 4
+CONF\&.VAR is looked up in the Git config files\&. If it\(cqs set, then its value specifies the browser that should be used\&.
+.RE
+.SH "CONFIGURATION VARIABLES"
+.SS "CONF\&.VAR (from \-c option) and web\&.browser"
+.sp
+The web browser can be specified using a configuration variable passed with the \-c (or \-\-config) command\-line option, or the \fBweb\&.browser\fR configuration variable if the former is not used\&.
+.SS "browser\&.<tool>\&.path"
+.sp
+You can explicitly provide a full path to your preferred browser by setting the configuration variable \fBbrowser\&.<tool>\&.path\fR\&. For example, you can configure the absolute path to firefox by setting \fIbrowser\&.firefox\&.path\fR\&. Otherwise, \fIgit web\-\-browse\fR assumes the tool is available in PATH\&.
+.SS "browser\&.<tool>\&.cmd"
+.sp
+When the browser, specified by options or configuration variables, is not among the supported ones, then the corresponding \fBbrowser\&.<tool>\&.cmd\fR configuration variable will be looked up\&. If this variable exists then \fIgit web\-\-browse\fR will treat the specified tool as a custom command and will use a shell eval to run the command with the URLs passed as arguments\&.
+.SH "NOTE ABOUT KONQUEROR"
+.sp
+When \fIkonqueror\fR is specified by a command\-line option or a configuration variable, we launch \fIkfmclient\fR to try to open the HTML man page on an already opened konqueror in a new tab if possible\&.
+.sp
+For consistency, we also try such a trick if \fIbrowser\&.konqueror\&.path\fR is set to something like \fIA_PATH_TO/konqueror\fR\&. That means we will try to launch \fIA_PATH_TO/kfmclient\fR instead\&.
+.sp
+If you really want to use \fIkonqueror\fR, then you can use something like the following:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [web]
+                browser = konq
+
+        [browser "konq"]
+                cmd = A_PATH_TO/konqueror
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SS "Note about git\-config \-\-global"
+.sp
+Note that these configuration variables should probably be set using the \fB\-\-global\fR flag, for example like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git config \-\-global web\&.browser firefox
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+as they are probably more user specific than repository specific\&. See \fBgit-config\fR(1) for more information about this\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

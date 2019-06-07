@@ -1,0 +1,138 @@
+'\" t
+.\"     Title: git-remote-ext
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-REMOTE\-EXT" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-remote-ext \- Bridge smart transport to external command\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+git remote add <nick> "ext::<command>[ <arguments>\&...]"
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This remote helper uses the specified \fI<command>\fR to connect to a remote Git server\&.
+.sp
+Data written to stdin of the specified \fI<command>\fR is assumed to be sent to a git:// server, git\-upload\-pack, git\-receive\-pack or git\-upload\-archive (depending on situation), and data read from stdout of <command> is assumed to be received from the same service\&.
+.sp
+Command and arguments are separated by an unescaped space\&.
+.sp
+The following sequences have a special meaning:
+.PP
+\(aq% \(aq
+.RS 4
+Literal space in command or argument\&.
+.RE
+.PP
+\fI%%\fR
+.RS 4
+Literal percent sign\&.
+.RE
+.PP
+\fI%s\fR
+.RS 4
+Replaced with name (receive\-pack, upload\-pack, or upload\-archive) of the service Git wants to invoke\&.
+.RE
+.PP
+\fI%S\fR
+.RS 4
+Replaced with long name (git\-receive\-pack, git\-upload\-pack, or git\-upload\-archive) of the service Git wants to invoke\&.
+.RE
+.PP
+\fI%G\fR (must be the first characters in an argument)
+.RS 4
+This argument will not be passed to
+\fI<command>\fR\&. Instead, it will cause the helper to start by sending git:// service requests to the remote side with the service field set to an appropriate value and the repository field set to rest of the argument\&. Default is not to send such a request\&.
+.sp
+This is useful if remote side is git:// server accessed over some tunnel\&.
+.RE
+.PP
+\fI%V\fR (must be first characters in argument)
+.RS 4
+This argument will not be passed to
+\fI<command>\fR\&. Instead it sets the vhost field in the git:// service request (to rest of the argument)\&. Default is not to send vhost in such request (if sent)\&.
+.RE
+.SH "ENVIRONMENT VARIABLES:"
+.PP
+GIT_TRANSLOOP_DEBUG
+.RS 4
+If set, prints debugging information about various reads/writes\&.
+.RE
+.SH "ENVIRONMENT VARIABLES PASSED TO COMMAND:"
+.PP
+GIT_EXT_SERVICE
+.RS 4
+Set to long name (git\-upload\-pack, etc\&...) of service helper needs to invoke\&.
+.RE
+.PP
+GIT_EXT_SERVICE_NOPREFIX
+.RS 4
+Set to long name (upload\-pack, etc\&...) of service helper needs to invoke\&.
+.RE
+.SH "EXAMPLES:"
+.sp
+This remote helper is transparently used by Git when you use commands such as "git fetch <URL>", "git clone <URL>", , "git push <URL>" or "git remote add <nick> <URL>", where <URL> begins with \fBext::\fR\&. Examples:
+.PP
+"ext::ssh \-i /home/foo/\&.ssh/somekey user@host\&.example %S \fIfoo/repo\fR"
+.RS 4
+Like host\&.example:foo/repo, but use /home/foo/\&.ssh/somekey as keypair and user as user on remote side\&. This avoids needing to edit \&.ssh/config\&.
+.RE
+.PP
+"ext::socat \-t3600 \- ABSTRACT\-CONNECT:/git\-server %G/somerepo"
+.RS 4
+Represents repository with path /somerepo accessible over git protocol at abstract namespace address /git\-server\&.
+.RE
+.PP
+"ext::git\-server\-alias foo %G/repo"
+.RS 4
+Represents a repository with path /repo accessed using the helper program "git\-server\-alias foo"\&. The path to the repository and type of request are not passed on the command line but as part of the protocol stream, as usual with git:// protocol\&.
+.RE
+.PP
+"ext::git\-server\-alias foo %G/repo %Vfoo"
+.RS 4
+Represents a repository with path /repo accessed using the helper program "git\-server\-alias foo"\&. The hostname for the remote server passed in the protocol stream will be "foo" (this allows multiple virtual Git servers to share a link\-level address)\&.
+.RE
+.PP
+"ext::git\-server\-alias foo %G/repo% with% spaces %Vfoo"
+.RS 4
+Represents a repository with path
+\fI/repo with spaces\fR
+accessed using the helper program "git\-server\-alias foo"\&. The hostname for the remote server passed in the protocol stream will be "foo" (this allows multiple virtual Git servers to share a link\-level address)\&.
+.RE
+.PP
+"ext::git\-ssl foo\&.example /bar"
+.RS 4
+Represents a repository accessed using the helper program "git\-ssl foo\&.example /bar"\&. The type of request can be determined by the helper using environment variables (see above)\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgitremote-helpers\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

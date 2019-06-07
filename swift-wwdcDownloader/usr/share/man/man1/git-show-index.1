@@ -1,0 +1,45 @@
+'\" t
+.\"     Title: git-show-index
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-SHOW\-INDEX" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-show-index \- Show packed archive index
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit show\-index\fR
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Read the idx file for a Git packfile created with \fIgit pack\-objects\fR command from the standard input, and dump its contents\&.
+.sp
+The information it outputs is subset of what you can get from \fIgit verify\-pack \-v\fR; this command only shows the packfile offset and SHA\-1 of each object\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

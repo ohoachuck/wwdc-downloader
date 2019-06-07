@@ -1,0 +1,59 @@
+'\" t
+.\"     Title: git-verify-tag
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-VERIFY\-TAG" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-verify-tag \- Check the GPG signature of tags
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit verify\-tag\fR [\-\-format=<format>] <tag>\&...
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Validates the gpg signature created by \fIgit tag\fR\&.
+.SH "OPTIONS"
+.PP
+\-\-raw
+.RS 4
+Print the raw gpg status output to standard error instead of the normal human\-readable output\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Print the contents of the tag object before validating it\&.
+.RE
+.PP
+<tag>\&...
+.RS 4
+SHA\-1 identifiers of Git tag objects\&.
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

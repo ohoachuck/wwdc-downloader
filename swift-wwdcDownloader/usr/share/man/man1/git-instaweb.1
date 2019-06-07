@@ -1,0 +1,114 @@
+'\" t
+.\"     Title: git-instaweb
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-INSTAWEB" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-instaweb \- Instantly browse your working repository in gitweb
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit instaweb\fR [\-\-local] [\-\-httpd=<httpd>] [\-\-port=<port>]
+               [\-\-browser=<browser>]
+\fIgit instaweb\fR [\-\-start] [\-\-stop] [\-\-restart]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+A simple script to set up \fBgitweb\fR and a web server for browsing the local repository\&.
+.SH "OPTIONS"
+.PP
+\-l, \-\-local
+.RS 4
+Only bind the web server to the local IP (127\&.0\&.0\&.1)\&.
+.RE
+.PP
+\-d, \-\-httpd
+.RS 4
+The HTTP daemon command\-line that will be executed\&. Command\-line options may be specified here, and the configuration file will be added at the end of the command\-line\&. Currently apache2, lighttpd, mongoose, plackup and webrick are supported\&. (Default: lighttpd)
+.RE
+.PP
+\-m, \-\-module\-path
+.RS 4
+The module path (only needed if httpd is Apache)\&. (Default: /usr/lib/apache2/modules)
+.RE
+.PP
+\-p, \-\-port
+.RS 4
+The port number to bind the httpd to\&. (Default: 1234)
+.RE
+.PP
+\-b, \-\-browser
+.RS 4
+The web browser that should be used to view the gitweb page\&. This will be passed to the
+\fIgit web\-\-browse\fR
+helper script along with the URL of the gitweb instance\&. See
+\fBgit-web--browse\fR(1)
+for more information about this\&. If the script fails, the URL will be printed to stdout\&.
+.RE
+.PP
+start, \-\-start
+.RS 4
+Start the httpd instance and exit\&. Regenerate configuration files as necessary for spawning a new instance\&.
+.RE
+.PP
+stop, \-\-stop
+.RS 4
+Stop the httpd instance and exit\&. This does not generate any of the configuration files for spawning a new instance, nor does it close the browser\&.
+.RE
+.PP
+restart, \-\-restart
+.RS 4
+Restart the httpd instance and exit\&. Regenerate configuration files as necessary for spawning a new instance\&.
+.RE
+.SH "CONFIGURATION"
+.sp
+You may specify configuration in your \&.git/config
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[instaweb]
+        local = true
+        httpd = apache2 \-f
+        port = 4321
+        browser = konqueror
+        modulePath = /usr/lib/apache2/modules
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+If the configuration variable \fBinstaweb\&.browser\fR is not set, \fBweb\&.browser\fR will be used instead if it is defined\&. See \fBgit-web--browse\fR(1) for more information about this\&.
+.SH "SEE ALSO"
+.sp
+\fBgitweb\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

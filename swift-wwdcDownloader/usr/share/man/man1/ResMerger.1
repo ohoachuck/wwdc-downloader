@@ -1,0 +1,58 @@
+.\" Copyright (c) 2004 Apple Computer, Inc. All Rights Reserved.
+.Dd April 12, 2004       \" DATE 
+.Dt RESMERGER 1 
+.Os "Mac OS X"
+.Sh NAME                 \" Section Header - required - don't modify 
+.Nm /usr/bin/ResMerger
+.Nd Merges resource forks or files into one resource file (DEPRECATED)
+.Sh SYNOPSIS             \" Section Header - required - don't modify
+.Nm
+.Op Fl fileCreator Ar <fileCreator> 
+.Op Fl fileType Ar <fileType> 
+.Op Fl [a]ppend
+.Op Fl srcIs Ar RSRC | DF 
+.Op Fl dstIs Ar RSRC | DF 
+.Ar file ...
+.Fl o Ar <dest-file>
+.Sh DESCRIPTION
+Tools supporting Carbon development, including
+.Nm ,
+were deprecated with Xcode 6.
+.Pp
+The 
+.Nm
+command merges the Carbon Resource Manager resource data in multiple files into a single file.  The output file may be one of the input files.
+.Pp
+The
+.Nm
+command takes the following flags and arguments:
+.Bl -tag -width
+.It Fl fileCreator Ar <fileCreator>
+Sets the HFS creator type of the output file.  The default is '????'.
+.It Fl fileType Ar <fileType> 
+Sets the HFS file type of the output file.  The default is '????'.
+.It Fl [a]ppend
+Append to output file, rather than overwriting it.
+.It Fl srcIs Ar RSRC | DF
+The fork in which to look for resources in the input file(s).  The default is the data fork (DF).
+.It Fl dstIs Ar RSRC | DF
+The fork in which to write resources in the output file.  The default is the data fork (DF).
+.It Fl skip Ar <type>
+Specifies resource type to skip during the resource merge. May be used multiple times, to specify multiple resource types to skip.
+.It file
+Specifies one or more input files.  Note that as there is only one
+.Ar srcIs
+flag, the input files must be homogenous, that is, the resources must be in the same fork of all input files.
+.It Fl o Ar <dest-file>
+Specifies the output file.  If the fork designated by
+.Fl dstIs
+exists, it is overwritten unless the 
+.Fl a
+flag is provided; if it does not exist, it is created.
+.El
+.Sh SEE ALSO 
+.Xr Rez 1 , 
+.Xr DeRez 1 ,
+.Xr RezWack 1 ,
+.Xr UnRezWack 1 ,
+.Xr SplitForks 1

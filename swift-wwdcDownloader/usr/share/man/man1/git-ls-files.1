@@ -1,0 +1,325 @@
+'\" t
+.\"     Title: git-ls-files
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-LS\-FILES" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-ls-files \- Show information about files in the index and the working tree
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit ls\-files\fR [\-z] [\-t] [\-v] [\-f]
+                (\-\-[cached|deleted|others|ignored|stage|unmerged|killed|modified])*
+                (\-[c|d|o|i|s|u|k|m])*
+                [\-\-eol]
+                [\-x <pattern>|\-\-exclude=<pattern>]
+                [\-X <file>|\-\-exclude\-from=<file>]
+                [\-\-exclude\-per\-directory=<file>]
+                [\-\-exclude\-standard]
+                [\-\-error\-unmatch] [\-\-with\-tree=<tree\-ish>]
+                [\-\-full\-name] [\-\-recurse\-submodules]
+                [\-\-abbrev] [\-\-] [<file>\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+This merges the file listing in the directory cache index with the actual working directory list, and shows different combinations of the two\&.
+.sp
+One or more of the options below may be used to determine the files shown:
+.SH "OPTIONS"
+.PP
+\-c, \-\-cached
+.RS 4
+Show cached files in the output (default)
+.RE
+.PP
+\-d, \-\-deleted
+.RS 4
+Show deleted files in the output
+.RE
+.PP
+\-m, \-\-modified
+.RS 4
+Show modified files in the output
+.RE
+.PP
+\-o, \-\-others
+.RS 4
+Show other (i\&.e\&. untracked) files in the output
+.RE
+.PP
+\-i, \-\-ignored
+.RS 4
+Show only ignored files in the output\&. When showing files in the index, print only those matched by an exclude pattern\&. When showing "other" files, show only those matched by an exclude pattern\&.
+.RE
+.PP
+\-s, \-\-stage
+.RS 4
+Show staged contents\(aq mode bits, object name and stage number in the output\&.
+.RE
+.PP
+\-\-directory
+.RS 4
+If a whole directory is classified as "other", show just its name (with a trailing slash) and not its whole contents\&.
+.RE
+.PP
+\-\-no\-empty\-directory
+.RS 4
+Do not list empty directories\&. Has no effect without \-\-directory\&.
+.RE
+.PP
+\-u, \-\-unmerged
+.RS 4
+Show unmerged files in the output (forces \-\-stage)
+.RE
+.PP
+\-k, \-\-killed
+.RS 4
+Show files on the filesystem that need to be removed due to file/directory conflicts for checkout\-index to succeed\&.
+.RE
+.PP
+\-z
+.RS 4
+\e0 line termination on output and do not quote filenames\&. See OUTPUT below for more information\&.
+.RE
+.PP
+\-x <pattern>, \-\-exclude=<pattern>
+.RS 4
+Skip untracked files matching pattern\&. Note that pattern is a shell wildcard pattern\&. See EXCLUDE PATTERNS below for more information\&.
+.RE
+.PP
+\-X <file>, \-\-exclude\-from=<file>
+.RS 4
+Read exclude patterns from <file>; 1 per line\&.
+.RE
+.PP
+\-\-exclude\-per\-directory=<file>
+.RS 4
+Read additional exclude patterns that apply only to the directory and its subdirectories in <file>\&.
+.RE
+.PP
+\-\-exclude\-standard
+.RS 4
+Add the standard Git exclusions: \&.git/info/exclude, \&.gitignore in each directory, and the user\(cqs global exclusion file\&.
+.RE
+.PP
+\-\-error\-unmatch
+.RS 4
+If any <file> does not appear in the index, treat this as an error (return 1)\&.
+.RE
+.PP
+\-\-with\-tree=<tree\-ish>
+.RS 4
+When using \-\-error\-unmatch to expand the user supplied <file> (i\&.e\&. path pattern) arguments to paths, pretend that paths which were removed in the index since the named <tree\-ish> are still present\&. Using this option with
+\fB\-s\fR
+or
+\fB\-u\fR
+options does not make any sense\&.
+.RE
+.PP
+\-t
+.RS 4
+This feature is semi\-deprecated\&. For scripting purpose,
+\fBgit-status\fR(1)
+\fB\-\-porcelain\fR
+and
+\fBgit-diff-files\fR(1)
+\fB\-\-name\-status\fR
+are almost always superior alternatives, and users should look at
+\fBgit-status\fR(1)
+\fB\-\-short\fR
+or
+\fBgit-diff\fR(1)
+\fB\-\-name\-status\fR
+for more user\-friendly alternatives\&.
+.sp
+This option identifies the file status with the following tags (followed by a space) at the start of each line:
+.RE
+.PP
+H
+.RS 4
+cached
+.RE
+.PP
+S
+.RS 4
+skip\-worktree
+.RE
+.PP
+M
+.RS 4
+unmerged
+.RE
+.PP
+R
+.RS 4
+removed/deleted
+.RE
+.PP
+C
+.RS 4
+modified/changed
+.RE
+.PP
+K
+.RS 4
+to be killed
+.RE
+.PP
+?
+.RS 4
+other
+.RE
+.PP
+\-v
+.RS 4
+Similar to
+\fB\-t\fR, but use lowercase letters for files that are marked as
+\fIassume unchanged\fR
+(see
+\fBgit-update-index\fR(1))\&.
+.RE
+.PP
+\-f
+.RS 4
+Similar to
+\fB\-t\fR, but use lowercase letters for files that are marked as
+\fIfsmonitor valid\fR
+(see
+\fBgit-update-index\fR(1))\&.
+.RE
+.PP
+\-\-full\-name
+.RS 4
+When run from a subdirectory, the command usually outputs paths relative to the current directory\&. This option forces paths to be output relative to the project top directory\&.
+.RE
+.PP
+\-\-recurse\-submodules
+.RS 4
+Recursively calls ls\-files on each submodule in the repository\&. Currently there is only support for the \-\-cached mode\&.
+.RE
+.PP
+\-\-abbrev[=<n>]
+.RS 4
+Instead of showing the full 40\-byte hexadecimal object lines, show only a partial prefix\&. Non default number of digits can be specified with \-\-abbrev=<n>\&.
+.RE
+.PP
+\-\-debug
+.RS 4
+After each line that describes a file, add more data about its cache entry\&. This is intended to show as much information as possible for manual inspection; the exact format may change at any time\&.
+.RE
+.PP
+\-\-eol
+.RS 4
+Show <eolinfo> and <eolattr> of files\&. <eolinfo> is the file content identification used by Git when the "text" attribute is "auto" (or not set and core\&.autocrlf is not false)\&. <eolinfo> is either "\-text", "none", "lf", "crlf", "mixed" or ""\&.
+.sp
+"" means the file is not a regular file, it is not in the index or not accessible in the working tree\&.
+.sp
+<eolattr> is the attribute that is used when checking out or committing, it is either "", "\-text", "text", "text=auto", "text eol=lf", "text eol=crlf"\&. Since Git 2\&.10 "text=auto eol=lf" and "text=auto eol=crlf" are supported\&.
+.sp
+Both the <eolinfo> in the index ("i/<eolinfo>") and in the working tree ("w/<eolinfo>") are shown for regular files, followed by the ("attr/<eolattr>")\&.
+.RE
+.PP
+\-\-
+.RS 4
+Do not interpret any more arguments as options\&.
+.RE
+.PP
+<file>
+.RS 4
+Files to show\&. If no files are given all files which match the other specified criteria are shown\&.
+.RE
+.SH "OUTPUT"
+.sp
+\fIgit ls\-files\fR just outputs the filenames unless \fB\-\-stage\fR is specified in which case it outputs:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[<tag> ]<mode> <object> <stage> <file>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fIgit ls\-files \-\-eol\fR will show i/<eolinfo><SPACES>w/<eolinfo><SPACES>attr/<eolattr><SPACE*><TAB><file>
+.sp
+\fIgit ls\-files \-\-unmerged\fR and \fIgit ls\-files \-\-stage\fR can be used to examine detailed information on unmerged paths\&.
+.sp
+For an unmerged path, instead of recording a single mode/SHA\-1 pair, the index records up to three such pairs; one from tree O in stage 1, A in stage 2, and B in stage 3\&. This information can be used by the user (or the porcelain) to see what should eventually be recorded at the path\&. (see \fBgit-read-tree\fR(1) for more information on state)
+.sp
+Without the \fB\-z\fR option, pathnames with "unusual" characters are quoted as explained for the configuration variable \fBcore\&.quotePath\fR (see \fBgit-config\fR(1))\&. Using \fB\-z\fR the filename is output verbatim and the line is terminated by a NUL byte\&.
+.SH "EXCLUDE PATTERNS"
+.sp
+\fIgit ls\-files\fR can use a list of "exclude patterns" when traversing the directory tree and finding files to show when the flags \-\-others or \-\-ignored are specified\&. \fBgitignore\fR(5) specifies the format of exclude patterns\&.
+.sp
+These exclude patterns come from these places, in order:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+The command\-line flag \-\-exclude=<pattern> specifies a single pattern\&. Patterns are ordered in the same order they appear in the command line\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+The command\-line flag \-\-exclude\-from=<file> specifies a file containing a list of patterns\&. Patterns are ordered in the same order they appear in the file\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+The command\-line flag \-\-exclude\-per\-directory=<name> specifies a name of the file in each directory
+\fIgit ls\-files\fR
+examines, normally
+\fB\&.gitignore\fR\&. Files in deeper directories take precedence\&. Patterns are ordered in the same order they appear in the files\&.
+.RE
+.sp
+A pattern specified on the command line with \-\-exclude or read from the file specified with \-\-exclude\-from is relative to the top of the directory tree\&. A pattern read from a file specified by \-\-exclude\-per\-directory is relative to the directory that the pattern file appears in\&.
+.SH "SEE ALSO"
+.sp
+\fBgit-read-tree\fR(1), \fBgitignore\fR(5)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

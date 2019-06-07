@@ -1,0 +1,463 @@
+'\" t
+.\"     Title: git-for-each-ref
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-FOR\-EACH\-REF" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-for-each-ref \- Output information on each ref
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit for\-each\-ref\fR [\-\-count=<count>] [\-\-shell|\-\-perl|\-\-python|\-\-tcl]
+                   [(\-\-sort=<key>)\&...] [\-\-format=<format>] [<pattern>\&...]
+                   [\-\-points\-at=<object>]
+                   (\-\-merged[=<object>] | \-\-no\-merged[=<object>])
+                   [\-\-contains[=<object>]] [\-\-no\-contains[=<object>]]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Iterate over all refs that match \fB<pattern>\fR and show them according to the given \fB<format>\fR, after sorting them according to the given set of \fB<key>\fR\&. If \fB<count>\fR is given, stop after showing that many refs\&. The interpolated values in \fB<format>\fR can optionally be quoted as string literals in the specified host language allowing their direct evaluation in that language\&.
+.SH "OPTIONS"
+.PP
+<pattern>\&...
+.RS 4
+If one or more patterns are given, only refs are shown that match against at least one pattern, either using fnmatch(3) or literally, in the latter case matching completely or from the beginning up to a slash\&.
+.RE
+.PP
+\-\-count=<count>
+.RS 4
+By default the command shows all refs that match
+\fB<pattern>\fR\&. This option makes it stop after showing that many refs\&.
+.RE
+.PP
+\-\-sort=<key>
+.RS 4
+A field name to sort on\&. Prefix
+\fB\-\fR
+to sort in descending order of the value\&. When unspecified,
+\fBrefname\fR
+is used\&. You may use the \-\-sort=<key> option multiple times, in which case the last key becomes the primary key\&.
+.RE
+.PP
+\-\-format=<format>
+.RS 4
+A string that interpolates
+\fB%(fieldname)\fR
+from a ref being shown and the object it points at\&. If
+\fBfieldname\fR
+is prefixed with an asterisk (\fB*\fR) and the ref points at a tag object, use the value for the field in the object which the tag object refers to (instead of the field in the tag object)\&. When unspecified,
+\fB<format>\fR
+defaults to
+\fB%(objectname) SPC %(objecttype) TAB %(refname)\fR\&. It also interpolates
+\fB%%\fR
+to
+\fB%\fR, and
+\fB%xx\fR
+where
+\fBxx\fR
+are hex digits interpolates to character with hex code
+\fBxx\fR; for example
+\fB%00\fR
+interpolates to
+\fB\e0\fR
+(NUL),
+\fB%09\fR
+to
+\fB\et\fR
+(TAB) and
+\fB%0a\fR
+to
+\fB\en\fR
+(LF)\&.
+.RE
+.sp
+\-\-color[=<when>]: Respect any colors specified in the \fB\-\-format\fR option\&. The \fB<when>\fR field must be one of \fBalways\fR, \fBnever\fR, or \fBauto\fR (if \fB<when>\fR is absent, behave as if \fBalways\fR was given)\&.
+.PP
+\-\-shell, \-\-perl, \-\-python, \-\-tcl
+.RS 4
+If given, strings that substitute
+\fB%(fieldname)\fR
+placeholders are quoted as string literals suitable for the specified host language\&. This is meant to produce a scriptlet that can directly be `eval`ed\&.
+.RE
+.PP
+\-\-points\-at=<object>
+.RS 4
+Only list refs which points at the given object\&.
+.RE
+.PP
+\-\-merged[=<object>]
+.RS 4
+Only list refs whose tips are reachable from the specified commit (HEAD if not specified), incompatible with
+\fB\-\-no\-merged\fR\&.
+.RE
+.PP
+\-\-no\-merged[=<object>]
+.RS 4
+Only list refs whose tips are not reachable from the specified commit (HEAD if not specified), incompatible with
+\fB\-\-merged\fR\&.
+.RE
+.PP
+\-\-contains[=<object>]
+.RS 4
+Only list refs which contain the specified commit (HEAD if not specified)\&.
+.RE
+.PP
+\-\-no\-contains[=<object>]
+.RS 4
+Only list refs which don\(cqt contain the specified commit (HEAD if not specified)\&.
+.RE
+.PP
+\-\-ignore\-case
+.RS 4
+Sorting and filtering refs are case insensitive\&.
+.RE
+.SH "FIELD NAMES"
+.sp
+Various values from structured fields in referenced objects can be used to interpolate into the resulting output, or as sort keys\&.
+.sp
+For all objects, the following names can be used:
+.PP
+refname
+.RS 4
+The name of the ref (the part after $GIT_DIR/)\&. For a non\-ambiguous short name of the ref append
+\fB:short\fR\&. The option core\&.warnAmbiguousRefs is used to select the strict abbreviation mode\&. If
+\fBlstrip=<N>\fR
+(\fBrstrip=<N>\fR) is appended, strips
+\fB<N>\fR
+slash\-separated path components from the front (back) of the refname (e\&.g\&.
+\fB%(refname:lstrip=2)\fR
+turns
+\fBrefs/tags/foo\fR
+into
+\fBfoo\fR
+and
+\fB%(refname:rstrip=2)\fR
+turns
+\fBrefs/tags/foo\fR
+into
+\fBrefs\fR)\&. If
+\fB<N>\fR
+is a negative number, strip as many path components as necessary from the specified end to leave
+\fB\-<N>\fR
+path components (e\&.g\&.
+\fB%(refname:lstrip=\-2)\fR
+turns
+\fBrefs/tags/foo\fR
+into
+\fBtags/foo\fR
+and
+\fB%(refname:rstrip=\-1)\fR
+turns
+\fBrefs/tags/foo\fR
+into
+\fBrefs\fR)\&. When the ref does not have enough components, the result becomes an empty string if stripping with positive <N>, or it becomes the full refname if stripping with negative <N>\&. Neither is an error\&.
+.sp
+\fBstrip\fR
+can be used as a synomym to
+\fBlstrip\fR\&.
+.RE
+.PP
+objecttype
+.RS 4
+The type of the object (\fBblob\fR,
+\fBtree\fR,
+\fBcommit\fR,
+\fBtag\fR)\&.
+.RE
+.PP
+objectsize
+.RS 4
+The size of the object (the same as
+\fIgit cat\-file \-s\fR
+reports)\&.
+.RE
+.PP
+objectname
+.RS 4
+The object name (aka SHA\-1)\&. For a non\-ambiguous abbreviation of the object name append
+\fB:short\fR\&. For an abbreviation of the object name with desired length append
+\fB:short=<length>\fR, where the minimum length is MINIMUM_ABBREV\&. The length may be exceeded to ensure unique object names\&.
+.RE
+.PP
+upstream
+.RS 4
+The name of a local ref which can be considered \(lqupstream\(rq from the displayed ref\&. Respects
+\fB:short\fR,
+\fB:lstrip\fR
+and
+\fB:rstrip\fR
+in the same way as
+\fBrefname\fR
+above\&. Additionally respects
+\fB:track\fR
+to show "[ahead N, behind M]" and
+\fB:trackshort\fR
+to show the terse version: ">" (ahead), "<" (behind), "<>" (ahead and behind), or "=" (in sync)\&.
+\fB:track\fR
+also prints "[gone]" whenever unknown upstream ref is encountered\&. Append
+\fB:track,nobracket\fR
+to show tracking information without brackets (i\&.e "ahead N, behind M")\&.
+.sp
+For any remote\-tracking branch
+\fB%(upstream)\fR,
+\fB%(upstream:remotename)\fR
+and
+\fB%(upstream:remoteref)\fR
+refer to the name of the remote and the name of the tracked remote ref, respectively\&. In other words, the remote\-tracking branch can be updated explicitly and individually by using the refspec
+\fB%(upstream:remoteref):%(upstream)\fR
+to fetch from
+\fB%(upstream:remotename)\fR\&.
+.sp
+Has no effect if the ref does not have tracking information associated with it\&. All the options apart from
+\fBnobracket\fR
+are mutually exclusive, but if used together the last option is selected\&.
+.RE
+.PP
+push
+.RS 4
+The name of a local ref which represents the
+\fB@{push}\fR
+location for the displayed ref\&. Respects
+\fB:short\fR,
+\fB:lstrip\fR,
+\fB:rstrip\fR,
+\fB:track\fR,
+\fB:trackshort\fR,
+\fB:remotename\fR, and
+\fB:remoteref\fR
+options as
+\fBupstream\fR
+does\&. Produces an empty string if no
+\fB@{push}\fR
+ref is configured\&.
+.RE
+.PP
+HEAD
+.RS 4
+\fI*\fR
+if HEAD matches current ref (the checked out branch), \(aq \(aq otherwise\&.
+.RE
+.PP
+color
+.RS 4
+Change output color\&. Followed by
+\fB:<colorname>\fR, where color names are described under Values in the "CONFIGURATION FILE" section of
+\fBgit-config\fR(1)\&. For example,
+\fB%(color:bold red)\fR\&.
+.RE
+.PP
+align
+.RS 4
+Left\-, middle\-, or right\-align the content between %(align:\&...) and %(end)\&. The "align:" is followed by
+\fBwidth=<width>\fR
+and
+\fBposition=<position>\fR
+in any order separated by a comma, where the
+\fB<position>\fR
+is either left, right or middle, default being left and
+\fB<width>\fR
+is the total length of the content with alignment\&. For brevity, the "width=" and/or "position=" prefixes may be omitted, and bare <width> and <position> used instead\&. For instance,
+\fB%(align:<width>,<position>)\fR\&. If the contents length is more than the width then no alignment is performed\&. If used with
+\fB\-\-quote\fR
+everything in between %(align:\&...) and %(end) is quoted, but if nested then only the topmost level performs quoting\&.
+.RE
+.PP
+if
+.RS 4
+Used as %(if)\&...%(then)\&...%(end) or %(if)\&...%(then)\&...%(else)\&...%(end)\&. If there is an atom with value or string literal after the %(if) then everything after the %(then) is printed, else if the %(else) atom is used, then everything after %(else) is printed\&. We ignore space when evaluating the string before %(then), this is useful when we use the %(HEAD) atom which prints either "*" or " " and we want to apply the
+\fIif\fR
+condition only on the
+\fIHEAD\fR
+ref\&. Append ":equals=<string>" or ":notequals=<string>" to compare the value between the %(if:\&...) and %(then) atoms with the given string\&.
+.RE
+.PP
+symref
+.RS 4
+The ref which the given symbolic ref refers to\&. If not a symbolic ref, nothing is printed\&. Respects the
+\fB:short\fR,
+\fB:lstrip\fR
+and
+\fB:rstrip\fR
+options in the same way as
+\fBrefname\fR
+above\&.
+.RE
+.sp
+In addition to the above, for commit and tag objects, the header field names (\fBtree\fR, \fBparent\fR, \fBobject\fR, \fBtype\fR, and \fBtag\fR) can be used to specify the value in the header field\&.
+.sp
+For commit and tag objects, the special \fBcreatordate\fR and \fBcreator\fR fields will correspond to the appropriate date or name\-email\-date tuple from the \fBcommitter\fR or \fBtagger\fR fields depending on the object type\&. These are intended for working on a mix of annotated and lightweight tags\&.
+.sp
+Fields that have name\-email\-date tuple as its value (\fBauthor\fR, \fBcommitter\fR, and \fBtagger\fR) can be suffixed with \fBname\fR, \fBemail\fR, and \fBdate\fR to extract the named component\&.
+.sp
+The complete message in a commit and tag object is \fBcontents\fR\&. Its first line is \fBcontents:subject\fR, where subject is the concatenation of all lines of the commit message up to the first blank line\&. The next line is \fBcontents:body\fR, where body is all of the lines after the first blank line\&. The optional GPG signature is \fBcontents:signature\fR\&. The first \fBN\fR lines of the message is obtained using \fBcontents:lines=N\fR\&. Additionally, the trailers as interpreted by \fBgit-interpret-trailers\fR(1) are obtained as \fBtrailers\fR (or by using the historical alias \fBcontents:trailers\fR)\&. Non\-trailer lines from the trailer block can be omitted with \fBtrailers:only\fR\&. Whitespace\-continuations can be removed from trailers so that each trailer appears on a line by itself with its full content with \fBtrailers:unfold\fR\&. Both can be used together as \fBtrailers:unfold,only\fR\&.
+.sp
+For sorting purposes, fields with numeric values sort in numeric order (\fBobjectsize\fR, \fBauthordate\fR, \fBcommitterdate\fR, \fBcreatordate\fR, \fBtaggerdate\fR)\&. All other fields are used to sort in their byte\-value order\&.
+.sp
+There is also an option to sort by versions, this can be done by using the fieldname \fBversion:refname\fR or its alias \fBv:refname\fR\&.
+.sp
+In any case, a field name that refers to a field inapplicable to the object referred by the ref does not cause an error\&. It returns an empty string instead\&.
+.sp
+As a special case for the date\-type fields, you may specify a format for the date by adding \fB:\fR followed by date format name (see the values the \fB\-\-date\fR option to \fBgit-rev-list\fR(1) takes)\&.
+.sp
+Some atoms like %(align) and %(if) always require a matching %(end)\&. We call them "opening atoms" and sometimes denote them as %($open)\&.
+.sp
+When a scripting language specific quoting is in effect, everything between a top\-level opening atom and its matching %(end) is evaluated according to the semantics of the opening atom and only its result from the top\-level is quoted\&.
+.SH "EXAMPLES"
+.sp
+An example directly producing formatted text\&. Show the most recent 3 tagged commits:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!/bin/sh
+
+git for\-each\-ref \-\-count=3 \-\-sort=\(aq\-*authordate\(aq \e
+\-\-format=\(aqFrom: %(*authorname) %(*authoremail)
+Subject: %(*subject)
+Date: %(*authordate)
+Ref: %(*refname)
+
+%(*body)
+\(aq \(aqrefs/tags\(aq
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+A simple example showing the use of shell eval on the output, demonstrating the use of \-\-shell\&. List the prefixes of all heads:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!/bin/sh
+
+git for\-each\-ref \-\-shell \-\-format="ref=%(refname)" refs/heads | \e
+while read entry
+do
+        eval "$entry"
+        echo `dirname $ref`
+done
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+A bit more elaborate report on tags, demonstrating that the format may be an entire script:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!/bin/sh
+
+fmt=\(aq
+        r=%(refname)
+        t=%(*objecttype)
+        T=${r#refs/tags/}
+
+        o=%(*objectname)
+        n=%(*authorname)
+        e=%(*authoremail)
+        s=%(*subject)
+        d=%(*authordate)
+        b=%(*body)
+
+        kind=Tag
+        if test "z$t" = z
+        then
+                # could be a lightweight tag
+                t=%(objecttype)
+                kind="Lightweight tag"
+                o=%(objectname)
+                n=%(authorname)
+                e=%(authoremail)
+                s=%(subject)
+                d=%(authordate)
+                b=%(body)
+        fi
+        echo "$kind $T points at a $t object $o"
+        if test "z$t" = zcommit
+        then
+                echo "The commit was authored by $n $e
+at $d, and titled
+
+    $s
+
+Its message reads as:
+"
+                echo "$b" | sed \-e "s/^/    /"
+                echo
+        fi
+\(aq
+
+eval=`git for\-each\-ref \-\-shell \-\-format="$fmt" \e
+        \-\-sort=\(aq*objecttype\(aq \e
+        \-\-sort=\-taggerdate \e
+        refs/tags`
+eval "$eval"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+An example to show the usage of %(if)\&...%(then)\&...%(else)\&...%(end)\&. This prefixes the current branch with a star\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git for\-each\-ref \-\-format="%(if)%(HEAD)%(then)* %(else)  %(end)%(refname:short)" refs/heads/
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+An example to show the usage of %(if)\&...%(then)\&...%(end)\&. This prints the authorname, if present\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git for\-each\-ref \-\-format="%(refname)%(if)%(authorname)%(then) Authored by: %(authorname)%(end)"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "SEE ALSO"
+.sp
+\fBgit-show-ref\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

@@ -1,0 +1,103 @@
+'\" t
+.\"     Title: git-var
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-VAR" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-var \- Show a Git logical variable
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit var\fR ( \-l | <variable> )
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Prints a Git logical variable\&.
+.SH "OPTIONS"
+.PP
+\-l
+.RS 4
+Cause the logical variables to be listed\&. In addition, all the variables of the Git configuration file \&.git/config are listed as well\&. (However, the configuration variables listing functionality is deprecated in favor of
+\fBgit config \-l\fR\&.)
+.RE
+.SH "EXAMPLE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git var GIT_AUTHOR_IDENT
+Eric W\&. Biederman <ebiederm@lnxi\&.com> 1121223278 \-0600
+.fi
+.if n \{\
+.RE
+.\}
+.SH "VARIABLES"
+.PP
+GIT_AUTHOR_IDENT
+.RS 4
+The author of a piece of code\&.
+.RE
+.PP
+GIT_COMMITTER_IDENT
+.RS 4
+The person who put a piece of code into Git\&.
+.RE
+.PP
+GIT_EDITOR
+.RS 4
+Text editor for use by Git commands\&. The value is meant to be interpreted by the shell when it is used\&. Examples:
+\fB~/bin/vi\fR,
+\fB$SOME_ENVIRONMENT_VARIABLE\fR,
+\fB"C:\eProgram Files\eVim\egvim\&.exe" \-\-nofork\fR\&. The order of preference is the
+\fB$GIT_EDITOR\fR
+environment variable, then
+\fBcore\&.editor\fR
+configuration, then
+\fB$VISUAL\fR, then
+\fB$EDITOR\fR, and then the default chosen at compile time, which is usually
+\fIvi\fR\&.
+.RE
+.PP
+GIT_PAGER
+.RS 4
+Text viewer for use by Git commands (e\&.g\&.,
+\fIless\fR)\&. The value is meant to be interpreted by the shell\&. The order of preference is the
+\fB$GIT_PAGER\fR
+environment variable, then
+\fBcore\&.pager\fR
+configuration, then
+\fB$PAGER\fR, and then the default chosen at compile time (usually
+\fIless\fR)\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgit-commit-tree\fR(1) \fBgit-tag\fR(1) \fBgit-config\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

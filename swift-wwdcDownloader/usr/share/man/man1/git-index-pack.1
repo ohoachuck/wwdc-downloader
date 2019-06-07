@@ -1,0 +1,120 @@
+'\" t
+.\"     Title: git-index-pack
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-INDEX\-PACK" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-index-pack \- Build pack index file for an existing packed archive
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit index\-pack\fR [\-v] [\-o <index\-file>] <pack\-file>
+\fIgit index\-pack\fR \-\-stdin [\-\-fix\-thin] [\-\-keep] [\-v] [\-o <index\-file>]
+                 [<pack\-file>]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Reads a packed archive (\&.pack) from the specified file, and builds a pack index file (\&.idx) for it\&. The packed archive together with the pack index can then be placed in the objects/pack/ directory of a Git repository\&.
+.SH "OPTIONS"
+.PP
+\-v
+.RS 4
+Be verbose about what is going on, including progress status\&.
+.RE
+.PP
+\-o <index\-file>
+.RS 4
+Write the generated pack index into the specified file\&. Without this option the name of pack index file is constructed from the name of packed archive file by replacing \&.pack with \&.idx (and the program fails if the name of packed archive does not end with \&.pack)\&.
+.RE
+.PP
+\-\-stdin
+.RS 4
+When this flag is provided, the pack is read from stdin instead and a copy is then written to <pack\-file>\&. If <pack\-file> is not specified, the pack is written to objects/pack/ directory of the current Git repository with a default name determined from the pack content\&. If <pack\-file> is not specified consider using \-\-keep to prevent a race condition between this process and
+\fIgit repack\fR\&.
+.RE
+.PP
+\-\-fix\-thin
+.RS 4
+Fix a "thin" pack produced by
+\fBgit pack\-objects \-\-thin\fR
+(see
+\fBgit-pack-objects\fR(1)
+for details) by adding the excluded objects the deltified objects are based on to the pack\&. This option only makes sense in conjunction with \-\-stdin\&.
+.RE
+.PP
+\-\-keep
+.RS 4
+Before moving the index into its final destination create an empty \&.keep file for the associated pack file\&. This option is usually necessary with \-\-stdin to prevent a simultaneous
+\fIgit repack\fR
+process from deleting the newly constructed pack and index before refs can be updated to use objects contained in the pack\&.
+.RE
+.PP
+\-\-keep=<msg>
+.RS 4
+Like \-\-keep create a \&.keep file before moving the index into its final destination, but rather than creating an empty file place
+\fI<msg>\fR
+followed by an LF into the \&.keep file\&. The
+\fI<msg>\fR
+message can later be searched for within all \&.keep files to locate any which have outlived their usefulness\&.
+.RE
+.PP
+\-\-index\-version=<version>[,<offset>]
+.RS 4
+This is intended to be used by the test suite only\&. It allows to force the version for the generated pack index, and to force 64\-bit index entries on objects located above the given offset\&.
+.RE
+.PP
+\-\-strict
+.RS 4
+Die, if the pack contains broken objects or links\&.
+.RE
+.PP
+\-\-check\-self\-contained\-and\-connected
+.RS 4
+Die if the pack contains broken links\&. For internal use only\&.
+.RE
+.PP
+\-\-fsck\-objects
+.RS 4
+Die if the pack contains broken objects\&. For internal use only\&.
+.RE
+.PP
+\-\-threads=<n>
+.RS 4
+Specifies the number of threads to spawn when resolving deltas\&. This requires that index\-pack be compiled with pthreads otherwise this option is ignored with a warning\&. This is meant to reduce packing time on multiprocessor machines\&. The required amount of memory for the delta search window is however multiplied by the number of threads\&. Specifying 0 will cause Git to auto\-detect the number of CPU\(cqs and use maximum 3 threads\&.
+.RE
+.PP
+\-\-max\-input\-size=<size>
+.RS 4
+Die, if the pack is larger than <size>\&.
+.RE
+.SH "NOTE"
+.sp
+Once the index has been created, the list of object names is sorted and the SHA\-1 hash of that list is printed to stdout\&. If \-\-stdin was also used then this is prefixed by either "pack\et", or "keep\et" if a new \&.keep file was successfully created\&. This is useful to remove a \&.keep file used as a lock to prevent the race with \fIgit repack\fR mentioned above\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

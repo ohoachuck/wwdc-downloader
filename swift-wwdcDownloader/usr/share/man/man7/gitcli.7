@@ -1,0 +1,358 @@
+'\" t
+.\"     Title: gitcli
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GITCLI" "7" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+gitcli \- Git command\-line interface and conventions
+.SH "SYNOPSIS"
+.sp
+gitcli
+.SH "DESCRIPTION"
+.sp
+This manual describes the convention used throughout Git CLI\&.
+.sp
+Many commands take revisions (most often "commits", but sometimes "tree\-ish", depending on the context and command) and paths as their arguments\&. Here are the rules:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Revisions come first and then paths\&. E\&.g\&. in
+\fBgit diff v1\&.0 v2\&.0 arch/x86 include/asm\-x86\fR,
+\fBv1\&.0\fR
+and
+\fBv2\&.0\fR
+are revisions and
+\fBarch/x86\fR
+and
+\fBinclude/asm\-x86\fR
+are paths\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+When an argument can be misunderstood as either a revision or a path, they can be disambiguated by placing
+\fB\-\-\fR
+between them\&. E\&.g\&.
+\fBgit diff \-\- HEAD\fR
+is, "I have a file called HEAD in my work tree\&. Please show changes between the version I staged in the index and what I have in the work tree for that file", not "show difference between the HEAD commit and the work tree as a whole"\&. You can say
+\fBgit diff HEAD \-\-\fR
+to ask for the latter\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Without disambiguating
+\fB\-\-\fR, Git makes a reasonable guess, but errors out and asking you to disambiguate when ambiguous\&. E\&.g\&. if you have a file called HEAD in your work tree,
+\fBgit diff HEAD\fR
+is ambiguous, and you have to say either
+\fBgit diff HEAD \-\-\fR
+or
+\fBgit diff \-\- HEAD\fR
+to disambiguate\&.
+.sp
+When writing a script that is expected to handle random user\-input, it is a good practice to make it explicit which arguments are which by placing disambiguating
+\fB\-\-\fR
+at appropriate places\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Many commands allow wildcards in paths, but you need to protect them from getting globbed by the shell\&. These two mean different things:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout \-\- *\&.c
+$ git checkout \-\- \e*\&.c
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The former lets your shell expand the fileglob, and you are asking the dot\-C files in your working tree to be overwritten with the version in the index\&. The latter passes the
+\fB*\&.c\fR
+to Git, and you are asking the paths in the index that match the pattern to be checked out to your working tree\&. After running
+\fBgit add hello\&.c; rm hello\&.c\fR, you will
+\fInot\fR
+see
+\fBhello\&.c\fR
+in your working tree with the former, but with the latter you will\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Just as the filesystem
+\fI\&.\fR
+(period) refers to the current directory, using a
+\fI\&.\fR
+as a repository name in Git (a dot\-repository) is a relative path and means your current repository\&.
+.RE
+.sp
+Here are the rules regarding the "flags" that you should follow when you are scripting Git:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+it\(cqs preferred to use the non\-dashed form of Git commands, which means that you should prefer
+\fBgit foo\fR
+to
+\fBgit\-foo\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+splitting short options to separate words (prefer
+\fBgit foo \-a \-b\fR
+to
+\fBgit foo \-ab\fR, the latter may not even work)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+when a command\-line option takes an argument, use the
+\fIstuck\fR
+form\&. In other words, write
+\fBgit foo \-oArg\fR
+instead of
+\fBgit foo \-o Arg\fR
+for short options, and
+\fBgit foo \-\-long\-opt=Arg\fR
+instead of
+\fBgit foo \-\-long\-opt Arg\fR
+for long options\&. An option that takes optional option\-argument must be written in the
+\fIstuck\fR
+form\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+when you give a revision parameter to a command, make sure the parameter is not ambiguous with a name of a file in the work tree\&. E\&.g\&. do not write
+\fBgit log \-1 HEAD\fR
+but write
+\fBgit log \-1 HEAD \-\-\fR; the former will not work if you happen to have a file called
+\fBHEAD\fR
+in the work tree\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+many commands allow a long option
+\fB\-\-option\fR
+to be abbreviated only to their unique prefix (e\&.g\&. if there is no other option whose name begins with
+\fBopt\fR, you may be able to spell
+\fB\-\-opt\fR
+to invoke the
+\fB\-\-option\fR
+flag), but you should fully spell them out when writing your scripts; later versions of Git may introduce a new option whose name shares the same prefix, e\&.g\&.
+\fB\-\-optimize\fR, to make a short prefix that used to be unique no longer unique\&.
+.RE
+.SH "ENHANCED OPTION PARSER"
+.sp
+From the Git 1\&.5\&.4 series and further, many Git commands (not all of them at the time of the writing though) come with an enhanced option parser\&.
+.sp
+Here is a list of the facilities provided by this option parser\&.
+.SS "Magic Options"
+.sp
+Commands which have the enhanced option parser activated all understand a couple of magic command\-line options:
+.PP
+\-h
+.RS 4
+gives a pretty printed usage of the command\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git describe \-h
+usage: git describe [options] <commit\-ish>*
+   or: git describe [options] \-\-dirty
+
+    \-\-contains            find the tag that comes after the commit
+    \-\-debug               debug search strategy on stderr
+    \-\-all                 use any ref
+    \-\-tags                use any tag, even unannotated
+    \-\-long                always use long format
+    \-\-abbrev[=<n>]        use <n> digits to display SHA\-1s
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+\-\-help\-all
+.RS 4
+Some Git commands take options that are only used for plumbing or that are deprecated, and such options are hidden from the default usage\&. This option gives the full list of options\&.
+.RE
+.SS "Negating options"
+.sp
+Options with long option names can be negated by prefixing \fB\-\-no\-\fR\&. For example, \fBgit branch\fR has the option \fB\-\-track\fR which is \fIon\fR by default\&. You can use \fB\-\-no\-track\fR to override that behaviour\&. The same goes for \fB\-\-color\fR and \fB\-\-no\-color\fR\&.
+.SS "Aggregating short options"
+.sp
+Commands that support the enhanced option parser allow you to aggregate short options\&. This means that you can for example use \fBgit rm \-rf\fR or \fBgit clean \-fdx\fR\&.
+.SS "Abbreviating long options"
+.sp
+Commands that support the enhanced option parser accepts unique prefix of a long option as if it is fully spelled out, but use this with a caution\&. For example, \fBgit commit \-\-amen\fR behaves as if you typed \fBgit commit \-\-amend\fR, but that is true only until a later version of Git introduces another option that shares the same prefix, e\&.g\&. \fBgit commit \-\-amenity\fR option\&.
+.SS "Separating argument from the option"
+.sp
+You can write the mandatory option parameter to an option as a separate word on the command line\&. That means that all the following uses work:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git foo \-\-long\-opt=Arg
+$ git foo \-\-long\-opt Arg
+$ git foo \-oArg
+$ git foo \-o Arg
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+However, this is \fBNOT\fR allowed for switches with an optional value, where the \fIstuck\fR form must be used:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git describe \-\-abbrev HEAD     # correct
+$ git describe \-\-abbrev=10 HEAD  # correct
+$ git describe \-\-abbrev 10 HEAD  # NOT WHAT YOU MEANT
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "NOTES ON FREQUENTLY CONFUSED OPTIONS"
+.sp
+Many commands that can work on files in the working tree and/or in the index can take \fB\-\-cached\fR and/or \fB\-\-index\fR options\&. Sometimes people incorrectly think that, because the index was originally called cache, these two are synonyms\&. They are \fBnot\fR \(em these two options mean very different things\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The
+\fB\-\-cached\fR
+option is used to ask a command that usually works on files in the working tree to
+\fBonly\fR
+work with the index\&. For example,
+\fBgit grep\fR, when used without a commit to specify from which commit to look for strings in, usually works on files in the working tree, but with the
+\fB\-\-cached\fR
+option, it looks for strings in the index\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The
+\fB\-\-index\fR
+option is used to ask a command that usually works on files in the working tree to
+\fBalso\fR
+affect the index\&. For example,
+\fBgit stash apply\fR
+usually merges changes recorded in a stash entry to the working tree, but with the
+\fB\-\-index\fR
+option, it also merges changes to the index as well\&.
+.RE
+.sp
+\fBgit apply\fR command can be used with \fB\-\-cached\fR and \fB\-\-index\fR (but not at the same time)\&. Usually the command only affects the files in the working tree, but with \fB\-\-index\fR, it patches both the files and their index entries, and with \fB\-\-cached\fR, it modifies only the index entries\&.
+.sp
+See also \m[blue]\fBhttp://marc\&.info/?l=git&m=116563135620359\fR\m[] and \m[blue]\fBhttp://marc\&.info/?l=git&m=119150393620273\fR\m[] for further information\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

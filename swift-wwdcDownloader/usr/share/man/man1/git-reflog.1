@@ -1,0 +1,137 @@
+'\" t
+.\"     Title: git-reflog
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-REFLOG" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-reflog \- Manage reflog information
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit reflog\fR <subcommand> <options>
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+The command takes various subcommands, and different options depending on the subcommand:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fIgit reflog\fR [\fIshow\fR] [log\-options] [<ref>]
+\fIgit reflog expire\fR [\-\-expire=<time>] [\-\-expire\-unreachable=<time>]
+        [\-\-rewrite] [\-\-updateref] [\-\-stale\-fix]
+        [\-\-dry\-run | \-n] [\-\-verbose] [\-\-all | <refs>\&...]
+\fIgit reflog delete\fR [\-\-rewrite] [\-\-updateref]
+        [\-\-dry\-run | \-n] [\-\-verbose] ref@{specifier}\&...
+\fIgit reflog exists\fR <ref>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Reference logs, or "reflogs", record when the tips of branches and other references were updated in the local repository\&. Reflogs are useful in various Git commands, to specify the old value of a reference\&. For example, \fBHEAD@{2}\fR means "where HEAD used to be two moves ago", \fBmaster@{one\&.week\&.ago}\fR means "where master used to point to one week ago in this local repository", and so on\&. See \fBgitrevisions\fR(7) for more details\&.
+.sp
+This command manages the information recorded in the reflogs\&.
+.sp
+The "show" subcommand (which is also the default, in the absence of any subcommands) shows the log of the reference provided in the command\-line (or \fBHEAD\fR, by default)\&. The reflog covers all recent actions, and in addition the \fBHEAD\fR reflog records branch switching\&. \fBgit reflog show\fR is an alias for \fBgit log \-g \-\-abbrev\-commit \-\-pretty=oneline\fR; see \fBgit-log\fR(1) for more information\&.
+.sp
+The "expire" subcommand prunes older reflog entries\&. Entries older than \fBexpire\fR time, or entries older than \fBexpire\-unreachable\fR time and not reachable from the current tip, are removed from the reflog\&. This is typically not used directly by end users \(em instead, see \fBgit-gc\fR(1)\&.
+.sp
+The "delete" subcommand deletes single entries from the reflog\&. Its argument must be an \fIexact\fR entry (e\&.g\&. "\fBgit reflog delete master@{2}\fR")\&. This subcommand is also typically not used directly by end users\&.
+.sp
+The "exists" subcommand checks whether a ref has a reflog\&. It exits with zero status if the reflog exists, and non\-zero status if it does not\&.
+.SH "OPTIONS"
+.SS "Options for \fBshow\fR"
+.sp
+\fBgit reflog show\fR accepts any of the options accepted by \fBgit log\fR\&.
+.SS "Options for \fBexpire\fR"
+.PP
+\-\-all
+.RS 4
+Process the reflogs of all references\&.
+.RE
+.PP
+\-\-expire=<time>
+.RS 4
+Prune entries older than the specified time\&. If this option is not specified, the expiration time is taken from the configuration setting
+\fBgc\&.reflogExpire\fR, which in turn defaults to 90 days\&.
+\fB\-\-expire=all\fR
+prunes entries regardless of their age;
+\fB\-\-expire=never\fR
+turns off pruning of reachable entries (but see
+\fB\-\-expire\-unreachable\fR)\&.
+.RE
+.PP
+\-\-expire\-unreachable=<time>
+.RS 4
+Prune entries older than
+\fB<time>\fR
+that are not reachable from the current tip of the branch\&. If this option is not specified, the expiration time is taken from the configuration setting
+\fBgc\&.reflogExpireUnreachable\fR, which in turn defaults to 30 days\&.
+\fB\-\-expire\-unreachable=all\fR
+prunes unreachable entries regardless of their age;
+\fB\-\-expire\-unreachable=never\fR
+turns off early pruning of unreachable entries (but see
+\fB\-\-expire\fR)\&.
+.RE
+.PP
+\-\-updateref
+.RS 4
+Update the reference to the value of the top reflog entry (i\&.e\&. <ref>@{0}) if the previous top entry was pruned\&. (This option is ignored for symbolic references\&.)
+.RE
+.PP
+\-\-rewrite
+.RS 4
+If a reflog entry\(cqs predecessor is pruned, adjust its "old" SHA\-1 to be equal to the "new" SHA\-1 field of the entry that now precedes it\&.
+.RE
+.PP
+\-\-stale\-fix
+.RS 4
+Prune any reflog entries that point to "broken commits"\&. A broken commit is a commit that is not reachable from any of the reference tips and that refers, directly or indirectly, to a missing commit, tree, or blob object\&.
+.sp
+This computation involves traversing all the reachable objects, i\&.e\&. it has the same cost as
+\fIgit prune\fR\&. It is primarily intended to fix corruption caused by garbage collecting using older versions of Git, which didn\(cqt protect objects referred to by reflogs\&.
+.RE
+.PP
+\-n, \-\-dry\-run
+.RS 4
+Do not actually prune any entries; just show what would have been pruned\&.
+.RE
+.PP
+\-\-verbose
+.RS 4
+Print extra information on screen\&.
+.RE
+.SS "Options for \fBdelete\fR"
+.sp
+\fBgit reflog delete\fR accepts options \fB\-\-updateref\fR, \fB\-\-rewrite\fR, \fB\-n\fR, \fB\-\-dry\-run\fR, and \fB\-\-verbose\fR, with the same meanings as when they are used with \fBexpire\fR\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

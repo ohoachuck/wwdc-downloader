@@ -1,0 +1,1145 @@
+'\" t
+.\"     Title: git-pull
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-PULL" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-pull \- Fetch from and integrate with another repository or a local branch
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit pull\fR [options] [<repository> [<refspec>\&...]]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Incorporates changes from a remote repository into the current branch\&. In its default mode, \fBgit pull\fR is shorthand for \fBgit fetch\fR followed by \fBgit merge FETCH_HEAD\fR\&.
+.sp
+More precisely, \fIgit pull\fR runs \fIgit fetch\fR with the given parameters and calls \fIgit merge\fR to merge the retrieved branch heads into the current branch\&. With \fB\-\-rebase\fR, it runs \fIgit rebase\fR instead of \fIgit merge\fR\&.
+.sp
+<repository> should be the name of a remote repository as passed to \fBgit-fetch\fR(1)\&. <refspec> can name an arbitrary remote ref (for example, the name of a tag) or even a collection of refs with corresponding remote\-tracking branches (e\&.g\&., refs/heads/*:refs/remotes/origin/*), but usually it is the name of a branch in the remote repository\&.
+.sp
+Default values for <repository> and <branch> are read from the "remote" and "merge" configuration for the current branch as set by \fBgit-branch\fR(1) \fB\-\-track\fR\&.
+.sp
+Assume the following history exists and the current branch is "\fBmaster\fR":
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+          A\-\-\-B\-\-\-C master on origin
+         /
+    D\-\-\-E\-\-\-F\-\-\-G master
+        ^
+        origin/master in your repository
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Then "\fBgit pull\fR" will fetch and replay the changes from the remote \fBmaster\fR branch since it diverged from the local \fBmaster\fR (i\&.e\&., \fBE\fR) until its current commit (\fBC\fR) on top of \fBmaster\fR and record the result in a new commit along with the names of the two parent commits and a log message from the user describing the changes\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+          A\-\-\-B\-\-\-C origin/master
+         /         \e
+    D\-\-\-E\-\-\-F\-\-\-G\-\-\-H master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+See \fBgit-merge\fR(1) for details, including how conflicts are presented and handled\&.
+.sp
+In Git 1\&.7\&.0 or later, to cancel a conflicting merge, use \fBgit reset \-\-merge\fR\&. \fBWarning\fR: In older versions of Git, running \fIgit pull\fR with uncommitted changes is discouraged: while possible, it leaves you in a state that may be hard to back out of in the case of a conflict\&.
+.sp
+If any of the remote changes overlap with local uncommitted changes, the merge will be automatically canceled and the work tree untouched\&. It is generally best to get any local changes in working order before pulling or stash them away with \fBgit-stash\fR(1)\&.
+.SH "OPTIONS"
+.PP
+\-q, \-\-quiet
+.RS 4
+This is passed to both underlying git\-fetch to squelch reporting of during transfer, and underlying git\-merge to squelch output during merging\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Pass \-\-verbose to git\-fetch and git\-merge\&.
+.RE
+.PP
+\-\-[no\-]recurse\-submodules[=yes|on\-demand|no]
+.RS 4
+This option controls if new commits of all populated submodules should be fetched and updated, too (see
+\fBgit-config\fR(1)
+and
+\fBgitmodules\fR(5))\&.
+.sp
+If the checkout is done via rebase, local submodule commits are rebased as well\&.
+.sp
+If the update is done via merge, the submodule conflicts are resolved and checked out\&.
+.RE
+.SS "Options related to merging"
+.PP
+\-\-commit, \-\-no\-commit
+.RS 4
+Perform the merge and commit the result\&. This option can be used to override \-\-no\-commit\&.
+.sp
+With \-\-no\-commit perform the merge but pretend the merge failed and do not autocommit, to give the user a chance to inspect and further tweak the merge result before committing\&.
+.RE
+.PP
+\-\-edit, \-e, \-\-no\-edit
+.RS 4
+Invoke an editor before committing successful mechanical merge to further edit the auto\-generated merge message, so that the user can explain and justify the merge\&. The
+\fB\-\-no\-edit\fR
+option can be used to accept the auto\-generated message (this is generally discouraged)\&.
+.sp
+Older scripts may depend on the historical behaviour of not allowing the user to edit the merge log message\&. They will see an editor opened when they run
+\fBgit merge\fR\&. To make it easier to adjust such scripts to the updated behaviour, the environment variable
+\fBGIT_MERGE_AUTOEDIT\fR
+can be set to
+\fBno\fR
+at the beginning of them\&.
+.RE
+.PP
+\-\-ff
+.RS 4
+When the merge resolves as a fast\-forward, only update the branch pointer, without creating a merge commit\&. This is the default behavior\&.
+.RE
+.PP
+\-\-no\-ff
+.RS 4
+Create a merge commit even when the merge resolves as a fast\-forward\&. This is the default behaviour when merging an annotated (and possibly signed) tag that is not stored in its natural place in
+\fIrefs/tags/\fR
+hierarchy\&.
+.RE
+.PP
+\-\-ff\-only
+.RS 4
+Refuse to merge and exit with a non\-zero status unless the current
+\fBHEAD\fR
+is already up to date or the merge can be resolved as a fast\-forward\&.
+.RE
+.PP
+\-S[<keyid>], \-\-gpg\-sign[=<keyid>]
+.RS 4
+GPG\-sign the resulting merge commit\&. The
+\fBkeyid\fR
+argument is optional and defaults to the committer identity; if specified, it must be stuck to the option without a space\&.
+.RE
+.PP
+\-\-log[=<n>], \-\-no\-log
+.RS 4
+In addition to branch names, populate the log message with one\-line descriptions from at most <n> actual commits that are being merged\&. See also
+\fBgit-fmt-merge-msg\fR(1)\&.
+.sp
+With \-\-no\-log do not list one\-line descriptions from the actual commits being merged\&.
+.RE
+.PP
+\-\-signoff, \-\-no\-signoff
+.RS 4
+Add Signed\-off\-by line by the committer at the end of the commit log message\&. The meaning of a signoff depends on the project, but it typically certifies that committer has the rights to submit this work under the same license and agrees to a Developer Certificate of Origin (see
+\m[blue]\fBhttp://developercertificate\&.org/\fR\m[]
+for more information)\&.
+.sp
+With \-\-no\-signoff do not add a Signed\-off\-by line\&.
+.RE
+.PP
+\-\-stat, \-n, \-\-no\-stat
+.RS 4
+Show a diffstat at the end of the merge\&. The diffstat is also controlled by the configuration option merge\&.stat\&.
+.sp
+With \-n or \-\-no\-stat do not show a diffstat at the end of the merge\&.
+.RE
+.PP
+\-\-squash, \-\-no\-squash
+.RS 4
+Produce the working tree and index state as if a real merge happened (except for the merge information), but do not actually make a commit, move the
+\fBHEAD\fR, or record
+\fB$GIT_DIR/MERGE_HEAD\fR
+(to cause the next
+\fBgit commit\fR
+command to create a merge commit)\&. This allows you to create a single commit on top of the current branch whose effect is the same as merging another branch (or more in case of an octopus)\&.
+.sp
+With \-\-no\-squash perform the merge and commit the result\&. This option can be used to override \-\-squash\&.
+.RE
+.PP
+\-s <strategy>, \-\-strategy=<strategy>
+.RS 4
+Use the given merge strategy; can be supplied more than once to specify them in the order they should be tried\&. If there is no
+\fB\-s\fR
+option, a built\-in list of strategies is used instead (\fIgit merge\-recursive\fR
+when merging a single head,
+\fIgit merge\-octopus\fR
+otherwise)\&.
+.RE
+.PP
+\-X <option>, \-\-strategy\-option=<option>
+.RS 4
+Pass merge strategy specific option through to the merge strategy\&.
+.RE
+.PP
+\-\-verify\-signatures, \-\-no\-verify\-signatures
+.RS 4
+Verify that the tip commit of the side branch being merged is signed with a valid key, i\&.e\&. a key that has a valid uid: in the default trust model, this means the signing key has been signed by a trusted key\&. If the tip commit of the side branch is not signed with a valid key, the merge is aborted\&.
+.RE
+.PP
+\-\-summary, \-\-no\-summary
+.RS 4
+Synonyms to \-\-stat and \-\-no\-stat; these are deprecated and will be removed in the future\&.
+.RE
+.PP
+\-\-allow\-unrelated\-histories
+.RS 4
+By default,
+\fBgit merge\fR
+command refuses to merge histories that do not share a common ancestor\&. This option can be used to override this safety when merging histories of two projects that started their lives independently\&. As that is a very rare occasion, no configuration variable to enable this by default exists and will not be added\&.
+.RE
+.PP
+\-r, \-\-rebase[=false|true|preserve|interactive]
+.RS 4
+When true, rebase the current branch on top of the upstream branch after fetching\&. If there is a remote\-tracking branch corresponding to the upstream branch and the upstream branch was rebased since last fetched, the rebase uses that information to avoid rebasing non\-local changes\&.
+.sp
+When set to preserve, rebase with the
+\fB\-\-preserve\-merges\fR
+option passed to
+\fBgit rebase\fR
+so that locally created merge commits will not be flattened\&.
+.sp
+When false, merge the current branch into the upstream branch\&.
+.sp
+When
+\fBinteractive\fR, enable the interactive mode of rebase\&.
+.sp
+See
+\fBpull\&.rebase\fR,
+\fBbranch\&.<name>\&.rebase\fR
+and
+\fBbranch\&.autoSetupRebase\fR
+in
+\fBgit-config\fR(1)
+if you want to make
+\fBgit pull\fR
+always use
+\fB\-\-rebase\fR
+instead of merging\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+This is a potentially
+\fIdangerous\fR
+mode of operation\&. It rewrites history, which does not bode well when you published that history already\&. Do
+\fBnot\fR
+use this option unless you have read
+\fBgit-rebase\fR(1)
+carefully\&.
+.sp .5v
+.RE
+.RE
+.PP
+\-\-no\-rebase
+.RS 4
+Override earlier \-\-rebase\&.
+.RE
+.PP
+\-\-autostash, \-\-no\-autostash
+.RS 4
+Before starting rebase, stash local modifications away (see
+\fBgit-stash\fR(1)) if needed, and apply the stash entry when done\&.
+\fB\-\-no\-autostash\fR
+is useful to override the
+\fBrebase\&.autoStash\fR
+configuration variable (see
+\fBgit-config\fR(1))\&.
+.sp
+This option is only valid when "\-\-rebase" is used\&.
+.RE
+.SS "Options related to fetching"
+.PP
+\-\-all
+.RS 4
+Fetch all remotes\&.
+.RE
+.PP
+\-a, \-\-append
+.RS 4
+Append ref names and object names of fetched refs to the existing contents of
+\fB\&.git/FETCH_HEAD\fR\&. Without this option old data in
+\fB\&.git/FETCH_HEAD\fR
+will be overwritten\&.
+.RE
+.PP
+\-\-depth=<depth>
+.RS 4
+Limit fetching to the specified number of commits from the tip of each remote branch history\&. If fetching to a
+\fIshallow\fR
+repository created by
+\fBgit clone\fR
+with
+\fB\-\-depth=<depth>\fR
+option (see
+\fBgit-clone\fR(1)), deepen or shorten the history to the specified number of commits\&. Tags for the deepened commits are not fetched\&.
+.RE
+.PP
+\-\-deepen=<depth>
+.RS 4
+Similar to \-\-depth, except it specifies the number of commits from the current shallow boundary instead of from the tip of each remote branch history\&.
+.RE
+.PP
+\-\-shallow\-since=<date>
+.RS 4
+Deepen or shorten the history of a shallow repository to include all reachable commits after <date>\&.
+.RE
+.PP
+\-\-shallow\-exclude=<revision>
+.RS 4
+Deepen or shorten the history of a shallow repository to exclude commits reachable from a specified remote branch or tag\&. This option can be specified multiple times\&.
+.RE
+.PP
+\-\-unshallow
+.RS 4
+If the source repository is complete, convert a shallow repository to a complete one, removing all the limitations imposed by shallow repositories\&.
+.sp
+If the source repository is shallow, fetch as much as possible so that the current repository has the same history as the source repository\&.
+.RE
+.PP
+\-\-update\-shallow
+.RS 4
+By default when fetching from a shallow repository,
+\fBgit fetch\fR
+refuses refs that require updating \&.git/shallow\&. This option updates \&.git/shallow and accept such refs\&.
+.RE
+.PP
+\-f, \-\-force
+.RS 4
+When
+\fIgit fetch\fR
+is used with
+\fB<rbranch>:<lbranch>\fR
+refspec, it refuses to update the local branch
+\fB<lbranch>\fR
+unless the remote branch
+\fB<rbranch>\fR
+it fetches is a descendant of
+\fB<lbranch>\fR\&. This option overrides that check\&.
+.RE
+.PP
+\-k, \-\-keep
+.RS 4
+Keep downloaded pack\&.
+.RE
+.PP
+\-\-no\-tags
+.RS 4
+By default, tags that point at objects that are downloaded from the remote repository are fetched and stored locally\&. This option disables this automatic tag following\&. The default behavior for a remote may be specified with the remote\&.<name>\&.tagOpt setting\&. See
+\fBgit-config\fR(1)\&.
+.RE
+.PP
+\-u, \-\-update\-head\-ok
+.RS 4
+By default
+\fIgit fetch\fR
+refuses to update the head which corresponds to the current branch\&. This flag disables the check\&. This is purely for the internal use for
+\fIgit pull\fR
+to communicate with
+\fIgit fetch\fR, and unless you are implementing your own Porcelain you are not supposed to use it\&.
+.RE
+.PP
+\-\-upload\-pack <upload\-pack>
+.RS 4
+When given, and the repository to fetch from is handled by
+\fIgit fetch\-pack\fR,
+\fB\-\-exec=<upload\-pack>\fR
+is passed to the command to specify non\-default path for the command run on the other end\&.
+.RE
+.PP
+\-\-progress
+.RS 4
+Progress status is reported on the standard error stream by default when it is attached to a terminal, unless \-q is specified\&. This flag forces progress status even if the standard error stream is not directed to a terminal\&.
+.RE
+.PP
+\-4, \-\-ipv4
+.RS 4
+Use IPv4 addresses only, ignoring IPv6 addresses\&.
+.RE
+.PP
+\-6, \-\-ipv6
+.RS 4
+Use IPv6 addresses only, ignoring IPv4 addresses\&.
+.RE
+.PP
+<repository>
+.RS 4
+The "remote" repository that is the source of a fetch or pull operation\&. This parameter can be either a URL (see the section
+GIT URLS
+below) or the name of a remote (see the section
+REMOTES
+below)\&.
+.RE
+.PP
+<refspec>
+.RS 4
+Specifies which refs to fetch and which local refs to update\&. When no <refspec>s appear on the command line, the refs to fetch are read from
+\fBremote\&.<repository>\&.fetch\fR
+variables instead (see
+\fBgit-fetch\fR(1))\&.
+.sp
+The format of a <refspec> parameter is an optional plus
+\fB+\fR, followed by the source <src>, followed by a colon
+\fB:\fR, followed by the destination ref <dst>\&. The colon can be omitted when <dst> is empty\&. <src> is typically a ref, but it can also be a fully spelled hex object name\&.
+.sp
+\fBtag <tag>\fR
+means the same as
+\fBrefs/tags/<tag>:refs/tags/<tag>\fR; it requests fetching everything up to the given tag\&.
+.sp
+The remote ref that matches <src> is fetched, and if <dst> is not empty string, the local ref that matches it is fast\-forwarded using <src>\&. If the optional plus
+\fB+\fR
+is used, the local ref is updated even if it does not result in a fast\-forward update\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+When the remote branch you want to fetch is known to be rewound and rebased regularly, it is expected that its new tip will not be descendant of its previous tip (as stored in your remote\-tracking branch the last time you fetched)\&. You would want to use the
+\fB+\fR
+sign to indicate non\-fast\-forward updates will be needed for such branches\&. There is no way to determine or declare that a branch will be made available in a repository with this behavior; the pulling user simply must know this is the expected usage pattern for a branch\&.
+.sp .5v
+.RE
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+There is a difference between listing multiple <refspec> directly on
+\fIgit pull\fR
+command line and having multiple
+\fBremote\&.<repository>\&.fetch\fR
+entries in your configuration for a <repository> and running a
+\fIgit pull\fR
+command without any explicit <refspec> parameters\&. <refspec>s listed explicitly on the command line are always merged into the current branch after fetching\&. In other words, if you list more than one remote ref,
+\fIgit pull\fR
+will create an Octopus merge\&. On the other hand, if you do not list any explicit <refspec> parameter on the command line,
+\fIgit pull\fR
+will fetch all the <refspec>s it finds in the
+\fBremote\&.<repository>\&.fetch\fR
+configuration and merge only the first <refspec> found into the current branch\&. This is because making an Octopus from remote refs is rarely done, while keeping track of multiple remote heads in one\-go by fetching more than one is often useful\&.
+.sp .5v
+.RE
+.RE
+.SH "GIT URLS"
+.sp
+In general, URLs contain information about the transport protocol, the address of the remote server, and the path to the repository\&. Depending on the transport protocol, some of this information may be absent\&.
+.sp
+Git supports ssh, git, http, and https protocols (in addition, ftp, and ftps can be used for fetching, but this is inefficient and deprecated; do not use it)\&.
+.sp
+The native transport (i\&.e\&. git:// URL) does no authentication and should be used with caution on unsecured networks\&.
+.sp
+The following syntaxes may be used with them:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ssh://[user@]host\&.xz[:port]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+git://host\&.xz[:port]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+http[s]://host\&.xz[:port]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ftp[s]://host\&.xz[:port]/path/to/repo\&.git/
+.RE
+.sp
+An alternative scp\-like syntax may also be used with the ssh protocol:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+[user@]host\&.xz:path/to/repo\&.git/
+.RE
+.sp
+This syntax is only recognized if there are no slashes before the first colon\&. This helps differentiate a local path that contains a colon\&. For example the local path \fBfoo:bar\fR could be specified as an absolute path or \fB\&./foo:bar\fR to avoid being misinterpreted as an ssh url\&.
+.sp
+The ssh and git protocols additionally support ~username expansion:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ssh://[user@]host\&.xz[:port]/~[user]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+git://host\&.xz[:port]/~[user]/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+[user@]host\&.xz:/~[user]/path/to/repo\&.git/
+.RE
+.sp
+For local repositories, also supported by Git natively, the following syntaxes may be used:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+/path/to/repo\&.git/
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file:///path/to/repo\&.git/
+.RE
+.sp
+These two syntaxes are mostly equivalent, except when cloning, when the former implies \-\-local option\&. See \fBgit-clone\fR(1) for details\&.
+.sp
+When Git doesn\(cqt know how to handle a certain transport protocol, it attempts to use the \fIremote\-<transport>\fR remote helper, if one exists\&. To explicitly request a remote helper, the following syntax may be used:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+<transport>::<address>
+.RE
+.sp
+where <address> may be a path, a server and path, or an arbitrary URL\-like string recognized by the specific remote helper being invoked\&. See \fBgitremote-helpers\fR(1) for details\&.
+.sp
+If there are a large number of similarly\-named remote repositories and you want to use a different format for them (such that the URLs you use will be rewritten into URLs that work), you can create a configuration section of the form:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [url "<actual url base>"]
+                insteadOf = <other url base>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+For example, with this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [url "git://git\&.host\&.xz/"]
+                insteadOf = host\&.xz:/path/to/
+                insteadOf = work:
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+a URL like "work:repo\&.git" or like "host\&.xz:/path/to/repo\&.git" will be rewritten in any context that takes a URL to be "git://git\&.host\&.xz/repo\&.git"\&.
+.sp
+If you want to rewrite URLs for push only, you can create a configuration section of the form:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [url "<actual url base>"]
+                pushInsteadOf = <other url base>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+For example, with this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [url "ssh://example\&.org/"]
+                pushInsteadOf = git://example\&.org/
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+a URL like "git://example\&.org/path/to/repo\&.git" will be rewritten to "ssh://example\&.org/path/to/repo\&.git" for pushes, but pulls will still use the original URL\&.
+.SH "REMOTES"
+.sp
+The name of one of the following can be used instead of a URL as \fB<repository>\fR argument:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a remote in the Git configuration file:
+\fB$GIT_DIR/config\fR,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a file in the
+\fB$GIT_DIR/remotes\fR
+directory, or
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a file in the
+\fB$GIT_DIR/branches\fR
+directory\&.
+.RE
+.sp
+All of these also allow you to omit the refspec from the command line because they each contain a refspec which git will use by default\&.
+.SS "Named remote in configuration file"
+.sp
+You can choose to provide the name of a remote which you had previously configured using \fBgit-remote\fR(1), \fBgit-config\fR(1) or even by a manual edit to the \fB$GIT_DIR/config\fR file\&. The URL of this remote will be used to access the repository\&. The refspec of this remote will be used by default when you do not provide a refspec on the command line\&. The entry in the config file would appear like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [remote "<name>"]
+                url = <url>
+                pushurl = <pushurl>
+                push = <refspec>
+                fetch = <refspec>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+The \fB<pushurl>\fR is used for pushes only\&. It is optional and defaults to \fB<url>\fR\&.
+.SS "Named file in \fB$GIT_DIR/remotes\fR"
+.sp
+You can choose to provide the name of a file in \fB$GIT_DIR/remotes\fR\&. The URL in this file will be used to access the repository\&. The refspec in this file will be used as default when you do not provide a refspec on the command line\&. This file should have the following format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        URL: one of the above URL format
+        Push: <refspec>
+        Pull: <refspec>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+\fBPush:\fR lines are used by \fIgit push\fR and \fBPull:\fR lines are used by \fIgit pull\fR and \fIgit fetch\fR\&. Multiple \fBPush:\fR and \fBPull:\fR lines may be specified for additional branch mappings\&.
+.SS "Named file in \fB$GIT_DIR/branches\fR"
+.sp
+You can choose to provide the name of a file in \fB$GIT_DIR/branches\fR\&. The URL in this file will be used to access the repository\&. This file should have the following format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        <url>#<head>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+\fB<url>\fR is required; \fB#<head>\fR is optional\&.
+.sp
+Depending on the operation, git will use one of the following refspecs, if you don\(cqt provide one on the command line\&. \fB<branch>\fR is the name of this file in \fB$GIT_DIR/branches\fR and \fB<head>\fR defaults to \fBmaster\fR\&.
+.sp
+git fetch uses:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        refs/heads/<head>:refs/heads/<branch>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+git push uses:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        HEAD:refs/heads/<head>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "MERGE STRATEGIES"
+.sp
+The merge mechanism (\fBgit merge\fR and \fBgit pull\fR commands) allows the backend \fImerge strategies\fR to be chosen with \fB\-s\fR option\&. Some strategies can also take their own options, which can be passed by giving \fB\-X<option>\fR arguments to \fBgit merge\fR and/or \fBgit pull\fR\&.
+.PP
+resolve
+.RS 4
+This can only resolve two heads (i\&.e\&. the current branch and another branch you pulled from) using a 3\-way merge algorithm\&. It tries to carefully detect criss\-cross merge ambiguities and is considered generally safe and fast\&.
+.RE
+.PP
+recursive
+.RS 4
+This can only resolve two heads using a 3\-way merge algorithm\&. When there is more than one common ancestor that can be used for 3\-way merge, it creates a merged tree of the common ancestors and uses that as the reference tree for the 3\-way merge\&. This has been reported to result in fewer merge conflicts without causing mismerges by tests done on actual merge commits taken from Linux 2\&.6 kernel development history\&. Additionally this can detect and handle merges involving renames\&. This is the default merge strategy when pulling or merging one branch\&.
+.sp
+The
+\fIrecursive\fR
+strategy can take the following options:
+.PP
+ours
+.RS 4
+This option forces conflicting hunks to be auto\-resolved cleanly by favoring
+\fIour\fR
+version\&. Changes from the other tree that do not conflict with our side are reflected to the merge result\&. For a binary file, the entire contents are taken from our side\&.
+.sp
+This should not be confused with the
+\fIours\fR
+merge strategy, which does not even look at what the other tree contains at all\&. It discards everything the other tree did, declaring
+\fIour\fR
+history contains all that happened in it\&.
+.RE
+.PP
+theirs
+.RS 4
+This is the opposite of
+\fIours\fR; note that, unlike
+\fIours\fR, there is no
+\fItheirs\fR
+merge strategy to confuse this merge option with\&.
+.RE
+.PP
+patience
+.RS 4
+With this option,
+\fImerge\-recursive\fR
+spends a little extra time to avoid mismerges that sometimes occur due to unimportant matching lines (e\&.g\&., braces from distinct functions)\&. Use this when the branches to be merged have diverged wildly\&. See also
+\fBgit-diff\fR(1)
+\fB\-\-patience\fR\&.
+.RE
+.PP
+diff\-algorithm=[patience|minimal|histogram|myers]
+.RS 4
+Tells
+\fImerge\-recursive\fR
+to use a different diff algorithm, which can help avoid mismerges that occur due to unimportant matching lines (such as braces from distinct functions)\&. See also
+\fBgit-diff\fR(1)
+\fB\-\-diff\-algorithm\fR\&.
+.RE
+.PP
+ignore\-space\-change, ignore\-all\-space, ignore\-space\-at\-eol, ignore\-cr\-at\-eol
+.RS 4
+Treats lines with the indicated type of whitespace change as unchanged for the sake of a three\-way merge\&. Whitespace changes mixed with other changes to a line are not ignored\&. See also
+\fBgit-diff\fR(1)
+\fB\-b\fR,
+\fB\-w\fR,
+\fB\-\-ignore\-space\-at\-eol\fR, and
+\fB\-\-ignore\-cr\-at\-eol\fR\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If
+\fItheir\fR
+version only introduces whitespace changes to a line,
+\fIour\fR
+version is used;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If
+\fIour\fR
+version introduces whitespace changes but
+\fItheir\fR
+version includes a substantial change,
+\fItheir\fR
+version is used;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Otherwise, the merge proceeds in the usual way\&.
+.RE
+.RE
+.PP
+renormalize
+.RS 4
+This runs a virtual check\-out and check\-in of all three stages of a file when resolving a three\-way merge\&. This option is meant to be used when merging branches with different clean filters or end\-of\-line normalization rules\&. See "Merging branches with differing checkin/checkout attributes" in
+\fBgitattributes\fR(5)
+for details\&.
+.RE
+.PP
+no\-renormalize
+.RS 4
+Disables the
+\fBrenormalize\fR
+option\&. This overrides the
+\fBmerge\&.renormalize\fR
+configuration variable\&.
+.RE
+.PP
+no\-renames
+.RS 4
+Turn off rename detection\&. See also
+\fBgit-diff\fR(1)
+\fB\-\-no\-renames\fR\&.
+.RE
+.PP
+find\-renames[=<n>]
+.RS 4
+Turn on rename detection, optionally setting the similarity threshold\&. This is the default\&. See also
+\fBgit-diff\fR(1)
+\fB\-\-find\-renames\fR\&.
+.RE
+.PP
+rename\-threshold=<n>
+.RS 4
+Deprecated synonym for
+\fBfind\-renames=<n>\fR\&.
+.RE
+.PP
+subtree[=<path>]
+.RS 4
+This option is a more advanced form of
+\fIsubtree\fR
+strategy, where the strategy makes a guess on how two trees must be shifted to match with each other when merging\&. Instead, the specified path is prefixed (or stripped from the beginning) to make the shape of two trees to match\&.
+.RE
+.RE
+.PP
+octopus
+.RS 4
+This resolves cases with more than two heads, but refuses to do a complex merge that needs manual resolution\&. It is primarily meant to be used for bundling topic branch heads together\&. This is the default merge strategy when pulling or merging more than one branch\&.
+.RE
+.PP
+ours
+.RS 4
+This resolves any number of heads, but the resulting tree of the merge is always that of the current branch head, effectively ignoring all changes from all other branches\&. It is meant to be used to supersede old development history of side branches\&. Note that this is different from the \-Xours option to the
+\fIrecursive\fR
+merge strategy\&.
+.RE
+.PP
+subtree
+.RS 4
+This is a modified recursive strategy\&. When merging trees A and B, if B corresponds to a subtree of A, B is first adjusted to match the tree structure of A, instead of reading the trees at the same level\&. This adjustment is also done to the common ancestor tree\&.
+.RE
+.sp
+With the strategies that use 3\-way merge (including the default, \fIrecursive\fR), if a change is made on both branches, but later reverted on one of the branches, that change will be present in the merged result; some people find this behavior confusing\&. It occurs because only the heads and the merge base are considered when performing a merge, not the individual commits\&. The merge algorithm therefore considers the reverted change as no change at all, and substitutes the changed version instead\&.
+.SH "DEFAULT BEHAVIOUR"
+.sp
+Often people use \fBgit pull\fR without giving any parameter\&. Traditionally, this has been equivalent to saying \fBgit pull origin\fR\&. However, when configuration \fBbranch\&.<name>\&.remote\fR is present while on branch \fB<name>\fR, that value is used instead of \fBorigin\fR\&.
+.sp
+In order to determine what URL to use to fetch from, the value of the configuration \fBremote\&.<origin>\&.url\fR is consulted and if there is not any such variable, the value on the \fBURL:\fR line in \fB$GIT_DIR/remotes/<origin>\fR is used\&.
+.sp
+In order to determine what remote branches to fetch (and optionally store in the remote\-tracking branches) when the command is run without any refspec parameters on the command line, values of the configuration variable \fBremote\&.<origin>\&.fetch\fR are consulted, and if there aren\(cqt any, \fB$GIT_DIR/remotes/<origin>\fR is consulted and its \fBPull:\fR lines are used\&. In addition to the refspec formats described in the OPTIONS section, you can have a globbing refspec that looks like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+refs/heads/*:refs/remotes/origin/*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+A globbing refspec must have a non\-empty RHS (i\&.e\&. must store what were fetched in remote\-tracking branches), and its LHS and RHS must end with \fB/*\fR\&. The above specifies that all remote branches are tracked using remote\-tracking branches in \fBrefs/remotes/origin/\fR hierarchy under the same name\&.
+.sp
+The rule to determine which remote branch to merge after fetching is a bit involved, in order not to break backward compatibility\&.
+.sp
+If explicit refspecs were given on the command line of \fBgit pull\fR, they are all merged\&.
+.sp
+When no refspec was given on the command line, then \fBgit pull\fR uses the refspec from the configuration or \fB$GIT_DIR/remotes/<origin>\fR\&. In such cases, the following rules apply:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+If
+\fBbranch\&.<name>\&.merge\fR
+configuration for the current branch
+\fB<name>\fR
+exists, that is the name of the branch at the remote site that is merged\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+If the refspec is a globbing one, nothing is merged\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+Otherwise the remote branch of the first refspec is merged\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Update the remote\-tracking branches for the repository you cloned from, then merge one of them into your current branch:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git pull
+$ git pull origin
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Normally the branch merged in is the HEAD of the remote repository, but the choice is determined by the branch\&.<name>\&.remote and branch\&.<name>\&.merge options; see
+\fBgit-config\fR(1)
+for details\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Merge into the current branch the remote branch
+\fBnext\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git pull origin next
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This leaves a copy of
+\fBnext\fR
+temporarily in FETCH_HEAD, but does not update any remote\-tracking branches\&. Using remote\-tracking branches, the same can be done by invoking fetch and merge:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git fetch origin
+$ git merge origin/next
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.sp
+If you tried a pull which resulted in complex conflicts and would want to start over, you can recover with \fIgit reset\fR\&.
+.SH "SECURITY"
+.sp
+The fetch and push protocols are not designed to prevent one side from stealing data from the other repository that was not intended to be shared\&. If you have private data that you need to protect from a malicious peer, your best option is to store it in another repository\&. This applies to both clients and servers\&. In particular, namespaces on a server are not effective for read access control; you should only grant read access to a namespace to clients that you would trust with read access to the entire repository\&.
+.sp
+The known attack vectors are as follows:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+The victim sends "have" lines advertising the IDs of objects it has that are not explicitly intended to be shared but can be used to optimize the transfer if the peer also has them\&. The attacker chooses an object ID X to steal and sends a ref to X, but isn\(cqt required to send the content of X because the victim already has it\&. Now the victim believes that the attacker has X, and it sends the content of X back to the attacker later\&. (This attack is most straightforward for a client to perform on a server, by creating a ref to X in the namespace the client has access to and then fetching it\&. The most likely way for a server to perform it on a client is to "merge" X into a public branch and hope that the user does additional work on this branch and pushes it back to the server without noticing the merge\&.)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+As in #1, the attacker chooses an object ID X to steal\&. The victim sends an object Y that the attacker already has, and the attacker falsely claims to have X and not Y, so the victim sends Y as a delta against X\&. The delta reveals regions of X that are similar to Y to the attacker\&.
+.RE
+.SH "BUGS"
+.sp
+Using \-\-recurse\-submodules can only fetch new commits in already checked out submodules right now\&. When e\&.g\&. upstream added a new submodule in the just fetched commits of the superproject the submodule itself can not be fetched, making it impossible to check out that submodule later without having to do a fetch again\&. This is expected to be fixed in a future Git version\&.
+.SH "SEE ALSO"
+.sp
+\fBgit-fetch\fR(1), \fBgit-merge\fR(1), \fBgit-config\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

@@ -1,0 +1,36 @@
+.\"
+.\" Copyright (c) 2003 Apple Computer, Inc.
+.\" All rights reserved.
+.\"
+.Dd June 13, 2003
+.Dt GATHERHEADERDOC 1
+.Os Darwin
+.Sh NAME
+.Nm gatherheaderdoc
+.Nd header documentation processor
+.Sh SYNOPSIS
+.Nm gatherheaderdoc
+.Op options
+.Ar directory
+.Sh DESCRIPTION
+.Nm Gatherheaderdoc
+processes the headerdoc output in 
+.Ar directory
+and creates an index page that links to each header's
+documentation.
+.Pp
+.Sh FILES
+.Bl -tag -width /$HOME/Library/Preferences/com.apple.headerDoc2HTML.config -compact
+.It Pa /$HOME/Library/Preferences/com.apple.headerDoc2HTML.config
+.El
+.Sh SEE ALSO
+.Xr headerdoc2html 1
+.Pp
+For more information, see the HeaderDoc User Guide.
+It can be found in
+.Pa /Developer/Documentation/
+if you have the Xcode Tools package installed, or at
+.UR http://developer.apple.com/documentation/DeveloperTools/Conceptual/HeaderDoc
+<http://developer.apple.com/documentation/DeveloperTools/Conceptual/HeaderDoc>
+.UE
+in the reference library.

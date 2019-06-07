@@ -1,0 +1,228 @@
+'\" t
+.\"     Title: git-show-ref
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-SHOW\-REF" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-show-ref \- List references in a local repository
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit show\-ref\fR [\-q|\-\-quiet] [\-\-verify] [\-\-head] [\-d|\-\-dereference]
+             [\-s|\-\-hash[=<n>]] [\-\-abbrev[=<n>]] [\-\-tags]
+             [\-\-heads] [\-\-] [<pattern>\&...]
+\fIgit show\-ref\fR \-\-exclude\-existing[=<pattern>]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Displays references available in a local repository along with the associated commit IDs\&. Results can be filtered using a pattern and tags can be dereferenced into object IDs\&. Additionally, it can be used to test whether a particular ref exists\&.
+.sp
+By default, shows the tags, heads, and remote refs\&.
+.sp
+The \-\-exclude\-existing form is a filter that does the inverse\&. It reads refs from stdin, one ref per line, and shows those that don\(cqt exist in the local repository\&.
+.sp
+Use of this utility is encouraged in favor of directly accessing files under the \fB\&.git\fR directory\&.
+.SH "OPTIONS"
+.PP
+\-\-head
+.RS 4
+Show the HEAD reference, even if it would normally be filtered out\&.
+.RE
+.PP
+\-\-tags, \-\-heads
+.RS 4
+Limit to "refs/heads" and "refs/tags", respectively\&. These options are not mutually exclusive; when given both, references stored in "refs/heads" and "refs/tags" are displayed\&.
+.RE
+.PP
+\-d, \-\-dereference
+.RS 4
+Dereference tags into object IDs as well\&. They will be shown with "^{}" appended\&.
+.RE
+.PP
+\-s, \-\-hash[=<n>]
+.RS 4
+Only show the SHA\-1 hash, not the reference name\&. When combined with \-\-dereference the dereferenced tag will still be shown after the SHA\-1\&.
+.RE
+.PP
+\-\-verify
+.RS 4
+Enable stricter reference checking by requiring an exact ref path\&. Aside from returning an error code of 1, it will also print an error message if
+\fB\-\-quiet\fR
+was not specified\&.
+.RE
+.PP
+\-\-abbrev[=<n>]
+.RS 4
+Abbreviate the object name\&. When using
+\fB\-\-hash\fR, you do not have to say
+\fB\-\-hash \-\-abbrev\fR;
+\fB\-\-hash=n\fR
+would do\&.
+.RE
+.PP
+\-q, \-\-quiet
+.RS 4
+Do not print any results to stdout\&. When combined with
+\fB\-\-verify\fR
+this can be used to silently check if a reference exists\&.
+.RE
+.PP
+\-\-exclude\-existing[=<pattern>]
+.RS 4
+Make
+\fIgit show\-ref\fR
+act as a filter that reads refs from stdin of the form "\fB^(?:<anything>\es)?<refname>(?:\e^{})?$\fR" and performs the following actions on each: (1) strip "^{}" at the end of line if any; (2) ignore if pattern is provided and does not head\-match refname; (3) warn if refname is not a well\-formed refname and skip; (4) ignore if refname is a ref that exists in the local repository; (5) otherwise output the line\&.
+.RE
+.PP
+<pattern>\&...
+.RS 4
+Show references matching one or more patterns\&. Patterns are matched from the end of the full name, and only complete parts are matched, e\&.g\&.
+\fImaster\fR
+matches
+\fIrefs/heads/master\fR,
+\fIrefs/remotes/origin/master\fR,
+\fIrefs/tags/jedi/master\fR
+but not
+\fIrefs/heads/mymaster\fR
+or
+\fIrefs/remotes/master/jedi\fR\&.
+.RE
+.SH "OUTPUT"
+.sp
+The output is in the format: \fI<SHA\-1 ID>\fR \fI<space>\fR \fI<reference name>\fR\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git show\-ref \-\-head \-\-dereference
+832e76a9899f560a90ffd62ae2ce83bbeff58f54 HEAD
+832e76a9899f560a90ffd62ae2ce83bbeff58f54 refs/heads/master
+832e76a9899f560a90ffd62ae2ce83bbeff58f54 refs/heads/origin
+3521017556c5de4159da4615a39fa4d5d2c279b5 refs/tags/v0\&.99\&.9c
+6ddc0964034342519a87fe013781abf31c6db6ad refs/tags/v0\&.99\&.9c^{}
+055e4ae3ae6eb344cbabf2a5256a49ea66040131 refs/tags/v1\&.0rc4
+423325a2d24638ddcc82ce47be5e40be550f4507 refs/tags/v1\&.0rc4^{}
+\&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+When using \-\-hash (and not \-\-dereference) the output format is: \fI<SHA\-1 ID>\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git show\-ref \-\-heads \-\-hash
+2e3ba0114a1f52b47df29743d6915d056be13278
+185008ae97960c8d551adcd9e23565194651b5d1
+03adf42c988195b50e1a1935ba5fcbc39b2b029b
+\&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "EXAMPLE"
+.sp
+To show all references called "master", whether tags or heads or anything else, and regardless of how deep in the reference naming hierarchy they are, use:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        git show\-ref master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+This will show "refs/heads/master" but also "refs/remote/other\-repo/master", if such references exists\&.
+.sp
+When using the \fB\-\-verify\fR flag, the command requires an exact path:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        git show\-ref \-\-verify refs/heads/master
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+will only match the exact branch called "master"\&.
+.sp
+If nothing matches, \fIgit show\-ref\fR will return an error code of 1, and in the case of verification, it will show an error message\&.
+.sp
+For scripting, you can ask it to be quiet with the "\-\-quiet" flag, which allows you to do things like
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        git show\-ref \-\-quiet \-\-verify \-\- "refs/heads/$headname" ||
+                echo "$headname is not a valid branch"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+to check whether a particular branch exists or not (notice how we don\(cqt actually want to show any results, and we want to use the full refname for it in order to not trigger the problem with ambiguous partial matches)\&.
+.sp
+To show only tags, or only proper branch heads, use "\-\-tags" and/or "\-\-heads" respectively (using both means that it shows tags and heads, but not other random references under the refs/ subdirectory)\&.
+.sp
+To do automatic tag object dereferencing, use the "\-d" or "\-\-dereference" flag, so you can do
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        git show\-ref \-\-tags \-\-dereference
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+to get a listing of all tags together with what they dereference\&.
+.SH "FILES"
+.sp
+\fB\&.git/refs/*\fR, \fB\&.git/packed\-refs\fR
+.SH "SEE ALSO"
+.sp
+\fBgit-for-each-ref\fR(1), \fBgit-ls-remote\fR(1), \fBgit-update-ref\fR(1), \fBgitrepository-layout\fR(5)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

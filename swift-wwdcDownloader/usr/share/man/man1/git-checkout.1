@@ -1,0 +1,678 @@
+'\" t
+.\"     Title: git-checkout
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-CHECKOUT" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-checkout \- Switch branches or restore working tree files
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit checkout\fR [\-q] [\-f] [\-m] [<branch>]
+\fIgit checkout\fR [\-q] [\-f] [\-m] \-\-detach [<branch>]
+\fIgit checkout\fR [\-q] [\-f] [\-m] [\-\-detach] <commit>
+\fIgit checkout\fR [\-q] [\-f] [\-m] [[\-b|\-B|\-\-orphan] <new_branch>] [<start_point>]
+\fIgit checkout\fR [\-f|\-\-ours|\-\-theirs|\-m|\-\-conflict=<style>] [<tree\-ish>] [\-\-] <paths>\&...
+\fIgit checkout\fR [<tree\-ish>] [\-\-] <pathspec>\&...
+\fIgit checkout\fR (\-p|\-\-patch) [<tree\-ish>] [\-\-] [<paths>\&...]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Updates files in the working tree to match the version in the index or the specified tree\&. If no paths are given, \fIgit checkout\fR will also update \fBHEAD\fR to set the specified branch as the current branch\&.
+.PP
+\fIgit checkout\fR <branch>
+.RS 4
+To prepare for working on <branch>, switch to it by updating the index and the files in the working tree, and by pointing HEAD at the branch\&. Local modifications to the files in the working tree are kept, so that they can be committed to the <branch>\&.
+.sp
+If <branch> is not found but there does exist a tracking branch in exactly one remote (call it <remote>) with a matching name, treat as equivalent to
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout \-b <branch> \-\-track <remote>/<branch>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+You could omit <branch>, in which case the command degenerates to "check out the current branch", which is a glorified no\-op with rather expensive side\-effects to show only the tracking information, if exists, for the current branch\&.
+.RE
+.PP
+\fIgit checkout\fR \-b|\-B <new_branch> [<start point>]
+.RS 4
+Specifying
+\fB\-b\fR
+causes a new branch to be created as if
+\fBgit-branch\fR(1)
+were called and then checked out\&. In this case you can use the
+\fB\-\-track\fR
+or
+\fB\-\-no\-track\fR
+options, which will be passed to
+\fIgit branch\fR\&. As a convenience,
+\fB\-\-track\fR
+without
+\fB\-b\fR
+implies branch creation; see the description of
+\fB\-\-track\fR
+below\&.
+.sp
+If
+\fB\-B\fR
+is given, <new_branch> is created if it doesn\(cqt exist; otherwise, it is reset\&. This is the transactional equivalent of
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git branch \-f <branch> [<start point>]
+$ git checkout <branch>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+that is to say, the branch is not reset/created unless "git checkout" is successful\&.
+.RE
+.PP
+\fIgit checkout\fR \-\-detach [<branch>], \fIgit checkout\fR [\-\-detach] <commit>
+.RS 4
+Prepare to work on top of <commit>, by detaching HEAD at it (see "DETACHED HEAD" section), and updating the index and the files in the working tree\&. Local modifications to the files in the working tree are kept, so that the resulting working tree will be the state recorded in the commit plus the local modifications\&.
+.sp
+When the <commit> argument is a branch name, the
+\fB\-\-detach\fR
+option can be used to detach HEAD at the tip of the branch (\fBgit checkout <branch>\fR
+would check out that branch without detaching HEAD)\&.
+.sp
+Omitting <branch> detaches HEAD at the tip of the current branch\&.
+.RE
+.PP
+\fIgit checkout\fR [<tree\-ish>] [\-\-] <pathspec>\&...
+.RS 4
+Overwrite paths in the working tree by replacing with the contents in the index or in the <tree\-ish> (most often a commit)\&. When a <tree\-ish> is given, the paths that match the <pathspec> are updated both in the index and in the working tree\&.
+.sp
+The index may contain unmerged entries because of a previous failed merge\&. By default, if you try to check out such an entry from the index, the checkout operation will fail and nothing will be checked out\&. Using
+\fB\-f\fR
+will ignore these unmerged entries\&. The contents from a specific side of the merge can be checked out of the index by using
+\fB\-\-ours\fR
+or
+\fB\-\-theirs\fR\&. With
+\fB\-m\fR, changes made to the working tree file can be discarded to re\-create the original conflicted merge result\&.
+.RE
+.PP
+\fIgit checkout\fR (\-p|\-\-patch) [<tree\-ish>] [\-\-] [<pathspec>\&...]
+.RS 4
+This is similar to the "check out paths to the working tree from either the index or from a tree\-ish" mode described above, but lets you use the interactive interface to show the "diff" output and choose which hunks to use in the result\&. See below for the description of
+\fB\-\-patch\fR
+option\&.
+.RE
+.SH "OPTIONS"
+.PP
+\-q, \-\-quiet
+.RS 4
+Quiet, suppress feedback messages\&.
+.RE
+.PP
+\-\-[no\-]progress
+.RS 4
+Progress status is reported on the standard error stream by default when it is attached to a terminal, unless
+\fB\-\-quiet\fR
+is specified\&. This flag enables progress reporting even if not attached to a terminal, regardless of
+\fB\-\-quiet\fR\&.
+.RE
+.PP
+\-f, \-\-force
+.RS 4
+When switching branches, proceed even if the index or the working tree differs from HEAD\&. This is used to throw away local changes\&.
+.sp
+When checking out paths from the index, do not fail upon unmerged entries; instead, unmerged entries are ignored\&.
+.RE
+.PP
+\-\-ours, \-\-theirs
+.RS 4
+When checking out paths from the index, check out stage #2 (\fIours\fR) or #3 (\fItheirs\fR) for unmerged paths\&.
+.sp
+Note that during
+\fBgit rebase\fR
+and
+\fBgit pull \-\-rebase\fR,
+\fIours\fR
+and
+\fItheirs\fR
+may appear swapped;
+\fB\-\-ours\fR
+gives the version from the branch the changes are rebased onto, while
+\fB\-\-theirs\fR
+gives the version from the branch that holds your work that is being rebased\&.
+.sp
+This is because
+\fBrebase\fR
+is used in a workflow that treats the history at the remote as the shared canonical one, and treats the work done on the branch you are rebasing as the third\-party work to be integrated, and you are temporarily assuming the role of the keeper of the canonical history during the rebase\&. As the keeper of the canonical history, you need to view the history from the remote as
+\fBours\fR
+(i\&.e\&. "our shared canonical history"), while what you did on your side branch as
+\fBtheirs\fR
+(i\&.e\&. "one contributor\(cqs work on top of it")\&.
+.RE
+.PP
+\-b <new_branch>
+.RS 4
+Create a new branch named <new_branch> and start it at <start_point>; see
+\fBgit-branch\fR(1)
+for details\&.
+.RE
+.PP
+\-B <new_branch>
+.RS 4
+Creates the branch <new_branch> and start it at <start_point>; if it already exists, then reset it to <start_point>\&. This is equivalent to running "git branch" with "\-f"; see
+\fBgit-branch\fR(1)
+for details\&.
+.RE
+.PP
+\-t, \-\-track
+.RS 4
+When creating a new branch, set up "upstream" configuration\&. See "\-\-track" in
+\fBgit-branch\fR(1)
+for details\&.
+.sp
+If no
+\fB\-b\fR
+option is given, the name of the new branch will be derived from the remote\-tracking branch, by looking at the local part of the refspec configured for the corresponding remote, and then stripping the initial part up to the "*"\&. This would tell us to use "hack" as the local branch when branching off of "origin/hack" (or "remotes/origin/hack", or even "refs/remotes/origin/hack")\&. If the given name has no slash, or the above guessing results in an empty name, the guessing is aborted\&. You can explicitly give a name with
+\fB\-b\fR
+in such a case\&.
+.RE
+.PP
+\-\-no\-track
+.RS 4
+Do not set up "upstream" configuration, even if the branch\&.autoSetupMerge configuration variable is true\&.
+.RE
+.PP
+\-l
+.RS 4
+Create the new branch\(cqs reflog; see
+\fBgit-branch\fR(1)
+for details\&.
+.RE
+.PP
+\-\-detach
+.RS 4
+Rather than checking out a branch to work on it, check out a commit for inspection and discardable experiments\&. This is the default behavior of "git checkout <commit>" when <commit> is not a branch name\&. See the "DETACHED HEAD" section below for details\&.
+.RE
+.PP
+\-\-orphan <new_branch>
+.RS 4
+Create a new
+\fIorphan\fR
+branch, named <new_branch>, started from <start_point> and switch to it\&. The first commit made on this new branch will have no parents and it will be the root of a new history totally disconnected from all the other branches and commits\&.
+.sp
+The index and the working tree are adjusted as if you had previously run "git checkout <start_point>"\&. This allows you to start a new history that records a set of paths similar to <start_point> by easily running "git commit \-a" to make the root commit\&.
+.sp
+This can be useful when you want to publish the tree from a commit without exposing its full history\&. You might want to do this to publish an open source branch of a project whose current tree is "clean", but whose full history contains proprietary or otherwise encumbered bits of code\&.
+.sp
+If you want to start a disconnected history that records a set of paths that is totally different from the one of <start_point>, then you should clear the index and the working tree right after creating the orphan branch by running "git rm \-rf \&." from the top level of the working tree\&. Afterwards you will be ready to prepare your new files, repopulating the working tree, by copying them from elsewhere, extracting a tarball, etc\&.
+.RE
+.PP
+\-\-ignore\-skip\-worktree\-bits
+.RS 4
+In sparse checkout mode,
+\fBgit checkout \-\- <paths>\fR
+would update only entries matched by <paths> and sparse patterns in $GIT_DIR/info/sparse\-checkout\&. This option ignores the sparse patterns and adds back any files in <paths>\&.
+.RE
+.PP
+\-m, \-\-merge
+.RS 4
+When switching branches, if you have local modifications to one or more files that are different between the current branch and the branch to which you are switching, the command refuses to switch branches in order to preserve your modifications in context\&. However, with this option, a three\-way merge between the current branch, your working tree contents, and the new branch is done, and you will be on the new branch\&.
+.sp
+When a merge conflict happens, the index entries for conflicting paths are left unmerged, and you need to resolve the conflicts and mark the resolved paths with
+\fBgit add\fR
+(or
+\fBgit rm\fR
+if the merge should result in deletion of the path)\&.
+.sp
+When checking out paths from the index, this option lets you recreate the conflicted merge in the specified paths\&.
+.RE
+.PP
+\-\-conflict=<style>
+.RS 4
+The same as \-\-merge option above, but changes the way the conflicting hunks are presented, overriding the merge\&.conflictStyle configuration variable\&. Possible values are "merge" (default) and "diff3" (in addition to what is shown by "merge" style, shows the original contents)\&.
+.RE
+.PP
+\-p, \-\-patch
+.RS 4
+Interactively select hunks in the difference between the <tree\-ish> (or the index, if unspecified) and the working tree\&. The chosen hunks are then applied in reverse to the working tree (and if a <tree\-ish> was specified, the index)\&.
+.sp
+This means that you can use
+\fBgit checkout \-p\fR
+to selectively discard edits from your current working tree\&. See the \(lqInteractive Mode\(rq section of
+\fBgit-add\fR(1)
+to learn how to operate the
+\fB\-\-patch\fR
+mode\&.
+.RE
+.PP
+\-\-ignore\-other\-worktrees
+.RS 4
+\fBgit checkout\fR
+refuses when the wanted ref is already checked out by another worktree\&. This option makes it check the ref out anyway\&. In other words, the ref can be held by more than one worktree\&.
+.RE
+.PP
+\-\-[no\-]recurse\-submodules
+.RS 4
+Using \-\-recurse\-submodules will update the content of all initialized submodules according to the commit recorded in the superproject\&. If local modifications in a submodule would be overwritten the checkout will fail unless
+\fB\-f\fR
+is used\&. If nothing (or \-\-no\-recurse\-submodules) is used, the work trees of submodules will not be updated\&. Just like
+\fBgit-submodule\fR(1), this will detach the submodules HEAD\&.
+.RE
+.PP
+<branch>
+.RS 4
+Branch to checkout; if it refers to a branch (i\&.e\&., a name that, when prepended with "refs/heads/", is a valid ref), then that branch is checked out\&. Otherwise, if it refers to a valid commit, your HEAD becomes "detached" and you are no longer on any branch (see below for details)\&.
+.sp
+You can use the
+\fB"@{\-N}"\fR
+syntax to refer to the N\-th last branch/commit checked out using "git checkout" operation\&. You may also specify
+\fB\-\fR
+which is synonymous to
+\fB"@{\-1}\fR\&.
+.sp
+As a special case, you may use
+\fB"A\&.\&.\&.B"\fR
+as a shortcut for the merge base of
+\fBA\fR
+and
+\fBB\fR
+if there is exactly one merge base\&. You can leave out at most one of
+\fBA\fR
+and
+\fBB\fR, in which case it defaults to
+\fBHEAD\fR\&.
+.RE
+.PP
+<new_branch>
+.RS 4
+Name for the new branch\&.
+.RE
+.PP
+<start_point>
+.RS 4
+The name of a commit at which to start the new branch; see
+\fBgit-branch\fR(1)
+for details\&. Defaults to HEAD\&.
+.RE
+.PP
+<tree\-ish>
+.RS 4
+Tree to checkout from (when paths are given)\&. If not specified, the index will be used\&.
+.RE
+.SH "DETACHED HEAD"
+.sp
+HEAD normally refers to a named branch (e\&.g\&. \fImaster\fR)\&. Meanwhile, each branch refers to a specific commit\&. Let\(cqs look at a repo with three commits, one of them tagged, and with branch \fImaster\fR checked out:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+           HEAD (refers to branch \(aqmaster\(aq)
+            |
+            v
+a\-\-\-b\-\-\-c  branch \(aqmaster\(aq (refers to commit \(aqc\(aq)
+    ^
+    |
+  tag \(aqv2\&.0\(aq (refers to commit \(aqb\(aq)
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+When a commit is created in this state, the branch is updated to refer to the new commit\&. Specifically, \fIgit commit\fR creates a new commit \fId\fR, whose parent is commit \fIc\fR, and then updates branch \fImaster\fR to refer to new commit \fId\fR\&. HEAD still refers to branch \fImaster\fR and so indirectly now refers to commit \fId\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ edit; git add; git commit
+
+               HEAD (refers to branch \(aqmaster\(aq)
+                |
+                v
+a\-\-\-b\-\-\-c\-\-\-d  branch \(aqmaster\(aq (refers to commit \(aqd\(aq)
+    ^
+    |
+  tag \(aqv2\&.0\(aq (refers to commit \(aqb\(aq)
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+It is sometimes useful to be able to checkout a commit that is not at the tip of any named branch, or even to create a new commit that is not referenced by a named branch\&. Let\(cqs look at what happens when we checkout commit \fIb\fR (here we show two ways this may be done):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout v2\&.0  # or
+$ git checkout master^^
+
+   HEAD (refers to commit \(aqb\(aq)
+    |
+    v
+a\-\-\-b\-\-\-c\-\-\-d  branch \(aqmaster\(aq (refers to commit \(aqd\(aq)
+    ^
+    |
+  tag \(aqv2\&.0\(aq (refers to commit \(aqb\(aq)
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Notice that regardless of which checkout command we use, HEAD now refers directly to commit \fIb\fR\&. This is known as being in detached HEAD state\&. It means simply that HEAD refers to a specific commit, as opposed to referring to a named branch\&. Let\(cqs see what happens when we create a commit:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ edit; git add; git commit
+
+     HEAD (refers to commit \(aqe\(aq)
+      |
+      v
+      e
+     /
+a\-\-\-b\-\-\-c\-\-\-d  branch \(aqmaster\(aq (refers to commit \(aqd\(aq)
+    ^
+    |
+  tag \(aqv2\&.0\(aq (refers to commit \(aqb\(aq)
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+There is now a new commit \fIe\fR, but it is referenced only by HEAD\&. We can of course add yet another commit in this state:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ edit; git add; git commit
+
+         HEAD (refers to commit \(aqf\(aq)
+          |
+          v
+      e\-\-\-f
+     /
+a\-\-\-b\-\-\-c\-\-\-d  branch \(aqmaster\(aq (refers to commit \(aqd\(aq)
+    ^
+    |
+  tag \(aqv2\&.0\(aq (refers to commit \(aqb\(aq)
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+In fact, we can perform all the normal Git operations\&. But, let\(cqs look at what happens when we then checkout master:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout master
+
+               HEAD (refers to branch \(aqmaster\(aq)
+      e\-\-\-f     |
+     /          v
+a\-\-\-b\-\-\-c\-\-\-d  branch \(aqmaster\(aq (refers to commit \(aqd\(aq)
+    ^
+    |
+  tag \(aqv2\&.0\(aq (refers to commit \(aqb\(aq)
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+It is important to realize that at this point nothing refers to commit \fIf\fR\&. Eventually commit \fIf\fR (and by extension commit \fIe\fR) will be deleted by the routine Git garbage collection process, unless we create a reference before that happens\&. If we have not yet moved away from commit \fIf\fR, any of these will create a reference to it:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout \-b foo   \fB(1)\fR
+$ git branch foo        \fB(2)\fR
+$ git tag foo           \fB(3)\fR
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+\fB1. \fRcreates a new branch
+\fIfoo\fR, which refers to commit
+\fIf\fR, and then updates HEAD to refer to branch
+\fIfoo\fR\&. In other words, we\(cqll no longer be in detached HEAD state after this command\&.
+.br
+\fB2. \fRsimilarly creates a new branch
+\fIfoo\fR, which refers to commit
+\fIf\fR, but leaves HEAD detached\&.
+.br
+\fB3. \fRcreates a new tag
+\fIfoo\fR, which refers to commit
+\fIf\fR, leaving HEAD detached\&.
+.br
+.sp
+If we have moved away from commit \fIf\fR, then we must first recover its object name (typically by using git reflog), and then we can create a reference to it\&. For example, to see the last two commits to which HEAD referred, we can use either of these commands:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git reflog \-2 HEAD # or
+$ git log \-g \-2 HEAD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "ARGUMENT DISAMBIGUATION"
+.sp
+When there is only one argument given and it is not \fB\-\-\fR (e\&.g\&. "git checkout abc"), and when the argument is both a valid \fB<tree\-ish>\fR (e\&.g\&. a branch "abc" exists) and a valid \fB<pathspec>\fR (e\&.g\&. a file or a directory whose name is "abc" exists), Git would usually ask you to disambiguate\&. Because checking out a branch is so common an operation, however, "git checkout abc" takes "abc" as a \fB<tree\-ish>\fR in such a situation\&. Use \fBgit checkout \-\- <pathspec>\fR if you want to checkout these paths out of the index\&.
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+The following sequence checks out the
+\fBmaster\fR
+branch, reverts the
+\fBMakefile\fR
+to two revisions back, deletes hello\&.c by mistake, and gets it back from the index\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout master             \fB(1)\fR
+$ git checkout master~2 Makefile  \fB(2)\fR
+$ rm \-f hello\&.c
+$ git checkout hello\&.c            \fB(3)\fR
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fB1. \fRswitch branch
+.br
+\fB2. \fRtake a file out of another commit
+.br
+\fB3. \fRrestore hello\&.c from the index
+.sp
+If you want to check out
+\fIall\fR
+C source files out of the index, you can say
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout \-\- \(aq*\&.c\(aq
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Note the quotes around
+\fB*\&.c\fR\&. The file
+\fBhello\&.c\fR
+will also be checked out, even though it is no longer in the working tree, because the file globbing is used to match entries in the index (not in the working tree by the shell)\&.
+.sp
+If you have an unfortunate branch that is named
+\fBhello\&.c\fR, this step would be confused as an instruction to switch to that branch\&. You should instead write:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout \-\- hello\&.c
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.br
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+After working in the wrong branch, switching to the correct branch would be done using:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout mytopic
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+However, your "wrong" branch and correct "mytopic" branch may differ in files that you have modified locally, in which case the above checkout would fail like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout mytopic
+error: You have local changes to \(aqfrotz\(aq; not switching branches\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+You can give the
+\fB\-m\fR
+flag to the command, which would try a three\-way merge:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout \-m mytopic
+Auto\-merging frotz
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+After this three\-way merge, the local modifications are
+\fInot\fR
+registered in your index file, so
+\fBgit diff\fR
+would show you what changes you made since the tip of the new branch\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+When a merge conflict happens during switching branches with the
+\fB\-m\fR
+option, you would see something like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout \-m mytopic
+Auto\-merging frotz
+ERROR: Merge conflict in frotz
+fatal: merge program failed
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+At this point,
+\fBgit diff\fR
+shows the changes cleanly merged as in the previous example, as well as the changes in the conflicted files\&. Edit and resolve the conflict and mark it resolved with
+\fBgit add\fR
+as usual:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ edit frotz
+$ git add frotz
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

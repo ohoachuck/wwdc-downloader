@@ -1,0 +1,76 @@
+'\" t
+.\"     Title: git-remote-fd
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-REMOTE\-FD" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-remote-fd \- Reflect smart transport stream back to caller
+.SH "SYNOPSIS"
+.sp
+"fd::<infd>[,<outfd>][/<anything>]" (as URL)
+.SH "DESCRIPTION"
+.sp
+This helper uses specified file descriptors to connect to a remote Git server\&. This is not meant for end users but for programs and scripts calling git fetch, push or archive\&.
+.sp
+If only <infd> is given, it is assumed to be a bidirectional socket connected to remote Git server (git\-upload\-pack, git\-receive\-pack or git\-upload\-archive)\&. If both <infd> and <outfd> are given, they are assumed to be pipes connected to a remote Git server (<infd> being the inbound pipe and <outfd> being the outbound pipe\&.
+.sp
+It is assumed that any handshaking procedures have already been completed (such as sending service request for git://) before this helper is started\&.
+.sp
+<anything> can be any string\&. It is ignored\&. It is meant for providing information to user in the URL in case that URL is displayed in some context\&.
+.SH "ENVIRONMENT VARIABLES"
+.PP
+GIT_TRANSLOOP_DEBUG
+.RS 4
+If set, prints debugging information about various reads/writes\&.
+.RE
+.SH "EXAMPLES"
+.PP
+\fBgit fetch fd::17 master\fR
+.RS 4
+Fetch master, using file descriptor #17 to communicate with git\-upload\-pack\&.
+.RE
+.PP
+\fBgit fetch fd::17/foo master\fR
+.RS 4
+Same as above\&.
+.RE
+.PP
+\fBgit push fd::7,8 master (as URL)\fR
+.RS 4
+Push master, using file descriptor #7 to read data from git\-receive\-pack and file descriptor #8 to write data to same service\&.
+.RE
+.PP
+\fBgit push fd::7,8/bar master\fR
+.RS 4
+Same as above\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgitremote-helpers\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

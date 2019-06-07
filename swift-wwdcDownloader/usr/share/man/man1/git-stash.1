@@ -1,0 +1,370 @@
+'\" t
+.\"     Title: git-stash
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-STASH" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-stash \- Stash the changes in a dirty working directory away
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit stash\fR list [<options>]
+\fIgit stash\fR show [<stash>]
+\fIgit stash\fR drop [\-q|\-\-quiet] [<stash>]
+\fIgit stash\fR ( pop | apply ) [\-\-index] [\-q|\-\-quiet] [<stash>]
+\fIgit stash\fR branch <branchname> [<stash>]
+\fIgit stash\fR [push [\-p|\-\-patch] [\-k|\-\-[no\-]keep\-index] [\-q|\-\-quiet]
+             [\-u|\-\-include\-untracked] [\-a|\-\-all] [\-m|\-\-message <message>]
+             [\-\-] [<pathspec>\&...]]
+\fIgit stash\fR clear
+\fIgit stash\fR create [<message>]
+\fIgit stash\fR store [\-m|\-\-message <message>] [\-q|\-\-quiet] <commit>
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Use \fBgit stash\fR when you want to record the current state of the working directory and the index, but want to go back to a clean working directory\&. The command saves your local modifications away and reverts the working directory to match the \fBHEAD\fR commit\&.
+.sp
+The modifications stashed away by this command can be listed with \fBgit stash list\fR, inspected with \fBgit stash show\fR, and restored (potentially on top of a different commit) with \fBgit stash apply\fR\&. Calling \fBgit stash\fR without any arguments is equivalent to \fBgit stash push\fR\&. A stash is by default listed as "WIP on \fIbranchname\fR \&...", but you can give a more descriptive message on the command line when you create one\&.
+.sp
+The latest stash you created is stored in \fBrefs/stash\fR; older stashes are found in the reflog of this reference and can be named using the usual reflog syntax (e\&.g\&. \fBstash@{0}\fR is the most recently created stash, \fBstash@{1}\fR is the one before it, \fBstash@{2\&.hours\&.ago}\fR is also possible)\&. Stashes may also be referenced by specifying just the stash index (e\&.g\&. the integer \fBn\fR is equivalent to \fBstash@{n}\fR)\&.
+.SH "OPTIONS"
+.PP
+push [\-p|\-\-patch] [\-k|\-\-[no\-]keep\-index] [\-u|\-\-include\-untracked] [\-a|\-\-all] [\-q|\-\-quiet] [\-m|\-\-message <message>] [\-\-] [<pathspec>\&...]
+.RS 4
+Save your local modifications to a new
+\fIstash entry\fR
+and roll them back to HEAD (in the working tree and in the index)\&. The <message> part is optional and gives the description along with the stashed state\&.
+.sp
+For quickly making a snapshot, you can omit "push"\&. In this mode, non\-option arguments are not allowed to prevent a misspelled subcommand from making an unwanted stash entry\&. The two exceptions to this are
+\fBstash \-p\fR
+which acts as alias for
+\fBstash push \-p\fR
+and pathspecs, which are allowed after a double hyphen
+\fB\-\-\fR
+for disambiguation\&.
+.sp
+When pathspec is given to
+\fIgit stash push\fR, the new stash entry records the modified states only for the files that match the pathspec\&. The index entries and working tree files are then rolled back to the state in HEAD only for these files, too, leaving files that do not match the pathspec intact\&.
+.sp
+If the
+\fB\-\-keep\-index\fR
+option is used, all changes already added to the index are left intact\&.
+.sp
+If the
+\fB\-\-include\-untracked\fR
+option is used, all untracked files are also stashed and then cleaned up with
+\fBgit clean\fR, leaving the working directory in a very clean state\&. If the
+\fB\-\-all\fR
+option is used instead then the ignored files are stashed and cleaned in addition to the untracked files\&.
+.sp
+With
+\fB\-\-patch\fR, you can interactively select hunks from the diff between HEAD and the working tree to be stashed\&. The stash entry is constructed such that its index state is the same as the index state of your repository, and its worktree contains only the changes you selected interactively\&. The selected changes are then rolled back from your worktree\&. See the \(lqInteractive Mode\(rq section of
+\fBgit-add\fR(1)
+to learn how to operate the
+\fB\-\-patch\fR
+mode\&.
+.sp
+The
+\fB\-\-patch\fR
+option implies
+\fB\-\-keep\-index\fR\&. You can use
+\fB\-\-no\-keep\-index\fR
+to override this\&.
+.RE
+.PP
+save [\-p|\-\-patch] [\-k|\-\-[no\-]keep\-index] [\-u|\-\-include\-untracked] [\-a|\-\-all] [\-q|\-\-quiet] [<message>]
+.RS 4
+This option is deprecated in favour of
+\fIgit stash push\fR\&. It differs from "stash push" in that it cannot take pathspecs, and any non\-option arguments form the message\&.
+.RE
+.PP
+list [<options>]
+.RS 4
+List the stash entries that you currently have\&. Each
+\fIstash entry\fR
+is listed with its name (e\&.g\&.
+\fBstash@{0}\fR
+is the latest entry,
+\fBstash@{1}\fR
+is the one before, etc\&.), the name of the branch that was current when the entry was made, and a short description of the commit the entry was based on\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+stash@{0}: WIP on submit: 6ebd0e2\&.\&.\&. Update git\-stash documentation
+stash@{1}: On master: 9cc0589\&.\&.\&. Add git\-stash
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The command takes options applicable to the
+\fIgit log\fR
+command to control what is shown and how\&. See
+\fBgit-log\fR(1)\&.
+.RE
+.PP
+show [<stash>]
+.RS 4
+Show the changes recorded in the stash entry as a diff between the stashed contents and the commit back when the stash entry was first created\&. When no
+\fB<stash>\fR
+is given, it shows the latest one\&. By default, the command shows the diffstat, but it will accept any format known to
+\fIgit diff\fR
+(e\&.g\&.,
+\fBgit stash show \-p stash@{1}\fR
+to view the second most recent entry in patch form)\&. You can use stash\&.showStat and/or stash\&.showPatch config variables to change the default behavior\&.
+.RE
+.PP
+pop [\-\-index] [\-q|\-\-quiet] [<stash>]
+.RS 4
+Remove a single stashed state from the stash list and apply it on top of the current working tree state, i\&.e\&., do the inverse operation of
+\fBgit stash push\fR\&. The working directory must match the index\&.
+.sp
+Applying the state can fail with conflicts; in this case, it is not removed from the stash list\&. You need to resolve the conflicts by hand and call
+\fBgit stash drop\fR
+manually afterwards\&.
+.sp
+If the
+\fB\-\-index\fR
+option is used, then tries to reinstate not only the working tree\(cqs changes, but also the index\(cqs ones\&. However, this can fail, when you have conflicts (which are stored in the index, where you therefore can no longer apply the changes as they were originally)\&.
+.sp
+When no
+\fB<stash>\fR
+is given,
+\fBstash@{0}\fR
+is assumed, otherwise
+\fB<stash>\fR
+must be a reference of the form
+\fBstash@{<revision>}\fR\&.
+.RE
+.PP
+apply [\-\-index] [\-q|\-\-quiet] [<stash>]
+.RS 4
+Like
+\fBpop\fR, but do not remove the state from the stash list\&. Unlike
+\fBpop\fR,
+\fB<stash>\fR
+may be any commit that looks like a commit created by
+\fBstash push\fR
+or
+\fBstash create\fR\&.
+.RE
+.PP
+branch <branchname> [<stash>]
+.RS 4
+Creates and checks out a new branch named
+\fB<branchname>\fR
+starting from the commit at which the
+\fB<stash>\fR
+was originally created, applies the changes recorded in
+\fB<stash>\fR
+to the new working tree and index\&. If that succeeds, and
+\fB<stash>\fR
+is a reference of the form
+\fBstash@{<revision>}\fR, it then drops the
+\fB<stash>\fR\&. When no
+\fB<stash>\fR
+is given, applies the latest one\&.
+.sp
+This is useful if the branch on which you ran
+\fBgit stash push\fR
+has changed enough that
+\fBgit stash apply\fR
+fails due to conflicts\&. Since the stash entry is applied on top of the commit that was HEAD at the time
+\fBgit stash\fR
+was run, it restores the originally stashed state with no conflicts\&.
+.RE
+.PP
+clear
+.RS 4
+Remove all the stash entries\&. Note that those entries will then be subject to pruning, and may be impossible to recover (see
+\fIExamples\fR
+below for a possible strategy)\&.
+.RE
+.PP
+drop [\-q|\-\-quiet] [<stash>]
+.RS 4
+Remove a single stash entry from the list of stash entries\&. When no
+\fB<stash>\fR
+is given, it removes the latest one\&. i\&.e\&.
+\fBstash@{0}\fR, otherwise
+\fB<stash>\fR
+must be a valid stash log reference of the form
+\fBstash@{<revision>}\fR\&.
+.RE
+.PP
+create
+.RS 4
+Create a stash entry (which is a regular commit object) and return its object name, without storing it anywhere in the ref namespace\&. This is intended to be useful for scripts\&. It is probably not the command you want to use; see "push" above\&.
+.RE
+.PP
+store
+.RS 4
+Store a given stash created via
+\fIgit stash create\fR
+(which is a dangling merge commit) in the stash ref, updating the stash reflog\&. This is intended to be useful for scripts\&. It is probably not the command you want to use; see "push" above\&.
+.RE
+.SH "DISCUSSION"
+.sp
+A stash entry is represented as a commit whose tree records the state of the working directory, and its first parent is the commit at \fBHEAD\fR when the entry was created\&. The tree of the second parent records the state of the index when the entry is made, and it is made a child of the \fBHEAD\fR commit\&. The ancestry graph looks like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+       \&.\-\-\-\-W
+      /    /
+\-\-\-\-\-H\-\-\-\-I
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+where \fBH\fR is the \fBHEAD\fR commit, \fBI\fR is a commit that records the state of the index, and \fBW\fR is a commit that records the state of the working tree\&.
+.SH "EXAMPLES"
+.PP
+Pulling into a dirty tree
+.RS 4
+When you are in the middle of something, you learn that there are upstream changes that are possibly relevant to what you are doing\&. When your local changes do not conflict with the changes in the upstream, a simple
+\fBgit pull\fR
+will let you move forward\&.
+.sp
+However, there are cases in which your local changes do conflict with the upstream changes, and
+\fBgit pull\fR
+refuses to overwrite your changes\&. In such a case, you can stash your changes away, perform a pull, and then unstash, like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git pull
+ \&.\&.\&.
+file foobar not up to date, cannot merge\&.
+$ git stash
+$ git pull
+$ git stash pop
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+Interrupted workflow
+.RS 4
+When you are in the middle of something, your boss comes in and demands that you fix something immediately\&. Traditionally, you would make a commit to a temporary branch to store your changes away, and return to your original branch to make the emergency fix, like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# \&.\&.\&. hack hack hack \&.\&.\&.
+$ git checkout \-b my_wip
+$ git commit \-a \-m "WIP"
+$ git checkout master
+$ edit emergency fix
+$ git commit \-a \-m "Fix in a hurry"
+$ git checkout my_wip
+$ git reset \-\-soft HEAD^
+# \&.\&.\&. continue hacking \&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+You can use
+\fIgit stash\fR
+to simplify the above, like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# \&.\&.\&. hack hack hack \&.\&.\&.
+$ git stash
+$ edit emergency fix
+$ git commit \-a \-m "Fix in a hurry"
+$ git stash pop
+# \&.\&.\&. continue hacking \&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+Testing partial commits
+.RS 4
+You can use
+\fBgit stash push \-\-keep\-index\fR
+when you want to make two or more commits out of the changes in the work tree, and you want to test each change before committing:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# \&.\&.\&. hack hack hack \&.\&.\&.
+$ git add \-\-patch foo            # add just first part to the index
+$ git stash push \-\-keep\-index    # save all other changes to the stash
+$ edit/build/test first part
+$ git commit \-m \(aqFirst part\(aq     # commit fully tested change
+$ git stash pop                  # prepare to work on all other changes
+# \&.\&.\&. repeat above five steps until one commit remains \&.\&.\&.
+$ edit/build/test remaining parts
+$ git commit foo \-m \(aqRemaining parts\(aq
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+Recovering stash entries that were cleared/dropped erroneously
+.RS 4
+If you mistakenly drop or clear stash entries, they cannot be recovered through the normal safety mechanisms\&. However, you can try the following incantation to get a list of stash entries that are still in your repository, but not reachable any more:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+git fsck \-\-unreachable |
+grep commit | cut \-d\e  \-f3 |
+xargs git log \-\-merges \-\-no\-walk \-\-grep=WIP
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgit-checkout\fR(1), \fBgit-commit\fR(1), \fBgit-reflog\fR(1), \fBgit-reset\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

@@ -1,0 +1,86 @@
+'\" t
+.\"     Title: git-upload-pack
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-UPLOAD\-PACK" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-upload-pack \- Send objects packed back to git\-fetch\-pack
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit\-upload\-pack\fR [\-\-[no\-]strict] [\-\-timeout=<n>] [\-\-stateless\-rpc]
+                  [\-\-advertise\-refs] <directory>
+DESCRIPTION
+.fi
+.sp
+
+.sp
+.nf
+Invoked by \(aqgit fetch\-pack\(aq, learns what
+objects the other side is missing, and sends them after packing\&.
+
+This command is usually not invoked directly by the end user\&.
+The UI for the protocol is on the \(aqgit fetch\-pack\(aq side, and the
+program pair is meant to be used to pull updates from a remote
+repository\&.  For push operations, see \(aqgit send\-pack\(aq\&.
+
+
+OPTIONS
+.fi
+.sp
+
+.PP
+\-\-[no\-]strict
+.RS 4
+Do not try <directory>/\&.git/ if <directory> is no Git directory\&.
+.RE
+.PP
+\-\-timeout=<n>
+.RS 4
+Interrupt transfer after <n> seconds of inactivity\&.
+.RE
+.PP
+\-\-stateless\-rpc
+.RS 4
+Perform only a single read\-write cycle with stdin and stdout\&. This fits with the HTTP POST request processing model where a program may read the request, write a response, and must exit\&.
+.RE
+.PP
+\-\-advertise\-refs
+.RS 4
+Only the initial ref advertisement is output, and the program exits immediately\&. This fits with the HTTP GET request model, where no request content is received but a response must be produced\&.
+.RE
+.PP
+<directory>
+.RS 4
+The repository to sync from\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBgitnamespaces\fR(7)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

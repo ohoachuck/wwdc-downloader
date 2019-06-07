@@ -1,0 +1,188 @@
+'\" t
+.\"     Title: git-cherry
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-CHERRY" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-cherry \- Find commits yet to be applied to upstream
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit cherry\fR [\-v] [<upstream> [<head> [<limit>]]]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Determine whether there are commits in \fB<head>\&.\&.<upstream>\fR that are equivalent to those in the range \fB<limit>\&.\&.<head>\fR\&.
+.sp
+The equivalence test is based on the diff, after removing whitespace and line numbers\&. git\-cherry therefore detects when commits have been "copied" by means of \fBgit-cherry-pick\fR(1), \fBgit-am\fR(1) or \fBgit-rebase\fR(1)\&.
+.sp
+Outputs the SHA1 of every commit in \fB<limit>\&.\&.<head>\fR, prefixed with \fB\-\fR for commits that have an equivalent in <upstream>, and \fB+\fR for commits that do not\&.
+.SH "OPTIONS"
+.PP
+\-v
+.RS 4
+Show the commit subjects next to the SHA1s\&.
+.RE
+.PP
+<upstream>
+.RS 4
+Upstream branch to search for equivalent commits\&. Defaults to the upstream branch of HEAD\&.
+.RE
+.PP
+<head>
+.RS 4
+Working branch; defaults to HEAD\&.
+.RE
+.PP
+<limit>
+.RS 4
+Do not report commits up to (and including) limit\&.
+.RE
+.SH "EXAMPLES"
+.SS "Patch workflows"
+.sp
+git\-cherry is frequently used in patch\-based workflows (see \fBgitworkflows\fR(7)) to determine if a series of patches has been applied by the upstream maintainer\&. In such a workflow you might create and send a topic branch like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git checkout \-b topic origin/master
+# work and create some commits
+$ git format\-patch origin/master
+$ git send\-email \&.\&.\&. 00*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Later, you can see whether your changes have been applied by saying (still on \fBtopic\fR):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git fetch  # update your notion of origin/master
+$ git cherry \-v
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SS "Concrete example"
+.sp
+In a situation where topic consisted of three commits, and the maintainer applied two of them, the situation might look like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git log \-\-graph \-\-oneline \-\-decorate \-\-boundary origin/master\&.\&.\&.topic
+* 7654321 (origin/master) upstream tip commit
+[\&.\&.\&. snip some other commits \&.\&.\&.]
+* cccc111 cherry\-pick of C
+* aaaa111 cherry\-pick of A
+[\&.\&.\&. snip a lot more that has happened \&.\&.\&.]
+| * cccc000 (topic) commit C
+| * bbbb000 commit B
+| * aaaa000 commit A
+|/
+o 1234567 branch point
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+In such cases, git\-cherry shows a concise summary of what has yet to be applied:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git cherry origin/master topic
+\- cccc000\&.\&.\&. commit C
++ bbbb000\&.\&.\&. commit B
+\- aaaa000\&.\&.\&. commit A
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+Here, we see that the commits A and C (marked with \fB\-\fR) can be dropped from your \fBtopic\fR branch when you rebase it on top of \fBorigin/master\fR, while the commit B (marked with \fB+\fR) still needs to be kept so that it will be sent to be applied to \fBorigin/master\fR\&.
+.SS "Using a limit"
+.sp
+The optional <limit> is useful in cases where your topic is based on other work that is not in upstream\&. Expanding on the previous example, this might look like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git log \-\-graph \-\-oneline \-\-decorate \-\-boundary origin/master\&.\&.\&.topic
+* 7654321 (origin/master) upstream tip commit
+[\&.\&.\&. snip some other commits \&.\&.\&.]
+* cccc111 cherry\-pick of C
+* aaaa111 cherry\-pick of A
+[\&.\&.\&. snip a lot more that has happened \&.\&.\&.]
+| * cccc000 (topic) commit C
+| * bbbb000 commit B
+| * aaaa000 commit A
+| * 0000fff (base) unpublished stuff F
+[\&.\&.\&. snip \&.\&.\&.]
+| * 0000aaa unpublished stuff A
+|/
+o 1234567 merge\-base between upstream and topic
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+By specifying \fBbase\fR as the limit, you can avoid listing commits between \fBbase\fR and \fBtopic\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git cherry origin/master topic base
+\- cccc000\&.\&.\&. commit C
++ bbbb000\&.\&.\&. commit B
+\- aaaa000\&.\&.\&. commit A
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "SEE ALSO"
+.sp
+\fBgit-patch-id\fR(1)
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

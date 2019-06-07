@@ -1,0 +1,263 @@
+'\" t
+.\"     Title: git-help
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/02/2018
+.\"    Manual: Git Manual
+.\"    Source: Git 2.17.0
+.\"  Language: English
+.\"
+.TH "GIT\-HELP" "1" "04/02/2018" "Git 2\&.17\&.0" "Git Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+git-help \- Display help information about Git
+.SH "SYNOPSIS"
+.sp
+.nf
+\fIgit help\fR [\-a|\-\-all] [\-g|\-\-guide]
+           [\-i|\-\-info|\-m|\-\-man|\-w|\-\-web] [COMMAND|GUIDE]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+With no options and no COMMAND or GUIDE given, the synopsis of the \fIgit\fR command and a list of the most commonly used Git commands are printed on the standard output\&.
+.sp
+If the option \fB\-\-all\fR or \fB\-a\fR is given, all available commands are printed on the standard output\&.
+.sp
+If the option \fB\-\-guide\fR or \fB\-g\fR is given, a list of the useful Git guides is also printed on the standard output\&.
+.sp
+If a command, or a guide, is given, a manual page for that command or guide is brought up\&. The \fIman\fR program is used by default for this purpose, but this can be overridden by other options or configuration variables\&.
+.sp
+Note that \fBgit \-\-help \&.\&.\&.\fR is identical to \fBgit help \&.\&.\&.\fR because the former is internally converted into the latter\&.
+.sp
+To display the \fBgit\fR(1) man page, use \fBgit help git\fR\&.
+.sp
+This page can be displayed with \fIgit help help\fR or \fBgit help \-\-help\fR
+.SH "OPTIONS"
+.PP
+\-a, \-\-all
+.RS 4
+Prints all the available commands on the standard output\&. This option overrides any given command or guide name\&.
+.RE
+.PP
+\-g, \-\-guides
+.RS 4
+Prints a list of useful guides on the standard output\&. This option overrides any given command or guide name\&.
+.RE
+.PP
+\-i, \-\-info
+.RS 4
+Display manual page for the command in the
+\fIinfo\fR
+format\&. The
+\fIinfo\fR
+program will be used for that purpose\&.
+.RE
+.PP
+\-m, \-\-man
+.RS 4
+Display manual page for the command in the
+\fIman\fR
+format\&. This option may be used to override a value set in the
+\fBhelp\&.format\fR
+configuration variable\&.
+.sp
+By default the
+\fIman\fR
+program will be used to display the manual page, but the
+\fBman\&.viewer\fR
+configuration variable may be used to choose other display programs (see below)\&.
+.RE
+.PP
+\-w, \-\-web
+.RS 4
+Display manual page for the command in the
+\fIweb\fR
+(HTML) format\&. A web browser will be used for that purpose\&.
+.sp
+The web browser can be specified using the configuration variable
+\fBhelp\&.browser\fR, or
+\fBweb\&.browser\fR
+if the former is not set\&. If none of these config variables is set, the
+\fIgit web\-\-browse\fR
+helper script (called by
+\fIgit help\fR) will pick a suitable default\&. See
+\fBgit-web--browse\fR(1)
+for more information about this\&.
+.RE
+.SH "CONFIGURATION VARIABLES"
+.SS "help\&.format"
+.sp
+If no command\-line option is passed, the \fBhelp\&.format\fR configuration variable will be checked\&. The following values are supported for this variable; they make \fIgit help\fR behave as their corresponding command\- line option:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"man" corresponds to
+\fI\-m|\-\-man\fR,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"info" corresponds to
+\fI\-i|\-\-info\fR,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"web" or "html" correspond to
+\fI\-w|\-\-web\fR\&.
+.RE
+.SS "help\&.browser, web\&.browser and browser\&.<tool>\&.path"
+.sp
+The \fBhelp\&.browser\fR, \fBweb\&.browser\fR and \fBbrowser\&.<tool>\&.path\fR will also be checked if the \fIweb\fR format is chosen (either by command\-line option or configuration variable)\&. See \fI\-w|\-\-web\fR in the OPTIONS section above and \fBgit-web--browse\fR(1)\&.
+.SS "man\&.viewer"
+.sp
+The \fBman\&.viewer\fR configuration variable will be checked if the \fIman\fR format is chosen\&. The following values are currently supported:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"man": use the
+\fIman\fR
+program as usual,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"woman": use
+\fIemacsclient\fR
+to launch the "woman" mode in emacs (this only works starting with emacsclient versions 22),
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"konqueror": use
+\fIkfmclient\fR
+to open the man page in a new konqueror tab (see
+\fINote about konqueror\fR
+below)\&.
+.RE
+.sp
+Values for other tools can be used if there is a corresponding \fBman\&.<tool>\&.cmd\fR configuration entry (see below)\&.
+.sp
+Multiple values may be given to the \fBman\&.viewer\fR configuration variable\&. Their corresponding programs will be tried in the order listed in the configuration file\&.
+.sp
+For example, this configuration:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [man]
+                viewer = konqueror
+                viewer = woman
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+will try to use konqueror first\&. But this may fail (for example, if DISPLAY is not set) and in that case emacs\(aq woman mode will be tried\&.
+.sp
+If everything fails, or if no viewer is configured, the viewer specified in the \fBGIT_MAN_VIEWER\fR environment variable will be tried\&. If that fails too, the \fIman\fR program will be tried anyway\&.
+.SS "man\&.<tool>\&.path"
+.sp
+You can explicitly provide a full path to your preferred man viewer by setting the configuration variable \fBman\&.<tool>\&.path\fR\&. For example, you can configure the absolute path to konqueror by setting \fIman\&.konqueror\&.path\fR\&. Otherwise, \fIgit help\fR assumes the tool is available in PATH\&.
+.SS "man\&.<tool>\&.cmd"
+.sp
+When the man viewer, specified by the \fBman\&.viewer\fR configuration variables, is not among the supported ones, then the corresponding \fBman\&.<tool>\&.cmd\fR configuration variable will be looked up\&. If this variable exists then the specified tool will be treated as a custom command and a shell eval will be used to run the command with the man page passed as arguments\&.
+.SS "Note about konqueror"
+.sp
+When \fIkonqueror\fR is specified in the \fBman\&.viewer\fR configuration variable, we launch \fIkfmclient\fR to try to open the man page on an already opened konqueror in a new tab if possible\&.
+.sp
+For consistency, we also try such a trick if \fIman\&.konqueror\&.path\fR is set to something like \fIA_PATH_TO/konqueror\fR\&. That means we will try to launch \fIA_PATH_TO/kfmclient\fR instead\&.
+.sp
+If you really want to use \fIkonqueror\fR, then you can use something like the following:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [man]
+                viewer = konq
+
+        [man "konq"]
+                cmd = A_PATH_TO/konqueror
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SS "Note about git config \-\-global"
+.sp
+Note that all these configuration variables should probably be set using the \fB\-\-global\fR flag, for example like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ git config \-\-global help\&.format web
+$ git config \-\-global web\&.browser firefox
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.sp
+as they are probably more user specific than repository specific\&. See \fBgit-config\fR(1) for more information about this\&.
+.SH "GIT"
+.sp
+Part of the \fBgit\fR(1) suite

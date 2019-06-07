@@ -1,0 +1,90 @@
+.\" Copyright (c) 2005 Apple Computer, Inc. All Rights Reserved.
+.Dd September 27, 2005 
+.Dt GETFILEINFO 1
+.Os "Mac OS X"
+.Sh NAME
+.Nm /usr/bin/GetFileInfo
+.Nd get attributes of files and directories (DEPRECATED)
+.Sh SYNOPSIS
+.Nm
+.Op Fl P a[<attribute-letter>] | c | d | m | t
+file ...
+.Sh DESCRIPTION
+Tools supporting Carbon development, including
+.Nm ,
+were deprecated with Xcode 6.
+.Pp
+.Nm
+is a tool to get the file attributes.
+.Pp
+With no flags, GetFileInfo retrieves all information about the file.  If exactly one option is provided, GetFileInfo retrieves and displays just that information; supplying more than one is an error.
+.Pp
+Flags:
+.Bl -tag -width "-P"
+.It Fl P
+Acts on a symlink file instead of the file the symlink resolves to.
+.El
+.Bl -tag -width "-a attributes"
+.It Fl a[<attribute-letter>]
+Gets a file's attribute bits where
+.Ar <attribute-letter> 
+is one of the following: 
+.Bl -tag -width -indent
+.It a 
+Alias file
+.It b 
+Has bundle
+.It c 
+Custom icon (allowed on folders)
+.It d 
+Located on the desktop (allowed on folders)
+.It e 
+Extension is hidden (allowed on folders)
+.It i
+Inited - Finder is aware of this file and has given it a location in a window. (allowed on folders)
+.It l 
+Locked
+.It m 
+Shared (can run multiple times)
+.It n
+File has no INIT resource
+.It s 
+System file (name locked)
+.It t 
+"Stationery Pad" file
+.It v 
+Invisible (allowed on folders)
+.It z 
+Busy (allowed on folders)
+.El
+.Pp
+The value of a single attribute is printed as 0 for off or false, 1 for on or true.  If no attribute letter is specified, the value of all attributes is returned, with lowercase letters representing off or false, and uppercase representing on or true.
+.It Fl t 
+Gets the file type, a string of exactly four characters.  If the type is not set, these will display as an empty pair of quotation marks.  Directories do not have types, so the type will be skipped if all information is being displayed; specifying -t for a directory is an error.
+.It Fl c
+Gets the file's creator, a string of four characters enclosed in quotation marks.  If the creator is not set, these will display as an empty pair of quotation marks.  Directories do not have creators, so the creator will be skipped if all information is being displayed; specifying -c for a directory is an error.
+.It Fl d 
+Gets the creation date, a string of the form "mm/dd/yyyy hh:mm:ss" in 24-hour clock format.
+.It Fl m 
+Gets the modification date, a string of the form "mm/dd/yyyy hh:mm:ss" in 24-hour clock format.
+.El
+.Sh RETURN VALUES
+.Bl -tag -compact -width -indent
+.It Nm 0 
+success
+.It Nm 1
+syntax error
+.It Nm 2 
+any other error
+.El
+.Sh SEE ALSO
+.Xr SetFile 1
+.Sh EXAMPLES 
+The following command line gets and prints the creator for the 
+"Late Breaking News" file:
+.Pp
+/Developer/Tools/GetFileInfo -c "Late Breaking News"
+.Pp
+This command line prints the modification date of "myFile":
+.Pp
+/Developer/Tools/GetFileInfo -m myFile
