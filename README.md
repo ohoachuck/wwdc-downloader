@@ -3,23 +3,25 @@ WWDC Video sessions bulk download (wwdcDownloader.swift)
 
 #### Important notice
 
-**Bad news**: current version does not work with latest Swift livraries. There is no bug fix yet unltill hopfully I can catch some people at WWDC lab on friday afternoon (a b-it short)
+**Bad news**: current version does not work with latest Swift livraries. There is no bug fix yet unltill hopfully I can catch some people at WWDC lab on friday afternoon (a bit short)
 
 **Goog news**: there is a workaround. But you don't gona like it:
-Option 1 (more secure):
-* Download (Install Command Lines Tools for Xcode 10.1 (macOS 10.13))[https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_macOS_10.13_for_Xcode_10.1/Command_Line_Tools_macOS_10.13_for_Xcode_10.1.dmg]
-* run: `pkgutil --expand-full /Volumes/Command\ Line\ Developer\ Tools/Command\ Line\ Tools\ \(macOS\ High\ Sierra\ version\ 10.13\).pkg /tmp/testpkg-full` + This will install the previous Swift Library on /tmp/testpkg-full
+
+**Option 1 (more secure):**
+* Download [Install Command Lines Tools for Xcode 10.1 (macOS 10.13)](https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_macOS_10.13_for_Xcode_10.1/Command_Line_Tools_macOS_10.13_for_Xcode_10.1.dmg)
+* Double-click on downloaded dmg
+* run: `pkgutil --expand-full /Volumes/Command\ Line\ Developer\ Tools/Command\ Line\ Tools\ \(macOS\ High\ Sierra\ version\ 10.13\).pkg /tmp/testpkg-full`
+
+This will install the previous Swift Library on /tmp/testpkg-full
 * run wwdcDownloader with this old swift runtine: `/tmp/testpkg-full/CLTools_Executables.pkg/Payload/Library/Developer/CommandLineTools/usr/bin/swift <your-path-to-script/wwdcDownloader.swift> --hd720 --pdf --sample` (or whatever are your command options.).
 
-Option 2 (quickest):
-* use the lib provided with GitHub (I'll create a separate repo as I just realised it's 900 Mb ;( ).)
+**Option 2 (quickest):**
+* No option 2 ;) that would be to provide the Swift package in GitHub, I realised it doesn't make much sens.
 
+** **
 
 **wwdcDownloader.swift** script is a Swift script that should **work out of the box** without any needs of extra software or development package (at least ususaly :) ).
 
-
-
-** **
 
 Its main purpose is to let you bulk download all WWDC session **videos**, **pdf resources** and **sample codes** in one shot.
 
