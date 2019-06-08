@@ -1,22 +1,12 @@
 WWDC Video sessions bulk download (wwdcDownloader.swift)
 ================
+I went to the WWDC Debug lab and found out that current script does not work with shebang (#!/usr/bin/swift) due to a bug in Swift 5.1 (I will file a radar).
 
-#### Important notice
+So the workaround (waiting for Swift 5.1 bug fix) is to compile the script before runing it (no crash with swiftc).
 
-**Bad news**: current version does not work with latest Swift livraries. There is no bug fix yet unltill hopfully I can catch some people at WWDC lab on friday afternoon (a bit short)
+Synthax: `wwdcDownloader.sh <same params as describes bellow>`
 
-**Goog news**: there is a workaround. But you don't gona like it:
-
-**Option 1 (more secure):**
-* Download [Install Command Lines Tools for Xcode 10.1 (macOS 10.13)](https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_macOS_10.13_for_Xcode_10.1/Command_Line_Tools_macOS_10.13_for_Xcode_10.1.dmg)
-* Double-click on downloaded dmg
-* run: `pkgutil --expand-full /Volumes/Command\ Line\ Developer\ Tools/Command\ Line\ Tools\ \(macOS\ High\ Sierra\ version\ 10.13\).pkg /tmp/testpkg-full`
-
-This will install the previous Swift Library on /tmp/testpkg-full
-* run wwdcDownloader with this old swift runtime: `/tmp/testpkg-full/CLTools_Executables.pkg/Payload/Library/Developer/CommandLineTools/usr/bin/swift <your-path-to-script/wwdcDownloader.swift> --hd720 --pdf --sample` (or whatever are your command options.).
-
-**Option 2 (quickest):**
-* No option 2 ;) that would be to provide the Swift package in GitHub, I realised it doesn't make much sens.
+example: `wwdcDownloader.sh --hd720 --pdf --sample` (will download all files in the same folder)
 
 ** **
 
