@@ -881,6 +881,14 @@ while let argument = iterator.next() {
         break
 
     default:
+	if gettingSessions {
+            if Int(argument) != nil {
+                sessionsSet.insert(argument)
+                break
+            } else {
+                gettingSessions = false
+            }
+        }
         print("\(argument) is not a \(#file) command.\n")
         showHelpAndExit()
     }
