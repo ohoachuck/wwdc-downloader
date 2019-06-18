@@ -365,14 +365,17 @@ class wwdcVideosController {
     }
 
     class func getSampleCodeURL(fromHTML: String) -> [URL] {
-        let pat = "\\b.*(href=\".*/content/samplecode/.*\")\\b"
+        let pat = "\\b.*(class=\"download\"\\>\\<a href=\".*\")\\b"
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var sampleURLPaths : [String] = []
         for match in matches {
             let range = match.range(at:1)
             var path = String(fromHTML[fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..< fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)])
-            path = path.replacingOccurrences(of: "href=\"", with: "https://developer.apple.com")
+            path = path.replacingOccurrences(of: "class=\"download\"><a href=\"", with: "")
+            if (!path.contains("https://developer.apple.com")) {
+                path = "https://developer.apple.com" + path
+            }
             path = path.replacingOccurrences(of: "\" target=\"", with: "/")
 
             sampleURLPaths.append(path)
@@ -380,18 +383,27 @@ class wwdcVideosController {
 
         var sampleArchiveUrls : [URL] = []
         for urlPath in sampleURLPaths {
-            let jsonText = getStringContent(fromURL: urlPath + "book.json")
-            if let data = jsonText.data(using: .utf8) {
-                let object = try? JSONSerialization.jsonObject(with: data, options: .allowFragments)
-                if let dictionary = object as? NSDictionary {
-                    if let relativePath = dictionary["sampleCode"] as? String, let url = URL(string: urlPath + relativePath) {
-                        sampleArchiveUrls.append(url)
-                    }
-                }
+            if let url = getDownloadPageURL(urlPath: urlPath) {
+                sampleArchiveUrls.append(url)
             }
         }
 
         return sampleArchiveUrls
+    }
+
+    class func getDownloadPageURL(urlPath: String) -> URL? {
+        let archivePat = "href=\"https.*?\\.zip"
+        let archiveRegex = try! NSRegularExpression(pattern: archivePat, options: [])
+        let downloadPage = getStringContent(fromURL: urlPath)
+        let matches = archiveRegex.matches(in: downloadPage, options: [], range: NSRange(location: 0, length: downloadPage.count))
+        for match in matches {
+            let range = match.range(at:0)
+            var path = String(downloadPage[downloadPage.index(downloadPage.startIndex, offsetBy: range.location) ..< downloadPage.index(downloadPage.startIndex, offsetBy: range.location+range.length)])
+            path = path.replacingOccurrences(of: "href=\"", with: "")
+            return URL(string: path)
+        }
+
+        return nil
     }
 
     class func getStringContent(fromURL: String) -> (String) {
