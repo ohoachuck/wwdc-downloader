@@ -41,11 +41,6 @@ enum VideoDownloadMode {
 struct DownloadSlice {
     let source: URL
     let destination: URL
-
-    // init(source: URL, destination: URL) {
-    //     self.source = source
-    //     self.destination = destination
-    // }
 }
     
 //http://stackoverflow.com/a/30743763
@@ -284,12 +279,29 @@ class wwdcVideosController {
         return videoUrl
     }
 
-    class func getPlaylistPath(fromPlaylist playlist: String, format: String) -> String {
-        let pat = "\\s*#EXT-X-STREAM-INF:.*RESOLUTION=\\d*x" + format + ",.*\\s*(.*)\\s*"
-        let regex = try! NSRegularExpression(pattern: pat, options: [])
+    class func getPlaylistPath(fromPlaylist playlist: String, format: String) -> String? {
+        let patterns = [
+            "\\s*#EXT-X-STREAM-INF:.*RESOLUTION=\\d*x" + format + ",.*\\s*(.*)\\s*",
+
+            // Fallback to find highest resolution video
+            "\\s*#EXT-X-STREAM-INF:.*RESOLUTION=1920x\\d*,.*\\s*(.*)\\s*"
+        ]
+
+        var path: String?
+        for pattern in patterns {
+            if let p = matchPlaylistPath(playlist: playlist, format: format, pattern: pattern) {
+                path = p
+                break
+            }
+        }
+        return path
+    }
+
+    class func matchPlaylistPath(playlist: String, format: String, pattern: String) -> String? {
+        let regex = try! NSRegularExpression(pattern: pattern, options: [])
         let matches = regex.matches(in: playlist, options: [], range: NSRange(location: 0, length: playlist.count))
 
-        var path = ""
+        var path: String?
         if !matches.isEmpty {
             let range = matches[0].range(at:1)
             path = String(playlist[playlist.index(playlist.startIndex, offsetBy: range.location) ..< playlist.index(playlist.startIndex, offsetBy: range.location + range.length)])
@@ -496,14 +508,21 @@ class wwdcVideosController {
             return
         }
 
-        let playlistPath = getPlaylistPath(fromPlaylist: playlist, format: format)
+        guard let playlistPath = getPlaylistPath(fromPlaylist: playlist, format: format) else {
+            print("Something went wrong getting download path")
+            return
+        }
 
         let slicesURL: URL?
         let sliceRelativePath: String
         if playlistPath.hasPrefix("https://") {
             slicesURL = URL(string: playlistPath)
             sliceRelativePath = String(playlistPath.dropFirst(8))
-            
+
+        } else if playlistPath.hasPrefix("http://") {
+            slicesURL = URL(string: playlistPath)
+            sliceRelativePath = String(playlistPath.dropFirst(7))
+        
         } else {
             slicesURL = playlistUrl.deletingLastPathComponent().appendingPathComponent(playlistPath)
             sliceRelativePath = playlistPath
@@ -519,7 +538,7 @@ class wwdcVideosController {
 
         let tempUrl = fileUrl.appendingPathExtension("part")
 
-        guard let newPlaylist = cleanupPlaylist(playlist: playlist, format: format, at: tempUrl),
+        guard let newPlaylist = cleanupPlaylist(playlist: playlist, format: format),
               let videoUrl = getVideoUrl(playlist: newPlaylist, baseUrl:  tempUrl) else {
             print("Something went wrong getting video path")
 
@@ -588,14 +607,16 @@ class wwdcVideosController {
     }
 
     class func getVideoUrl(playlist: String, baseUrl: URL) -> URL? {
-        let regex = try! NSRegularExpression(pattern: "^[^#].*/", options: [.anchorsMatchLines])
+        let regex = try! NSRegularExpression(pattern: "^#EXT-X-STREAM-INF:.*\n*(.*)/", options: [.anchorsMatchLines])
         let matches = regex.matches(in: playlist, options: [], range: NSRange(location: 0, length: playlist.count))
-        var videoPath = ""
+
         if !matches.isEmpty {
-            let range = matches[0].range(at: 0)
-            videoPath = String(playlist[playlist.index(playlist.startIndex, offsetBy: range.location) ..<
+            let range = matches[0].range(at: 1)
+            let path = String(playlist[playlist.index(playlist.startIndex, offsetBy: range.location) ..<
                                          playlist.index(playlist.startIndex, offsetBy: range.location+range.length)])
 
+            let videoPath = dropProtocol(fromUrlString: path)
+            
             return baseUrl.appendingPathComponent(videoPath)
         }
 
@@ -617,49 +638,54 @@ class wwdcVideosController {
         return nil
     }
     
-    class func cleanupPlaylist(playlist: String, format: String, at tempUrl: URL) -> String? {
-        var newPlaylist = ""
+    class func cleanupPlaylist(playlist: String, format: String) -> String? {
+        let patterns = [
+            "\n#EXT-X-STREAM-INF:.*RESOLUTION=\\d*x" + format + ",.*\n*.*\n#EXT-X-I-FRAME-STREAM-INF:[^\n]*",
+            "\n#EXT-X-STREAM-INF:.*RESOLUTION=\\d*x" + format + ",[^\n]*\n[^\n]*\n",
 
-        let headerRegex = try! NSRegularExpression(pattern: "^#.*\n.*\n.*\n\n", options: [.anchorsMatchLines])
-        let headerMatches = headerRegex.matches(in: playlist, options: [], range: NSRange(location: 0, length: playlist.count))
-        if headerMatches.isEmpty {
-            return nil
-        }
+            // Fallback to find highest resolution video
+            "\n#EXT-X-STREAM-INF:.*RESOLUTION=1920x\\d*,.*\n.*\n#EXT-X-I-FRAME-STREAM-INF:[^\n]*",
+            "\n#EXT-X-STREAM-INF:.*RESOLUTION=1920x\\d*,[^\n]*\n[^\n]*\n"
+        ]
 
-        let headerRange = headerMatches[0].range(at: 0)
-        newPlaylist = String(playlist[playlist.index(playlist.startIndex, offsetBy: headerRange.location) ..<
-                                      playlist.index(playlist.startIndex, offsetBy: headerRange.location+headerRange.length)])
+        var newPlaylist: String?
 
-        let programRegex = try! NSRegularExpression(pattern: "\n#EXT-X-STREAM-INF:.*RESOLUTION=\\d*x" + format + ",.*\n.*\n#EXT-X-I-FRAME-STREAM-INF.*\n\n", options: [])
-        let programMatches = programRegex.matches(in: playlist, options: .withTransparentBounds, range: NSRange(location: 0, length: playlist.count))
-        if programMatches.isEmpty {
-            return nil
-        }
-
-        let programRange = programMatches[0].range(at: 0)
-        var program = String(playlist[playlist.index(playlist.startIndex, offsetBy: programRange.location) ..<
-                                      playlist.index(playlist.startIndex, offsetBy: programRange.location+programRange.length)])
-
-        let httpRegex = try! NSRegularExpression(pattern: "https://", options: [])
-        let httpMatches = httpRegex.matches(in: program, options: [], range: NSRange(location: 0, length: program.count))
-        if !httpMatches.isEmpty {
-            program = httpRegex.stringByReplacingMatches(in: program, options: .withTransparentBounds, range: NSMakeRange(0, program.count), withTemplate: "")
-        }
-
-        newPlaylist += program
-
-        let audioRegex = try! NSRegularExpression(pattern: "\n#EXT-X-MEDIA:TYPE=AUDIO,.*\n", options: [])
-        let audioMatches = audioRegex.matches(in: playlist, options: .withTransparentBounds, range: NSRange(location: 0, length: playlist.count))
-        if !audioMatches.isEmpty {
-            let audioRange = audioMatches[0].range(at: 0)
-            newPlaylist += String(playlist[playlist.index(playlist.startIndex, offsetBy: audioRange.location) ..<
-                                           playlist.index(playlist.startIndex, offsetBy: audioRange.location+audioRange.length)])
+        for pattern in patterns {
+            if let pl = keepOnly(playlist: playlist, withPattern: pattern) {
+                newPlaylist = pl
+                break
+            }
         }
 
         return newPlaylist
     }
-}
 
+    class func keepOnly(playlist: String, withPattern pattern: String) -> String? {
+        let regex = try! NSRegularExpression(pattern: pattern, options: [])
+        let matches = regex.matches(in: playlist, options: [.withTransparentBounds], range: NSRange(location: 0, length: playlist.count))
+
+        var videoStreamLine: String?
+        if !matches.isEmpty {
+            let range = matches[0].range
+
+            let streamLine = String(playlist[playlist.index(playlist.startIndex, offsetBy: range.location) ..<
+                                               playlist.index(playlist.startIndex, offsetBy: range.location + range.length)])
+
+            videoStreamLine = dropProtocol(fromUrlString: streamLine)
+        }
+
+        if let videoStreamLine = videoStreamLine {
+            let pattern = "#EXT-X-STREAM-INF:.*[^\n]*"
+            let regex = try! NSRegularExpression(pattern: pattern, options: .dotMatchesLineSeparators)
+            let newPlaylist = regex.stringByReplacingMatches(in: playlist, options: [], range: NSRange(location: 0, length: playlist.count), withTemplate: videoStreamLine)
+
+            return newPlaylist
+        }
+
+        return nil
+    }
+
+}
 
 func ffmpeg(command: String, filelist: [String], tsBaseUrl: URL, playlistFileUrl: URL, tempDirBaseUrl: URL, outFile filename: String) {
     let fileManager = FileManager.default
@@ -752,6 +778,14 @@ func commandPath(command: String) -> String? {
     }
 
     return String(data: data, encoding: .utf8)
+}
+
+func dropProtocol(fromUrlString urlString: String) -> String {
+    let pattern = "https*://"
+    let regex = try! NSRegularExpression(pattern: pattern, options: .dotMatchesLineSeparators)
+    let path = regex.stringByReplacingMatches(in: urlString, options: [], range: NSRange(location: 0, length: urlString.count), withTemplate: "")
+
+    return path
 }
 
 func showHelpAndExit() {
