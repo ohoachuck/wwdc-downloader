@@ -1,3 +1,5 @@
+/!\ Whatch out: current script does not work if you try to download directly to an external Hard Drvie !
+
 WWDC Video sessions bulk download (wwdcDownloader.swift)
 ================
 I went to the WWDC Debug lab and found out that current script does not work with shebang (#!/usr/bin/swift) due to a bug in Swift 5.1 (I will file a radar).
