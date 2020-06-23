@@ -331,7 +331,7 @@ class wwdcVideosController {
         var videoUrl: URL? = nil
         if !matches.isEmpty {
             let range = matches[0].range(at: 1)
-            let videoUrlString = String(fromHTML[fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..< fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)])
+            let videoUrlString = String(fromHTML[Range(range, in: fromHTML)!])
             videoUrl = URL(string: videoUrlString)
         }
 
@@ -447,7 +447,8 @@ class wwdcVideosController {
                 let range = match.range(at:n)
                 switch n {
                 case 1:
-                    sessionsListArray.append(String(fromHTML[fromHTML.index(fromHTML.startIndex, offsetBy: range.location) ..< fromHTML.index(fromHTML.startIndex, offsetBy: range.location+range.length)]))
+                    let session = String(fromHTML[Range(range, in: fromHTML)!])
+                    sessionsListArray.append(session)
                 default: break
                 }
             }
@@ -751,7 +752,7 @@ func showHelpAndExit() {
 /* Managing options */
 let wwdcIndexUrlBaseString = "https://developer.apple.com/videos/"
 let wwdcSessionUrlBaseString = "https://developer.apple.com/videos/play/"
-var videoType = "wwdc2019"
+var videoType = "wwdc2020"
 var format = VideoQuality.HD1080
 var videoDownloadMode = VideoDownloadMode.stream
 
