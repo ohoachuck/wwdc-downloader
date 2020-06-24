@@ -86,4 +86,4 @@ Examples:
 * ffmpeg (for 1080 HD videos).
 
 ### Related content
-[WWDC](https://github.com/insidegui/WWDC) native app done by [Guilherme Rambo](https://github.com/insidegui). You definitely want to check he's [website](https://wwdc.io).
+[WWDC](https://github.com/insidegui/WWDC) native app done by [Guilherme Rambo](https://github.com/insidegui). You definitely want to check his [website](https://wwdc.io).
