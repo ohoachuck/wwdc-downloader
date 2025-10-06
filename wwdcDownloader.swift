@@ -25,7 +25,7 @@
 
 import Cocoa
 import Foundation
-import SystemConfiguration
+import Network
 
 enum VideoQuality: String {
     case HD1080 = "1080"
@@ -46,46 +46,41 @@ struct DownloadSlice {
 //http://stackoverflow.com/a/30743763
 
 class Reachability {
+    private static let statusQueue = DispatchQueue(label: "ReachabilityStatusQueue")
+    private static let monitorQueue = DispatchQueue(label: "ReachabilityMonitorQueue")
+    private static var monitor: NWPathMonitor?
+    private static var currentStatus: NWPath.Status = .requiresConnection
+
+    private static func startMonitorIfNeeded() {
+        guard monitor == nil else { return }
+
+        let newMonitor = NWPathMonitor()
+        newMonitor.pathUpdateHandler = { path in
+            statusQueue.async {
+                currentStatus = path.status
+            }
+        }
+
+        monitor = newMonitor
+        newMonitor.start(queue: monitorQueue)
+
+        monitorQueue.async {
+            let pathStatus = newMonitor.currentPath.status
+            statusQueue.async {
+                currentStatus = pathStatus
+            }
+        }
+    }
+
     class func isConnectedToNetwork() -> Bool {
-        guard let flags = getFlags() else { return false }
-        let isReachable = flags.contains(.reachable)
-        let needsConnection = flags.contains(.connectionRequired)
-        return (isReachable && !needsConnection)
-    }
+        startMonitorIfNeeded()
 
-    class func getFlags() -> SCNetworkReachabilityFlags? {
-        guard let reachability = ipv4Reachability() ?? ipv6Reachability() else {
-            return nil
+        var statusSnapshot: NWPath.Status = .requiresConnection
+        statusQueue.sync {
+            statusSnapshot = currentStatus
         }
-        var flags = SCNetworkReachabilityFlags()
-        if !SCNetworkReachabilityGetFlags(reachability, &flags) {
-            return nil
-        }
-        return flags
-    }
 
-    class func ipv6Reachability() -> SCNetworkReachability? {
-        var zeroAddress = sockaddr_in6()
-        zeroAddress.sin6_len = UInt8(MemoryLayout<sockaddr_in>.size)
-        zeroAddress.sin6_family = sa_family_t(AF_INET6)
-
-        return withUnsafePointer(to: &zeroAddress, {
-            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                SCNetworkReachabilityCreateWithAddress(nil, $0)
-            }
-        })
-    }
-
-    class func ipv4Reachability() -> SCNetworkReachability? {
-        var zeroAddress = sockaddr_in()
-        zeroAddress.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
-        zeroAddress.sin_family = sa_family_t(AF_INET)
-
-        return withUnsafePointer(to: &zeroAddress, {
-            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                SCNetworkReachabilityCreateWithAddress(nil, $0)
-            }
-        })
+        return statusSnapshot == .satisfied
     }
 }
 
@@ -418,6 +413,16 @@ class wwdcVideosController {
         return nil
     }
 
+    class func stringFromURL(_ url: URL) -> String? {
+        guard let data = try? Data(contentsOf: url) else {
+            return nil
+        }
+
+        return String(data: data, encoding: .utf8) ??
+            String(data: data, encoding: .ascii) ??
+            String(data: data, encoding: .isoLatin1)
+    }
+
     class func getStringContent(fromURL: String) -> (String) {
         /* Configure session, choose between:
          * defaultSessionConfiguration
@@ -442,19 +447,31 @@ class wwdcVideosController {
         /* Start a new Task */
         let semaphore = DispatchSemaphore.init(value: 0)
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                /* Success */
-                // let statusCode = (response as! NSHTTPURLResponse).statusCode
-                // print("URL Session Task Succeeded: HTTP \(statusCode)")
-                result = String.init(data: data!, encoding:
-                    .ascii)!
-            }
-            else {
-                /* Failure */
-                print("URL Session Task Failed: %@", error!.localizedDescription);
+            defer { semaphore.signal() }
+
+            if let error = error {
+                print("URL Session Task Failed: \(error.localizedDescription)")
+                return
             }
 
-            semaphore.signal()
+            if let httpResponse = response as? HTTPURLResponse,
+               !(200...299).contains(httpResponse.statusCode) {
+                print("URL Session Task Failed: HTTP \(httpResponse.statusCode) for \(fromURL)")
+                return
+            }
+
+            guard let data = data, !data.isEmpty else {
+                print("URL Session Task Failed: empty response for \(fromURL)")
+                return
+            }
+
+            if let decoded = String(data: data, encoding: .utf8) ??
+                String(data: data, encoding: .ascii) ??
+                String(data: data, encoding: .isoLatin1) {
+                result = decoded
+            } else {
+                print("URL Session Task Failed: undecodable body for \(fromURL)")
+            }
         })
         task.resume()
         semaphore.wait()
@@ -503,7 +520,7 @@ class wwdcVideosController {
 
         print("[Session \(session)] Getting \(filename):")
 
-        guard let playlist = try? String(contentsOf: playlistUrl) else {
+        guard let playlist = stringFromURL(playlistUrl) else {
             print("\(filename): could not download playlist!")
             return
         }
@@ -528,7 +545,7 @@ class wwdcVideosController {
             sliceRelativePath = playlistPath
         }
 
-        guard let slicePlaylistURL = slicesURL, let slicePlaylist = try? String(contentsOf: slicePlaylistURL) else {
+        guard let slicePlaylistURL = slicesURL, let slicePlaylist = stringFromURL(slicePlaylistURL) else {
             print("\(filename): Could not retrieve stream playlist!")
             return
         }
@@ -570,7 +587,7 @@ class wwdcVideosController {
 
             let audioSlicesUrl = playlistUrl.deletingLastPathComponent().appendingPathComponent(audioPlaylistPath)
             let audioBaseUrl = audioSlicesUrl.deletingLastPathComponent()
-            guard let audioSlicePlaylist = try? String(contentsOf: audioSlicesUrl) else {
+            guard let audioSlicePlaylist = stringFromURL(audioSlicesUrl) else {
                 print("\(filename): Could not retrieve audio stream playlist!")
                 return
             }
@@ -797,7 +814,7 @@ func showHelpAndExit() {
 /* Managing options */
 let wwdcIndexUrlBaseString = "https://developer.apple.com/videos/"
 let wwdcSessionUrlBaseString = "https://developer.apple.com/videos/play/"
-var videoType = "wwdc2019"
+var videoType = "wwdc2025"
 var format = VideoQuality.HD1080
 var videoDownloadMode = VideoDownloadMode.stream
 
@@ -807,6 +824,8 @@ var shouldDownloadSampleCodeResource = false
 
 var shouldDownloadTechTalksVideoResource = false
 var shouldDownloadWWDCVideoResource = false
+
+let supportedWWDCYears: Set<Int> = [2025, 2024, 2023]
 
 var gettingSessions = false
 var sessionsSet:Set<String> = Set()
@@ -896,22 +915,13 @@ while let argument = iterator.next() {
 
         if let yearString = iterator.next() {
             if let year = Int(yearString) {
-                let today = Date()
-                let currentYear = Calendar.current.component(.year, from: today)
-                let currentMonth = Calendar.current.component(.month, from: today)
-
-                if year > currentYear || (year == currentYear && currentMonth < 6) {
-                    print("WWDC \(yearString) videos are not yet available")
-                    showHelpAndExit()
-
-                } else if year < 2012 {
-                    print("WWDC videos earlier than 2012 were not made available for downloads")
-                    showHelpAndExit()
-
-                    
-                } else {
+                if supportedWWDCYears.contains(year) {
                     videoType = "wwdc\(yearString)"
                     shouldDownloadWWDCVideoResource = true
+                } else {
+                    let supportedYearsText = supportedWWDCYears.sorted(by: >).map(String.init).joined(separator: ", ")
+                    print("WWDC \(yearString) is not supported. Supported years: \(supportedYearsText)")
+                    showHelpAndExit()
                 }
 
             } else {

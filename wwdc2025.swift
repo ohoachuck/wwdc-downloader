@@ -1,18 +1,18 @@
-#!/usr/bin/swift -swift-version 4
+#!/usr/bin/swift
 
 /*
-	Author: Olivier HO-A-CHUCK
-	Date: June 17th 2017
+	Author: Olivier HO-A-CHUCK (community update for 2025)
+	Date: June 10th 2024
 	About this script:
- WWDC 2017 is ending and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
- I Still need to get my video doggy bag to fly back home. And Moscone alsways provide with great bandwidth.
- So as I had never really started to code in Swift I decided to start here (I know it's late - but I'm no more a developer) and copy/pasted some internet peace
- of codes to get a Swift Script that bulk download all sessions.
- You may have understand my usual disclamer : "I'm a Marketing guy" so don't blame my messy (Swift beginer) code.
+ WWDC 2025 is wrapping up and even if there are some great tools out there (https://github.com/insidegui/WWDC) that allow to see and download video sessions,
+ I still need to get my video doggy bag to fly back home. And Apple Park always provides great bandwidth.
+ So as I had never really started to code in Swift I decided to start here (I know it's late - but I'm no more a developer) and copy/pasted some internet piece
+ of code to get a Swift script that bulk downloads all sessions.
+ You may have understood my usual disclaimer: "I'm a Marketing guy" so don't blame my messy (Swift beginner) code.
  Please feel free to make this script better if you feel like so. There is plenty to do.
 	
 	License: Do what you want with it. But notice that this script comes with no warranty and will not be maintained.
-	Usage: wwdc2017.swift
+	Usage: wwdc2025.swift
 	Default behavior: without any options the script will download all available hd videos. And will re-take non fully downloaded ones.
 	Please use --help option to get currently available options
  
@@ -23,7 +23,7 @@
 
 import Cocoa
 import Foundation
-import SystemConfiguration
+import Network
 
 enum VideoQuality: String {
     case HD = "hd"
@@ -33,64 +33,41 @@ enum VideoQuality: String {
 //http://stackoverflow.com/a/30743763
 
 class Reachability {
+    private static let statusQueue = DispatchQueue(label: "ReachabilityStatusQueue")
+    private static let monitorQueue = DispatchQueue(label: "ReachabilityMonitorQueue")
+    private static var monitor: NWPathMonitor?
+    private static var currentStatus: NWPath.Status = .requiresConnection
+
+    private static func startMonitorIfNeeded() {
+        guard monitor == nil else { return }
+
+        let newMonitor = NWPathMonitor()
+        newMonitor.pathUpdateHandler = { path in
+            statusQueue.async {
+                currentStatus = path.status
+            }
+        }
+
+        monitor = newMonitor
+        newMonitor.start(queue: monitorQueue)
+
+        monitorQueue.async {
+            let pathStatus = newMonitor.currentPath.status
+            statusQueue.async {
+                currentStatus = pathStatus
+            }
+        }
+    }
+
     class func isConnectedToNetwork() -> Bool {
-        guard let flags = getFlags() else { return false }
-        let isReachable = flags.contains(.reachable)
-        let needsConnection = flags.contains(.connectionRequired)
-        return (isReachable && !needsConnection)
-    }
-    
-    class func getFlags() -> SCNetworkReachabilityFlags? {
-        guard let reachability = ipv4Reachability() ?? ipv6Reachability() else {
-            return nil
-        }
-        var flags = SCNetworkReachabilityFlags()
-        if !SCNetworkReachabilityGetFlags(reachability, &flags) {
-            return nil
-        }
-        return flags
-    }
-    
-    class func ipv6Reachability() -> SCNetworkReachability? {
-        var zeroAddress = sockaddr_in6()
-        zeroAddress.sin6_len = UInt8(MemoryLayout<sockaddr_in>.size)
-        zeroAddress.sin6_family = sa_family_t(AF_INET6)
-        
-        return withUnsafePointer(to: &zeroAddress, {
-            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                SCNetworkReachabilityCreateWithAddress(nil, $0)
-            }
-        })
-    }
-    
-    class func ipv4Reachability() -> SCNetworkReachability? {
-        var zeroAddress = sockaddr_in()
-        zeroAddress.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
-        zeroAddress.sin_family = sa_family_t(AF_INET)
-        
-        return withUnsafePointer(to: &zeroAddress, {
-            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                SCNetworkReachabilityCreateWithAddress(nil, $0)
-            }
-        })
-    }
-}
+        startMonitorIfNeeded()
 
-extension Notification.Name {
-    static let flagsChanged = Notification.Name("FlagsChanged")
-}
+        var statusSnapshot: NWPath.Status = .requiresConnection
+        statusQueue.sync {
+            statusSnapshot = currentStatus
+        }
 
-struct Network {
-    static var reachability: Reachability?
-    enum Status: String, CustomStringConvertible {
-        case unreachable, wifi, wwan
-        var description: String { return rawValue }
-    }
-    enum Error: Swift.Error {
-        case failedToSetCallout
-        case failedToSetDispatchQueue
-        case failedToCreateWith(String)
-        case failedToInitializeWith(sockaddr_in)
+        return statusSnapshot == .satisfied
     }
 }
 
@@ -332,8 +309,8 @@ class wwdcVideosController {
         let session = URLSession(configuration: URLSessionConfiguration.default, delegate: nil, delegateQueue: nil)
         
         /* Create the Request:
-         My API (2) (GET https://developer.apple.com/videos/play/wwdc2017/201/)
-         https://developer.apple.com/videos/play/wwdc2017/102/
+         My API (2) (GET https://developer.apple.com/videos/play/wwdc2025/201/)
+         https://developer.apple.com/videos/play/wwdc2025/102/
          */
         var result = ""
         guard let URL = URL(string: fromURL) else {return result}
@@ -343,19 +320,29 @@ class wwdcVideosController {
         /* Start a new Task */
         let semaphore = DispatchSemaphore.init(value: 0)
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                /* Success */
-                // let statusCode = (response as! NSHTTPURLResponse).statusCode
-                // print("URL Session Task Succeeded: HTTP \(statusCode)")
-                result = String.init(data: data!, encoding:
-                    .ascii)!
+            defer { semaphore.signal() }
+
+            if let error = error {
+                print("URL Session Task Failed: \(error.localizedDescription)")
+                return
             }
-            else {
-                /* Failure */
-                print("URL Session Task Failed: %@", error!.localizedDescription);
+
+            if let httpResponse = response as? HTTPURLResponse,
+               !(200...299).contains(httpResponse.statusCode) {
+                print("URL Session Task Failed: HTTP \(httpResponse.statusCode) for \(fromURL)")
+                return
             }
-            
-            semaphore.signal()
+
+            guard let data = data, !data.isEmpty else {
+                print("URL Session Task Failed: empty response for \(fromURL)")
+                return
+            }
+
+            if let decoded = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .ascii) {
+                result = decoded
+            } else {
+                print("URL Session Task Failed: undecodable body for \(fromURL)")
+            }
         })
         task.resume()
         semaphore.wait()
@@ -363,7 +350,7 @@ class wwdcVideosController {
     }
     
     class func getSessionsList(fromHTML: String) -> Array<String> {
-        let pat = "\"\\/videos\\/play\\/wwdc2017\\/([0-9]*)\\/\""
+        let pat = "\"\\/videos\\/play\\/wwdc2025\\/([0-9]*)\\/\""
         let regex = try! NSRegularExpression(pattern: pat, options: [])
         let matches = regex.matches(in: fromHTML, options: [], range: NSRange(location: 0, length: fromHTML.count))
         var sessionsListArray = [String]()
@@ -407,8 +394,8 @@ class wwdcVideosController {
 }
 
 func showHelpAndExit() {
-    print("wwdc2017 - a simple swifty video sessions bulk download.\nJust Get'em all!")
-    print("usage: wwdc2017.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--sample] [--sample-only] [--list-only] [--help]\n")
+    print("wwdc2025 - a simple swifty video sessions bulk download.\nJust Get'em all!")
+    print("usage: wwdc2025.swift [--hd] [--sd] [--pdf] [--pdf-only] [--sessions] [--sample] [--sample-only] [--list-only] [--help]\n")
     exit(0)
 }
 
@@ -502,7 +489,7 @@ func sortFunc(value1: String, value2: String) -> Bool {
 }
 
 /* Retreiving list of all video session */
-let htmlSessionListString = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/wwdc2017/")
+let htmlSessionListString = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/wwdc2025/")
 print("Let me ask Apple about currently available sessions. This can take some time (15 to 20 sec.) ...")
 var sessionsListArray = wwdcVideosController.getSessionsList(fromHTML: htmlSessionListString)
 //get unique values
@@ -517,7 +504,7 @@ if sessionsSet.count != 0 {
 sessionsListArray.sort(by: sortFunc)
 
 for (_, value) in sessionsListArray.enumerated() {
-    let htmlText = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/play/wwdc2017/" + value + "/")
+    let htmlText = wwdcVideosController.getStringContent(fromURL: "https://developer.apple.com/videos/play/wwdc2025/" + value + "/")
 
     let title = wwdcVideosController.getTitle(fromHTML: htmlText)
     print("\n[Session \(value)] : \(title)")
