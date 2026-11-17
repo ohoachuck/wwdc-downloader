@@ -1,0 +1,362 @@
+<title>Honeycomb Sheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one-screen app. Honeycomb stage on top, draggable bottom sheet below;
+   the honeycomb scales to whatever height the sheet leaves free. */
+:root {
+  color-scheme: dark;
+  --bg: #000;
+  --hex: #232325;
+  --hex-sel-a: #55555a;
+  --hex-sel-b: #303033;
+  --ico: #3a3a3d;
+  --ico-sel: #77777c;
+  --sheet: #1b1b1d;
+  --ctl: #2e2e31;
+  --ctl-edge: #4a4a4f;
+  --line: #2a2a2d;
+  --fg: #f3f3f5;
+  --muted: #8e8e93;
+  --accent: #ff8a2a;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+
+.app {
+  position: relative; height: 100%; max-width: 520px; margin: 0 auto;
+  overflow: hidden; background: var(--bg);
+  -webkit-user-select: none; user-select: none;
+}
+
+/* ---------- honeycomb ---------- */
+.stage { position: absolute; inset: 0 0 auto 0; overflow: hidden; }
+.comb {
+  --k: 0;
+  position: absolute; left: 50%; top: 50%;
+  width: 412px; height: 757px;
+  transform-origin: center; will-change: transform;
+}
+.hex {
+  position: absolute; width: 132px; height: 152px; padding: 0; border: 0;
+  background: none; cursor: pointer;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.hex svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: calc(1 - var(--k)); }
+.hex polygon { fill: var(--hex); stroke: var(--hex); stroke-width: 18; stroke-linejoin: round; }
+.hex[aria-pressed="true"] polygon { fill: url(#selGrad); stroke: url(#selGrad); }
+.hex:focus-visible { outline: none; }
+.hex:focus-visible .ico { box-shadow: 0 0 0 3px var(--accent); }
+.ico {
+  position: relative; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--ico); display: grid; place-items: center;
+  font-size: 24px; line-height: 1;
+  transform: translateY(calc(var(--k) * 14px)) scale(calc(1 + var(--k) * 0.7));
+}
+.hex[aria-pressed="true"] .ico { background: var(--ico-sel); }
+.lbl {
+  position: relative; font-size: 15px; letter-spacing: 0.01em; white-space: nowrap;
+  opacity: max(0, calc(1 - var(--k) * 1.8));
+}
+
+/* ---------- sheet ---------- */
+.sheet {
+  position: absolute; inset: auto 0 0 0;
+  background: var(--sheet); border-radius: 18px 18px 0 0;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+}
+.pad {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.grip { flex: none; touch-action: none; cursor: grab; padding-block: 0 10px; }
+.grip.dragging { cursor: grabbing; }
+.handle {
+  display: block; width: 100%; height: 22px; padding: 0; border: 0; background: none; cursor: inherit;
+}
+.handle::before {
+  content: ""; display: block; width: 40px; height: 5px; margin: 8px auto 0;
+  border-radius: 3px; background: var(--ctl-edge);
+}
+.handle:focus-visible { outline: none; }
+.handle:focus-visible::before { background: var(--accent); }
+.head { display: flex; align-items: center; gap: 12px; }
+.head h1 {
+  flex: 1; min-width: 0; margin: 0; text-align: center;
+  font-size: 22px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.round {
+  flex: none; width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid var(--ctl-edge); background: var(--ctl);
+  display: grid; place-items: center; cursor: pointer;
+}
+.round svg { width: 22px; height: 22px; stroke: var(--fg); stroke-width: 2.2; fill: none; stroke-linecap: round; }
+.round:focus-visible, .action:focus-visible, .search:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.round[aria-pressed="true"] { background: var(--ctl-edge); }
+
+.body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.tools { flex: none; display: flex; flex-direction: column; gap: 10px; padding-block: 6px 10px; }
+.search {
+  width: 100%; height: 40px; border-radius: 12px; border: 1px solid var(--ctl-edge);
+  background: var(--bg); padding: 0 14px; font-size: 16px; -webkit-user-select: text; user-select: text;
+}
+.action {
+  align-self: center; width: min(100%, 290px); height: 46px; border-radius: 23px;
+  border: 1px solid var(--ctl-edge); background: linear-gradient(var(--ctl-edge), var(--ctl));
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 19px; cursor: pointer;
+}
+.action svg { width: 24px; height: 24px; stroke: var(--fg); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.list {
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  margin: 0; list-style: none;
+  padding-top: 0; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.list li {
+  display: flex; align-items: center; gap: 12px; min-height: 64px;
+  border-bottom: 1px solid var(--line); font-size: 18px;
+}
+.list li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list li svg { flex: none; width: 22px; height: 22px; stroke: var(--accent); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.list .empty { color: var(--muted); border: 0; justify-content: center; font-size: 15px; }
+</style>
+
+<div class="app" id="app">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="selGrad" x1="0" y1="0" x2="0.6" y2="1">
+        <stop offset="0" stop-color="#55555a"></stop>
+        <stop offset="1" stop-color="#303033"></stop>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="stage" id="stage">
+    <nav class="comb" id="comb" aria-label="Sections"></nav>
+  </div>
+
+  <section class="sheet" id="sheet" aria-labelledby="title">
+    <div class="grip pad" id="grip">
+      <button class="handle" id="handle" role="slider" aria-label="Sheet height"
+              aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></button>
+      <div class="head">
+        <button class="round" id="closeBtn" aria-label="Collapse sheet">
+          <svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+        </button>
+        <h1 id="title">Chat History</h1>
+        <button class="round" id="searchBtn" aria-label="Search" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5L21 21"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div class="body">
+      <div class="tools pad">
+        <input class="search" id="search" type="search" placeholder="Search" aria-label="Search this list" hidden>
+        <button class="action" id="action">
+          <svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10l-4 3.5v-3.5H4zM12 8v6M9 11h6"></path></svg>
+          <span id="actionLbl">create new chat</span>
+        </button>
+      </div>
+      <ul class="list pad" id="list"></ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const SECTIONS = [
+    { name: "About Me", icon: "ℹ️", noun: "note", items: ["Short bio", "Languages I speak", "Where I live", "Work history", "Education"] },
+    { name: "Calendar", icon: "🗓️", noun: "event", items: ["Dentist, Thursday 9:30", "Team offsite", "Flight to Lisbon", "Anna's birthday", "Car service"] },
+    { name: "Contacts", icon: "📇", noun: "contact", items: ["Family", "Close friends", "Colleagues", "Doctors", "Neighbours", "Landlord"] },
+    { name: "Chat History", icon: "💬", noun: "chat", items: Array.from({ length: 14 }, (_, i) => "chat item #" + i) },
+    { name: "Goods", icon: "📦", noun: "item", items: ["Laptop", "Road bike", "Camera", "Espresso machine", "Standing desk"] },
+    { name: "Media Files", icon: "🗂️", noun: "file", items: ["Passport scan.pdf", "Lease 2026.pdf", "Holiday photos", "Voice memos", "Invoices"] },
+    { name: "Identifiers", icon: "🪪", noun: "identifier", items: ["Passport", "Driving licence", "Health insurance", "Tax number", "Loyalty cards"] },
+    { name: "Memories", icon: "🧠", noun: "memory", items: ["Prefers window seats", "Allergic to peanuts", "Learning Portuguese", "Runs on Sunday mornings"] },
+    { name: "My Profile", icon: "👤", noun: "field", items: ["Name", "Email", "Phone", "Photo", "Time zone"] },
+    { name: "Preferences", icon: "🎯", noun: "preference", items: ["Tone of replies", "Units and currency", "Diet", "Travel style", "Notification hours"] },
+    { name: "Subscriptions", icon: "♾️", noun: "subscription", items: ["Music streaming", "Cloud storage", "Gym", "Newspaper", "Phone plan"] },
+    { name: "settings", icon: "⚙️", noun: "setting", items: ["Appearance", "Privacy", "Data export", "Connected apps", "About"] },
+    { name: "Top of Mind", icon: "💡", noun: "thought", items: ["Renew passport before March", "Plan summer trip", "Call the plumber", "Gift idea for Sam"] },
+  ];
+  const ROWS = [2, 3, 2, 3, 2, 1];
+  const NW = 412, NH = 757, HW = 132, COL = 140, ROW = 121;
+  const POLY = "66,9 124,42.5 124,109.5 66,143 8,109.5 8,42.5";
+  const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"></path></svg>';
+
+  const $ = id => document.getElementById(id);
+  const app = $("app"), stage = $("stage"), comb = $("comb"), sheet = $("sheet"), grip = $("grip"),
+        handle = $("handle"), list = $("list"), search = $("search"), searchBtn = $("searchBtn");
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let selected = 3, h = 0, appH = 0, appW = 0, minH = 0, raf = 0;
+
+  /* ----- build honeycomb ----- */
+  let n = 0;
+  ROWS.forEach((count, r) => {
+    const x0 = (NW - (count * HW + (count - 1) * (COL - HW))) / 2;
+    for (let c = 0; c < count; c++, n++) {
+      const s = SECTIONS[n], b = document.createElement("button");
+      b.className = "hex";
+      b.style.left = x0 + c * COL + "px";
+      b.style.top = r * ROW + "px";
+      b.dataset.i = n;
+      b.setAttribute("aria-label", s.name);
+      b.innerHTML = '<svg viewBox="0 0 132 152" aria-hidden="true"><polygon points="' + POLY + '"></polygon></svg>' +
+        '<span class="ico" aria-hidden="true">' + s.icon + '</span><span class="lbl" aria-hidden="true">' + s.name + "</span>";
+      comb.appendChild(b);
+    }
+  });
+  comb.addEventListener("click", e => {
+    const b = e.target.closest(".hex");
+    if (b) select(+b.dataset.i);
+  });
+
+  function select(i) {
+    selected = i;
+    comb.querySelectorAll(".hex").forEach((b, j) => b.setAttribute("aria-pressed", j === i));
+    $("title").textContent = SECTIONS[i].name;
+    $("actionLbl").textContent = "create new " + SECTIONS[i].noun;
+    search.value = "";
+    list.scrollTop = 0;
+    renderList();
+  }
+  function renderList() {
+    const q = search.value.trim().toLowerCase();
+    const rows = SECTIONS[selected].items.filter(t => t.toLowerCase().includes(q));
+    list.innerHTML = "";
+    if (!rows.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = q ? "Nothing matches “" + search.value.trim() + "”" : "Nothing here yet";
+      list.appendChild(li);
+      return;
+    }
+    rows.forEach(t => {
+      const li = document.createElement("li"), sp = document.createElement("span");
+      sp.textContent = t;
+      li.appendChild(sp);
+      li.insertAdjacentHTML("beforeend", ARROW);
+      list.appendChild(li);
+    });
+  }
+  $("action").addEventListener("click", () => {
+    const s = SECTIONS[selected];
+    s.items.unshift("new " + s.noun + " #" + s.items.length);
+    search.value = "";
+    renderList();
+    list.scrollTop = 0;
+  });
+  search.addEventListener("input", renderList);
+  searchBtn.addEventListener("click", () => {
+    const show = search.hidden;
+    search.hidden = !show;
+    searchBtn.setAttribute("aria-pressed", show);
+    if (show) {
+      if (h < snaps()[1]) animateTo(snaps()[1]);
+      search.focus({ preventScroll: true });
+    } else { search.value = ""; renderList(); }
+  });
+  $("closeBtn").addEventListener("click", () => animateTo(minH));
+
+  /* ----- geometry ----- */
+  const snaps = () => [minH, Math.max(minH, Math.round(appH * 0.66)), appH];
+
+  function measure() {
+    const ratio = appH ? (h - minH) / Math.max(1, appH - minH) : 0;
+    appH = app.clientHeight; appW = app.clientWidth;
+    minH = Math.min(appH, Math.max(190, Math.round(appH * 0.22)));
+    h = minH + clamp(ratio) * (appH - minH);
+    render();
+  }
+
+  function render() {
+    h = clamp(h, minH, appH);
+    const stageH = appH - h, availH = stageH - 28, availW = appW - 32;
+    const fit = ah => Math.max(0, Math.min(availW / NW, ah / NH));
+    const s = fit(availH), sMax = fit(appH - minH - 28);
+    const t = sMax > 0 ? s / sMax : 0;              // 1 = sheet collapsed, 0 = sheet at top
+    const k = clamp((0.8 - t) / 0.35);             // hexagons melt into icon dots
+    const op = clamp((availH - 10) / 70);          // dots vanish as the sheet reaches the top
+    sheet.style.height = h + "px";
+    sheet.style.borderRadius = stageH < 18 ? Math.max(0, stageH) + "px " + Math.max(0, stageH) + "px 0 0" : "";
+    stage.style.height = stageH + "px";
+    comb.style.transform = "translate(-50%,-50%) scale(" + s.toFixed(4) + ")";
+    comb.style.setProperty("--k", k.toFixed(3));
+    comb.style.opacity = op.toFixed(3);
+    comb.style.visibility = op > 0 ? "" : "hidden";
+    handle.setAttribute("aria-valuenow", Math.round(100 * (h - minH) / Math.max(1, appH - minH)));
+  }
+
+  function animateTo(target) {
+    cancelAnimationFrame(raf);
+    if (reduced) { h = target; render(); return; }
+    const from = h, t0 = performance.now(), dur = 380;
+    const step = now => {
+      const p = clamp((now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      h = from + (target - from) * e;
+      render();
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+
+  /* ----- drag ----- */
+  let drag = null;
+  grip.addEventListener("pointerdown", e => {
+    if (e.target.closest(".round")) return;
+    cancelAnimationFrame(raf);
+    drag = { y: e.clientY, h, lastY: e.clientY, lastT: e.timeStamp, v: 0, moved: false };
+    grip.setPointerCapture(e.pointerId);
+    grip.classList.add("dragging");
+  });
+  grip.addEventListener("pointermove", e => {
+    if (!drag) return;
+    const dt = e.timeStamp - drag.lastT;
+    if (dt > 0) drag.v = 0.6 * drag.v + 0.4 * ((drag.lastY - e.clientY) / dt);
+    drag.lastY = e.clientY; drag.lastT = e.timeStamp;
+    if (Math.abs(e.clientY - drag.y) > 3) drag.moved = true;
+    h = drag.h + (drag.y - e.clientY);
+    render();
+  });
+  const end = e => {
+    if (!drag) return;
+    const d = drag; drag = null;
+    grip.classList.remove("dragging");
+    if (!d.moved) return;
+    const pts = snaps();
+    let target;
+    if (Math.abs(d.v) > 0.45 && e.timeStamp - d.lastT < 80) {
+      target = d.v > 0 ? pts.find(p => p > h + 1) ?? appH : [...pts].reverse().find(p => p < h - 1) ?? minH;
+    } else {
+      target = pts.reduce((a, b) => Math.abs(b - h) < Math.abs(a - h) ? b : a);
+    }
+    animateTo(target);
+  };
+  grip.addEventListener("pointerup", end);
+  grip.addEventListener("pointercancel", end);
+
+  handle.addEventListener("keydown", e => {
+    const step = { ArrowUp: 40, ArrowDown: -40, PageUp: 160, PageDown: -160 }[e.key];
+    if (step) { h += step; render(); }
+    else if (e.key === "Home") animateTo(minH);
+    else if (e.key === "End") animateTo(appH);
+    else return;
+    e.preventDefault();
+  });
+  handle.addEventListener("click", e => {
+    if (e.detail === 0) return;                    // keyboard activation: arrows resize instead
+    const pts = snaps();
+    animateTo(pts.find(p => p > h + 1) ?? minH);   // tap the handle to step through the stops
+  });
+
+  new ResizeObserver(measure).observe(app);
+  select(selected);
+  measure();
+})();
+</script>
