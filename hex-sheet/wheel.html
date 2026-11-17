@@ -1,0 +1,419 @@
+<title>Honeycomb Wheel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one-screen app, built for one thumb. Content panel on top, a wheel of
+   hexagons under the thumb at the bottom. Spinning the wheel changes the section;
+   pulling the panel's bottom edge down shrinks the wheel to an arc of dots, then to nothing. */
+:root {
+  color-scheme: dark;
+  --bg: #000;
+  --hex: #232325;
+  --ico: #3a3a3d;
+  --ico-sel: #77777c;
+  --sheet: #1b1b1d;
+  --ctl: #2e2e31;
+  --ctl-edge: #4a4a4f;
+  --line: #2a2a2d;
+  --fg: #f3f3f5;
+  --muted: #8e8e93;
+  --accent: #ff8a2a;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+
+.app {
+  position: relative; height: 100%; max-width: 520px; margin: 0 auto;
+  overflow: hidden; background: var(--bg);
+  -webkit-user-select: none; user-select: none;
+}
+.pad {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- content panel (top) ---------- */
+.panel {
+  position: absolute; inset: 0 0 auto 0; z-index: 2;
+  background: var(--sheet); border-radius: 0 0 22px 22px;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+.head { flex: none; display: flex; align-items: center; gap: 12px; padding-block: 14px 6px; }
+.head .names { flex: 1; min-width: 0; }
+.count {
+  font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.head h1 {
+  margin: 2px 0 0; font-size: 28px; font-weight: 600; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.head h1.swap { animation: swap 0.22s ease-out; }
+@keyframes swap { from { opacity: 0; transform: translateY(6px); } }
+.round {
+  flex: none; width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid var(--ctl-edge); background: var(--ctl);
+  display: grid; place-items: center; cursor: pointer;
+}
+.round svg { width: 22px; height: 22px; stroke: var(--fg); stroke-width: 2.2; fill: none; stroke-linecap: round; }
+.round[aria-pressed="true"] { background: var(--ctl-edge); }
+.round:focus-visible, .action:focus-visible, .search:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.body { flex: 1; min-height: 0; display: flex; flex-direction: column; touch-action: pan-y; }
+.tools { flex: none; display: flex; flex-direction: column; gap: 10px; padding-block: 6px 8px; }
+.search {
+  width: 100%; height: 40px; border-radius: 12px; border: 1px solid var(--ctl-edge);
+  background: var(--bg); padding: 0 14px; font-size: 16px; -webkit-user-select: text; user-select: text;
+}
+.action {
+  width: 100%; height: 44px; border-radius: 22px;
+  border: 1px solid var(--ctl-edge); background: linear-gradient(var(--ctl-edge), var(--ctl));
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 17px; cursor: pointer;
+}
+.action svg { width: 22px; height: 22px; stroke: var(--fg); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0; list-style: none; padding-block: 0; }
+.list li {
+  display: flex; align-items: center; gap: 12px; min-height: 58px;
+  border-bottom: 1px solid var(--line); font-size: 17px;
+}
+.list li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list li svg { flex: none; width: 22px; height: 22px; stroke: var(--accent); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.list .empty { color: var(--muted); border: 0; justify-content: center; font-size: 15px; }
+
+.grip { flex: none; touch-action: none; cursor: grab; }
+.grip.dragging { cursor: grabbing; }
+.handle { display: block; width: 100%; height: 30px; padding: 0; border: 0; background: none; cursor: inherit; }
+.handle::before {
+  content: ""; display: block; width: 44px; height: 5px; margin: 0 auto;
+  border-radius: 3px; background: var(--ctl-edge);
+}
+.handle:focus-visible { outline: none; }
+.handle:focus-visible::before { background: var(--accent); }
+
+/* ---------- wheel (bottom) ---------- */
+.stage {
+  position: absolute; inset: auto 0 0 0; overflow: hidden;
+  touch-action: none; cursor: grab;
+}
+.stage.dragging { cursor: grabbing; }
+.wheel {
+  --k: 0;
+  position: absolute; left: 50%; top: 0; width: 0; height: 0;
+  transform-origin: 0 0; will-change: transform;
+}
+.hex {
+  position: absolute; left: -52px; top: 34px; width: 104px; height: 120px; padding: 0; border: 0;
+  background: none; cursor: pointer; will-change: transform;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+.hex svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: calc(1 - var(--k)); }
+.hex polygon { fill: var(--hex); stroke: var(--hex); stroke-width: 18; stroke-linejoin: round; }
+.hex[aria-pressed="true"] polygon { fill: url(#selGrad); stroke: url(#selGrad); }
+.hex:focus-visible { outline: none; }
+.hex:focus-visible .ico { box-shadow: 0 0 0 3px var(--accent); }
+.ico {
+  position: relative; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--ico); display: grid; place-items: center; font-size: 21px; line-height: 1;
+  transform: translateY(calc(var(--k) * 11px)) scale(calc(1 + var(--k) * 0.8));
+}
+.hex[aria-pressed="true"] .ico { background: var(--ico-sel); }
+.lbl {
+  position: relative; font-size: 12.5px; letter-spacing: 0.01em; white-space: nowrap;
+  opacity: max(0, calc(1 - var(--k) * 1.8));
+}
+</style>
+
+<div class="app" id="app">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="selGrad" x1="0" y1="0" x2="0.6" y2="1">
+        <stop offset="0" stop-color="#5c5c62"></stop>
+        <stop offset="1" stop-color="#303033"></stop>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <section class="panel" id="panel" aria-labelledby="title">
+    <div class="head pad" id="head">
+      <div class="names">
+        <div class="count" id="count">4 / 13</div>
+        <h1 id="title">Chat History</h1>
+      </div>
+      <button class="round" id="searchBtn" aria-label="Search" aria-pressed="false">
+        <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5L21 21"></path></svg>
+      </button>
+    </div>
+    <div class="body" id="body">
+      <div class="tools pad">
+        <input class="search" id="search" type="search" placeholder="Search" aria-label="Search this list" hidden>
+        <button class="action" id="action">
+          <svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10l-4 3.5v-3.5H4zM12 8v6M9 11h6"></path></svg>
+          <span id="actionLbl">create new chat</span>
+        </button>
+      </div>
+      <ul class="list pad" id="list"></ul>
+    </div>
+    <div class="grip" id="grip">
+      <button class="handle" id="handle" role="slider" aria-label="Panel height"
+              aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></button>
+    </div>
+  </section>
+
+  <div class="stage" id="stage">
+    <nav class="wheel" id="wheel" aria-label="Sections"></nav>
+  </div>
+</div>
+
+<script>
+(() => {
+  const SECTIONS = [
+    { name: "About Me", icon: "ℹ️", noun: "note", items: ["Short bio", "Languages I speak", "Where I live", "Work history", "Education"] },
+    { name: "Calendar", icon: "🗓️", noun: "event", items: ["Dentist, Thursday 9:30", "Team offsite", "Flight to Lisbon", "Anna's birthday", "Car service"] },
+    { name: "Contacts", icon: "📇", noun: "contact", items: ["Family", "Close friends", "Colleagues", "Doctors", "Neighbours", "Landlord"] },
+    { name: "Chat History", icon: "💬", noun: "chat", items: Array.from({ length: 14 }, (_, i) => "chat item #" + i) },
+    { name: "Goods", icon: "📦", noun: "item", items: ["Laptop", "Road bike", "Camera", "Espresso machine", "Standing desk"] },
+    { name: "Media Files", icon: "🗂️", noun: "file", items: ["Passport scan.pdf", "Lease 2026.pdf", "Holiday photos", "Voice memos", "Invoices"] },
+    { name: "Identifiers", icon: "🪪", noun: "identifier", items: ["Passport", "Driving licence", "Health insurance", "Tax number", "Loyalty cards"] },
+    { name: "Memories", icon: "🧠", noun: "memory", items: ["Prefers window seats", "Allergic to peanuts", "Learning Portuguese", "Runs on Sunday mornings"] },
+    { name: "My Profile", icon: "👤", noun: "field", items: ["Name", "Email", "Phone", "Photo", "Time zone"] },
+    { name: "Preferences", icon: "🎯", noun: "preference", items: ["Tone of replies", "Units and currency", "Diet", "Travel style", "Notification hours"] },
+    { name: "Subscriptions", icon: "♾️", noun: "subscription", items: ["Music streaming", "Cloud storage", "Gym", "Newspaper", "Phone plan"] },
+    { name: "settings", icon: "⚙️", noun: "setting", items: ["Appearance", "Privacy", "Data export", "Connected apps", "About"] },
+    { name: "Top of Mind", icon: "💡", noun: "thought", items: ["Renew passport before March", "Plan summer trip", "Call the plumber", "Gift idea for Sam"] },
+  ];
+  const N = SECTIONS.length, STEP = 2 * Math.PI / N, R = 250, DOTS = 96;
+  const POLY = "66,9 124,42.5 124,109.5 66,143 8,109.5 8,42.5";
+  const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"></path></svg>';
+
+  const $ = id => document.getElementById(id);
+  const app = $("app"), panel = $("panel"), stage = $("stage"), wheel = $("wheel"), grip = $("grip"),
+        handle = $("handle"), list = $("list"), search = $("search"), searchBtn = $("searchBtn"), title = $("title");
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const mod = i => ((i % N) + N) % N;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let rot = 3, selected = -1;          // rot: which item sits at the top of the wheel (float)
+  let H = 0, W = 0, stMax = 300, st = -1, scale = 1;   // st: height left to the wheel
+  let rafRot = 0, rafSt = 0;
+
+  /* ----- build wheel ----- */
+  const hexes = SECTIONS.map((s, i) => {
+    const b = document.createElement("button");
+    b.className = "hex";
+    b.dataset.i = i;
+    b.setAttribute("aria-label", s.name);
+    b.innerHTML = '<svg viewBox="0 0 132 152" aria-hidden="true"><polygon points="' + POLY + '"></polygon></svg>' +
+      '<span class="ico" aria-hidden="true">' + s.icon + '</span><span class="lbl" aria-hidden="true">' + s.name + "</span>";
+    b.addEventListener("click", e => { if (e.detail === 0) spinTo(nearest(i)); });   // keyboard activation
+    b.addEventListener("focus", () => { if (b.matches(":focus-visible")) spinTo(nearest(i)); });
+    wheel.appendChild(b);
+    return b;
+  });
+  const nearest = i => rot + (((i - rot) % N + N + N / 2) % N) - N / 2;   // same item, shortest way round
+
+  function renderWheel() {
+    hexes.forEach((b, i) => {
+      const d = (((i - rot) % N + N + N / 2) % N) - N / 2, a = d * STEP;
+      if (Math.abs(a) > 1.9 || Math.abs(R * Math.sin(a)) - 62 > W / 2) { b.style.visibility = "hidden"; return; }
+      const sc = 1 + 0.2 * Math.max(0, 1 - Math.abs(d));
+      b.style.visibility = "";
+      b.style.zIndex = 20 - Math.round(Math.abs(d) * 2);
+      b.style.transform = "translate(" + (R * Math.sin(a)).toFixed(1) + "px," + (R * (1 - Math.cos(a))).toFixed(1) + "px) scale(" + sc.toFixed(3) + ")";
+    });
+    const idx = mod(Math.round(rot));
+    if (idx !== selected) select(idx);
+  }
+
+  function select(i) {
+    selected = i;
+    hexes.forEach((b, j) => b.setAttribute("aria-pressed", j === i));
+    title.textContent = SECTIONS[i].name;
+    title.classList.remove("swap"); void title.offsetWidth; title.classList.add("swap");
+    $("count").textContent = (i + 1) + " / " + N;
+    $("actionLbl").textContent = "create new " + SECTIONS[i].noun;
+    search.value = "";
+    list.scrollTop = 0;
+    renderList();
+  }
+  function renderList() {
+    const q = search.value.trim().toLowerCase();
+    const rows = SECTIONS[selected].items.filter(t => t.toLowerCase().includes(q));
+    list.innerHTML = "";
+    if (!rows.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = q ? "Nothing matches “" + search.value.trim() + "”" : "Nothing here yet";
+      list.appendChild(li);
+      return;
+    }
+    rows.forEach(t => {
+      const li = document.createElement("li"), sp = document.createElement("span");
+      sp.textContent = t;
+      li.appendChild(sp);
+      li.insertAdjacentHTML("beforeend", ARROW);
+      list.appendChild(li);
+    });
+  }
+  $("action").addEventListener("click", () => {
+    const s = SECTIONS[selected];
+    s.items.unshift("new " + s.noun + " #" + s.items.length);
+    search.value = "";
+    renderList();
+    list.scrollTop = 0;
+  });
+  search.addEventListener("input", renderList);
+  searchBtn.addEventListener("click", () => {
+    const show = search.hidden;
+    search.hidden = !show;
+    searchBtn.setAttribute("aria-pressed", show);
+    if (show) search.focus({ preventScroll: true });
+    else { search.value = ""; renderList(); }
+  });
+
+  /* ----- geometry: panel height vs wheel size ----- */
+  const snaps = () => [stMax, Math.min(DOTS, stMax), 0];
+
+  function measure() {
+    const ratio = st < 0 ? 1 : st / stMax;
+    H = app.clientHeight; W = app.clientWidth;
+    stMax = Math.max(120, Math.min(clamp(Math.round(H * 0.38), 270, 320), H - 210));
+    st = ratio * stMax;
+    render();
+  }
+  function render() {
+    st = clamp(st, 0, stMax);
+    scale = st / stMax;
+    const k = clamp((0.75 - scale) / 0.35);        // hexagons melt into icon dots
+    const op = clamp((st - 16) / 50);              // dots vanish as the panel fills the screen
+    panel.style.height = (H - st) + "px";
+    panel.style.borderRadius = st < 22 ? "0 0 " + st + "px " + st + "px" : "";
+    stage.style.height = st + "px";
+    wheel.style.transform = "scale(" + Math.max(0.001, scale).toFixed(4) + ")";
+    wheel.style.setProperty("--k", k.toFixed(3));
+    wheel.style.opacity = op.toFixed(3);
+    stage.style.visibility = op > 0 ? "" : "hidden";
+    handle.setAttribute("aria-valuenow", Math.round(100 * (1 - scale)));
+  }
+
+  function tween(get, set, target, dur, slot) {
+    if (reduced) { set(target); return 0; }
+    const from = get(), t0 = performance.now();
+    const step = now => {
+      const p = clamp((now - t0) / dur);
+      set(from + (target - from) * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) slot.id = requestAnimationFrame(step);
+    };
+    return requestAnimationFrame(step);
+  }
+  const rotSlot = { id: 0 }, stSlot = { id: 0 };
+  function spinTo(target, dur = 420) {
+    cancelAnimationFrame(rotSlot.id);
+    rotSlot.id = tween(() => rot, v => { rot = v; renderWheel(); }, target, dur, rotSlot);
+  }
+  function sizeTo(target) {
+    cancelAnimationFrame(stSlot.id);
+    stSlot.id = tween(() => st, v => { st = v; render(); }, target, 380, stSlot);
+  }
+
+  /* ----- spin the wheel ----- */
+  let spin = null;
+  stage.addEventListener("pointerdown", e => {
+    cancelAnimationFrame(rotSlot.id);
+    const hex = e.target.closest(".hex");
+    spin = { x: e.clientX, rot, lastX: e.clientX, lastT: e.timeStamp, v: 0, moved: false, hit: hex ? +hex.dataset.i : -1 };
+    stage.setPointerCapture(e.pointerId);
+    stage.classList.add("dragging");
+  });
+  stage.addEventListener("pointermove", e => {
+    if (!spin) return;
+    const perPx = 1 / (R * Math.max(0.2, scale) * STEP);     // items per pixel of thumb travel
+    const dt = e.timeStamp - spin.lastT;
+    if (dt > 0) spin.v = 0.6 * spin.v + 0.4 * (-(e.clientX - spin.lastX) * perPx / dt);
+    spin.lastX = e.clientX; spin.lastT = e.timeStamp;
+    if (Math.abs(e.clientX - spin.x) > 4) spin.moved = true;
+    if (spin.moved) { rot = spin.rot - (e.clientX - spin.x) * perPx; renderWheel(); }
+  });
+  const endSpin = e => {
+    if (!spin) return;
+    const d = spin; spin = null;
+    stage.classList.remove("dragging");
+    if (!d.moved) { if (d.hit >= 0) spinTo(nearest(d.hit)); else spinTo(Math.round(rot)); return; }
+    const fling = e.timeStamp - d.lastT < 80 ? clamp(d.v * 220, -6, 6) : 0;   // inertia, capped at half a turn
+    spinTo(Math.round(rot + fling), 420 + Math.abs(fling) * 90);
+  };
+  stage.addEventListener("pointerup", endSpin);
+  stage.addEventListener("pointercancel", endSpin);
+  wheel.addEventListener("keydown", e => {
+    const d = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    const t = Math.round(rot) + d;
+    spinTo(t, 260);
+    hexes[mod(t)].focus({ preventScroll: true });
+  });
+
+  /* ----- swipe the content sideways to step through sections ----- */
+  let swipe = null;
+  const swipeStart = e => { if (!e.target.closest("button, input")) swipe = { x: e.clientX, y: e.clientY }; };
+  $("body").addEventListener("pointerdown", swipeStart);
+  $("head").addEventListener("pointerdown", swipeStart);
+  window.addEventListener("pointerup", e => {
+    if (!swipe) return;
+    const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+    swipe = null;
+    if (Math.abs(dx) > 56 && Math.abs(dx) > 2 * Math.abs(dy)) spinTo(Math.round(rot) + (dx < 0 ? 1 : -1), 320);
+  });
+  window.addEventListener("pointercancel", () => { swipe = null; });
+
+  /* ----- pull the panel edge ----- */
+  let drag = null;
+  grip.addEventListener("pointerdown", e => {
+    cancelAnimationFrame(stSlot.id);
+    drag = { y: e.clientY, st, lastY: e.clientY, lastT: e.timeStamp, v: 0, moved: false };
+    grip.setPointerCapture(e.pointerId);
+    grip.classList.add("dragging");
+  });
+  grip.addEventListener("pointermove", e => {
+    if (!drag) return;
+    const dt = e.timeStamp - drag.lastT;
+    if (dt > 0) drag.v = 0.6 * drag.v + 0.4 * ((e.clientY - drag.lastY) / dt);   // + = panel growing
+    drag.lastY = e.clientY; drag.lastT = e.timeStamp;
+    if (Math.abs(e.clientY - drag.y) > 3) drag.moved = true;
+    st = drag.st - (e.clientY - drag.y);
+    render();
+  });
+  const endDrag = e => {
+    if (!drag) return;
+    const d = drag; drag = null;
+    grip.classList.remove("dragging");
+    const pts = snaps();
+    if (!d.moved) { sizeTo(pts.find(p => p < st - 1) ?? stMax); return; }      // tap: step through the stops
+    let target;
+    if (Math.abs(d.v) > 0.45 && e.timeStamp - d.lastT < 80) {
+      target = d.v > 0 ? pts.find(p => p < st - 1) ?? 0 : [...pts].reverse().find(p => p > st + 1) ?? stMax;
+    } else {
+      target = pts.reduce((a, b) => Math.abs(b - st) < Math.abs(a - st) ? b : a);
+    }
+    sizeTo(target);
+  };
+  grip.addEventListener("pointerup", endDrag);
+  grip.addEventListener("pointercancel", endDrag);
+  handle.addEventListener("keydown", e => {
+    const step = { ArrowDown: -40, ArrowUp: 40, PageDown: -120, PageUp: 120 }[e.key];
+    if (step) { st += step; render(); }
+    else if (e.key === "Home") sizeTo(stMax);
+    else if (e.key === "End") sizeTo(0);
+    else return;
+    e.preventDefault();
+  });
+
+  new ResizeObserver(measure).observe(app);
+  measure();
+  renderWheel();
+})();
+</script>
